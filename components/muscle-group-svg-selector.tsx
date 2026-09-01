@@ -1,9 +1,9 @@
 "use client"
 import { motion } from "framer-motion"
 
-export default function MuscleGroupSvgSelector({ selectedGroups, onMuscleGroupSelect }) {
+export default function MuscleGroupSvgSelector({ selectedGroups = [], onMuscleGroupSelect }: { selectedGroups?: any[]; onMuscleGroupSelect?: (group: string) => void }) {
   // Mapping of SVG element IDs to muscle groups
-  const muscleGroupMapping = {
+  const muscleGroupMapping: Record<string, string> = {
     chest: "Upper Body Push",
     shoulders: "Shoulders",
     biceps: "Arms",
@@ -22,16 +22,16 @@ export default function MuscleGroupSvgSelector({ selectedGroups, onMuscleGroupSe
   }
 
   // Check if a muscle group is selected
-  const isMuscleSelected = (muscleId) => {
+  const isMuscleSelected = (muscleId: any) => {
     const muscleGroup = muscleGroupMapping[muscleId]
     return muscleGroup && selectedGroups.includes(muscleGroup)
   }
 
   // Handle click on a muscle group
-  const handleMuscleClick = (muscleId) => {
+  const handleMuscleClick = (muscleId: any) => {
     const muscleGroup = muscleGroupMapping[muscleId]
     if (muscleGroup) {
-      onMuscleGroupSelect(muscleGroup)
+      onMuscleGroupSelect?.(muscleGroup)
     }
   }
 

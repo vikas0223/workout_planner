@@ -103,7 +103,7 @@ export default function FavoritesView({ savedPlans, onLoadPlan, onDeletePlan }: 
                       </div>
 
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {plan.plan.muscleGroups?.map((group, index) => (
+                        {plan.plan.muscleGroups?.map((group: any, index: number) => (
                           <span key={index} className="text-xs bg-purple-50 text-purple-700 rounded-full px-2 py-0.5">
                             {group}
                           </span>

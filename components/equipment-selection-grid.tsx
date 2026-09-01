@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { Check } from "lucide-react"
 
-export default function EquipmentSelectionGrid({ selectedEquipment, onChange }) {
+export default function EquipmentSelectionGrid({ selectedEquipment = [], onChange }: { selectedEquipment?: any[]; onChange?: (eq: any[]) => void }) {
   const equipmentOptions = [
     {
       id: "all",
@@ -147,22 +147,22 @@ export default function EquipmentSelectionGrid({ selectedEquipment, onChange }) 
     },
   ]
 
-  const handleSelect = (equipmentId) => {
+  const handleSelect = (equipmentId: any) => {
     if (equipmentId === "all") {
       // If "Select All" is clicked
       if (selectedEquipment.length === equipmentOptions.length - 1) {
         // If all are already selected, deselect all
-        onChange([])
+        onChange?.([])
       } else {
         // Otherwise, select all except "all" itself
-        onChange(equipmentOptions.filter((eq) => eq.id !== "all").map((eq) => eq.id))
+        onChange?.(equipmentOptions.filter((eq) => eq.id !== "all").map((eq) => eq.id))
       }
     } else {
       // Toggle individual equipment
       if (selectedEquipment.includes(equipmentId)) {
-        onChange(selectedEquipment.filter((id) => id !== equipmentId))
+        onChange?.(selectedEquipment.filter((id: any) => id !== equipmentId))
       } else {
-        onChange([...selectedEquipment, equipmentId])
+        onChange?.([...selectedEquipment, equipmentId])
       }
     }
   }

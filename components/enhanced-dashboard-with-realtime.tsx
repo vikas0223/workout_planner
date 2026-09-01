@@ -22,10 +22,10 @@ export default function EnhancedDashboardWithRealtime() {
     progress: 0,
   })
   const [caloriesTimeframe, setCaloriesTimeframe] = useState("monthly")
-  const [userStats, setUserStats] = useState(null)
-  const [recentWorkouts, setRecentWorkouts] = useState([])
-  const [weeklyData, setWeeklyData] = useState([])
-  const [caloriesData, setCaloriesData] = useState([])
+  const [userStats, setUserStats] = useState<any>(null)
+  const [recentWorkouts, setRecentWorkouts] = useState<any[]>([])
+  const [weeklyData, setWeeklyData] = useState<any[]>([])
+  const [caloriesData, setCaloriesData] = useState<any[]>([])
   const { refreshCompletedExercises } = useWorkoutCompletion()
   const supabase = getSupabaseBrowserClient()
 
@@ -106,7 +106,7 @@ export default function EnhancedDashboardWithRealtime() {
     }
   }
 
-  const animateCountUp = (statsData) => {
+  const animateCountUp = (statsData: any) => {
     const duration = 1500 // Animation duration in ms
     const steps = 30 // Number of steps in the animation
     const interval = duration / steps
@@ -142,7 +142,7 @@ export default function EnhancedDashboardWithRealtime() {
   }
 
   // Generate weekly workout data from completed exercises
-  const generateWeeklyWorkoutData = async (userId) => {
+  const generateWeeklyWorkoutData = async (userId: any) => {
     try {
       const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
@@ -179,7 +179,7 @@ export default function EnhancedDashboardWithRealtime() {
 
       if (completedExercises) {
         // Group exercises by day and calculate total minutes
-        completedExercises.forEach((exercise) => {
+        completedExercises.forEach((exercise: any) => {
           const exerciseDate = new Date(exercise.completed_at)
           const dateStr = exerciseDate.toISOString().split("T")[0]
           const weekDataIndex = weekData.findIndex((d) => d.date === dateStr)
@@ -191,14 +191,14 @@ export default function EnhancedDashboardWithRealtime() {
         })
       }
 
-      setWeeklyData(weekData)
+      setWeeklyData(weekData as any)
     } catch (error) {
       console.error("Error generating weekly workout data:", error)
     }
   }
 
   // Generate calories data
-  const generateCaloriesData = async (userId) => {
+  const generateCaloriesData = async (userId: any) => {
     try {
       if (caloriesTimeframe === "monthly") {
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -232,7 +232,7 @@ export default function EnhancedDashboardWithRealtime() {
 
         if (completedExercises) {
           // Group calories by month
-          completedExercises.forEach((exercise) => {
+          completedExercises.forEach((exercise: any) => {
             const exerciseDate = new Date(exercise.completed_at)
             const monthIndex = exerciseDate.getMonth()
             monthlyData[monthIndex].calories += exercise.calories_burned || 0
@@ -285,7 +285,7 @@ export default function EnhancedDashboardWithRealtime() {
 
         if (completedExercises) {
           // Group calories by day
-          completedExercises.forEach((exercise) => {
+          completedExercises.forEach((exercise: any) => {
             const exerciseDate = new Date(exercise.completed_at)
             const dayIndex = exerciseDate.getDay() - 1 // Monday is 0
             if (dayIndex >= 0 && dayIndex < 7) {
@@ -344,7 +344,7 @@ export default function EnhancedDashboardWithRealtime() {
   const recommendations = getWorkoutRecommendations()
 
   // Custom tooltip for calories chart
-  const CaloriesChartTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const CaloriesChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-2 border border-gray-200 rounded shadow-sm">
@@ -724,7 +724,7 @@ export default function EnhancedDashboardWithRealtime() {
 }
 
 // Calendar icon component
-function Calendar(props) {
+function Calendar(props: any) {
   return (
     <svg
       {...props}

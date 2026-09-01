@@ -5,15 +5,15 @@ import { ChevronDown, Check, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-export default function EnhancedMuscleGroupDropdown({ selectedGroups, onChange, exerciseDatabase }) {
+export default function EnhancedMuscleGroupDropdown({ selectedGroups = [], onChange, exerciseDatabase }: { selectedGroups?: any[]; onChange?: (groups: any[]) => void; exerciseDatabase?: any }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [hoveredGroup, setHoveredGroup] = useState(null)
-  const dropdownRef = useRef(null)
+  const [hoveredGroup, setHoveredGroup] = useState<string | null>(null)
+  const dropdownRef = useRef<any>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event: any) {
+      if (dropdownRef.current && !dropdownRef.current.contains((event.target as any))) {
         setIsOpen(false)
       }
     }
@@ -84,16 +84,16 @@ export default function EnhancedMuscleGroupDropdown({ selectedGroups, onChange, 
   ]
 
   // Get sample exercises for a muscle group from the exercise database
-  const getExercisesForMuscleGroup = (groupId) => {
+  const getExercisesForMuscleGroup = (groupId: any) => {
     if (!exerciseDatabase) return []
 
-    let exercises = []
+    let exercises: any[] = []
 
     // Look through all categories in the exercise database
-    Object.values(exerciseDatabase).forEach((goalExercises) => {
-      Object.values(goalExercises).forEach((typeExercises) => {
+    Object.values(exerciseDatabase as any || {}).forEach((goalExercises: any) => {
+      Object.values(goalExercises || {}).forEach((typeExercises: any) => {
         // Filter exercises for this muscle group
-        const matchingExercises = typeExercises.filter((ex) => ex.muscleGroup === groupId).map((ex) => ex.name)
+        const matchingExercises = (Array.isArray(typeExercises) ? typeExercises : []).filter((ex: any) => ex.muscleGroup === groupId).map((ex: any) => ex.name)
 
         exercises = [...exercises, ...matchingExercises]
       })
@@ -103,17 +103,17 @@ export default function EnhancedMuscleGroupDropdown({ selectedGroups, onChange, 
     return [...new Set(exercises)].slice(0, 5)
   }
 
-  const handleSelect = (groupId) => {
+  const handleSelect = (groupId: any) => {
     if (groupId === "All") {
       // If All is selected, include all muscle groups except "All" itself
       const allGroups = muscleGroups.filter((group) => group.id !== "All").map((group) => group.id)
-      onChange(allGroups)
+      onChange?.(allGroups)
     } else if (selectedGroups.includes(groupId)) {
       // If the group is already selected, remove it
-      onChange(selectedGroups.filter((id) => id !== groupId))
+      onChange?.(selectedGroups.filter((id: any) => id !== groupId))
     } else {
       // Add the group to the selection
-      onChange([...selectedGroups, groupId])
+      onChange?.([...selectedGroups, groupId])
     }
   }
 

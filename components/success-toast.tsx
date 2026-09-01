@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, X } from "lucide-react"
 
-export default function SuccessToast({ message, visible, onClose }) {
+export default function SuccessToast({ message, visible, onClose }: { message: string; visible: boolean; onClose: () => void }) {
   const [isVisible, setIsVisible] = useState(visible)
 
   useEffect(() => {

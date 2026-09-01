@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { useEffect, useState, useCallback, createContext, useContext } from "react"
 import { getSupabaseBrowserClient } from "@/lib/supabase-client"
+import { createRequiredTables } from "@/lib/create-tables"
 
 type CompletedExercise = {
   id: string
@@ -42,6 +43,7 @@ type WorkoutCompletionContextType = {
   isExerciseFavorite: (exerciseId: string) => boolean
   getUserId: () => string | null
   isOfflineMode: boolean
+  setIsOfflineMode: (offline: boolean) => void // Add setIsOfflineMode to context
 }
 
 const WorkoutCompletionContext = createContext<WorkoutCompletionContextType | undefined>(undefined)
@@ -53,6 +55,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
   const [userId, setUserId] = useState<string | null>(null)
   const [isOfflineMode, setIsOfflineMode] = useState(false)
   const [tablesInitialized, setTablesInitialized] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   // Try to get the Supabase client, which may return a fallback client if env vars are missing
   const supabase = getSupabaseBrowserClient()
@@ -61,13 +64,23 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
   const initializeTables = async () => {
     if (tablesInitialized) return
 
+    console.log("Initializing database tables...")
     try {
-      // Check if tables exist and create them if they don't
-      await createTablesIfNotExist()
+      // Try to create tables if they don't exist
+      const tablesCreated = await createRequiredTables()
+
+      // Even if table creation "fails", we'll continue and try to use the app
+      // The individual operations will fall back to offline mode if needed
+      console.log("Tables initialization process completed")
       setTablesInitialized(true)
+
+      // We won't automatically switch to offline mode here
+      // Instead, we'll let each operation decide if it needs to go offline
     } catch (error) {
       console.error("Error initializing tables:", error)
-      setIsOfflineMode(true)
+      // Don't switch to offline mode just because tables don't exist yet
+      // We'll mark as initialized so we don't keep trying
+      setTablesInitialized(true)
     }
   }
 
@@ -202,7 +215,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         }
 
         const exercisesMap: Record<string, CompletedExercise> = {}
-        data?.forEach((exercise) => {
+        data?.forEach((exercise: any) => {
           // Use exercise_id as the key in our map
           exercisesMap[exercise.exercise_id] = {
             id: exercise.id,
@@ -250,11 +263,56 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
             .limit(1)
             .maybeSingle()
 
-          // If the table doesn't exist, switch to offline mode immediately
-          if (tableError && tableError.message.includes('relation "saved_workouts" does not exist')) {
-            console.log("Saved workouts table doesn't exist, switching to offline mode")
-            setIsOfflineMode(true)
-            loadFromLocalStorage()
+          // If the table doesn't exist, try to create it and then continue
+          if (
+            tableError &&
+            tableError.message &&
+            tableError.message.includes('relation "saved_workouts" does not exist')
+          ) {
+            console.log("Saved workouts table doesn't exist, attempting to create it")
+            await createRequiredTables()
+
+            // Try the query again after creating the table
+            const { data, error } = await supabase.from("saved_workouts").select("*").eq("user_id", uid)
+
+            if (error) {
+              console.error("Error fetching saved workouts after table creation:", error)
+              setIsOfflineMode(true)
+              loadFromLocalStorage()
+              return
+            }
+
+            // Process the data as normal if the query succeeds
+            if (data) {
+              const workouts = data.map((workout: any) => {
+                let parsedWorkoutData
+
+                // Safely parse workout data
+                if (typeof workout.workout_data === "string") {
+                  try {
+                    parsedWorkoutData = JSON.parse(workout.workout_data)
+                  } catch (parseError) {
+                    console.error("Error parsing workout data:", parseError)
+                    parsedWorkoutData = {} // Fallback to empty object
+                  }
+                } else {
+                  parsedWorkoutData = workout.workout_data || {}
+                }
+
+                return {
+                  id: workout.id,
+                  name: workout.name || "Unnamed Workout",
+                  date: workout.created_at || new Date().toISOString(),
+                  plan: parsedWorkoutData,
+                }
+              })
+
+              setSavedWorkouts(workouts)
+
+              // Also store in localStorage as backup
+              localStorage.setItem("savedWorkouts", JSON.stringify(workouts))
+            }
+
             return
           }
         } catch (tableCheckError) {
@@ -275,7 +333,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         }
 
         if (data) {
-          const workouts = data.map((workout) => {
+          const workouts = data.map((workout: any) => {
             let parsedWorkoutData
 
             // Safely parse workout data
@@ -373,7 +431,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         }
 
         if (data) {
-          const favorites = data.map((fav) => {
+          const favorites = data.map((fav: any) => {
             let equipmentArray = []
 
             // Safely parse equipment data
@@ -431,6 +489,19 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
   }, [userId, isOfflineMode, fetchCompletedExercises])
 
   // Get user ID on mount
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
+
+    return () => {
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
+    }
+  }, [])
+
   useEffect(() => {
     const getUserId = async () => {
       try {
@@ -525,6 +596,14 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
 
     getUserId()
 
+    // Re-initialize Supabase and fetch data when the app comes online
+    if (isOnline && isOfflineMode) {
+      console.log("App is back online, re-initializing Supabase and fetching data")
+      setIsOfflineMode(false)
+      initializeTables()
+      getUserId()
+    }
+
     // Set up real-time subscription for completed exercises if not in offline mode
     let exercisesSubscription: any
     let statsSubscription: any
@@ -535,7 +614,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
       try {
         exercisesSubscription = supabase
           .channel("completed-exercises-changes")
-          .on("postgres_changes", { event: "*", schema: "public", table: "completed_exercises" }, (payload) => {
+          .on("postgres_changes", { event: "*", schema: "public", table: "completed_exercises" }, (payload: any) => {
             refreshCompletedExercises()
           })
           .subscribe()
@@ -543,7 +622,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         // Set up real-time subscription for user stats
         statsSubscription = supabase
           .channel("user-stats-changes")
-          .on("postgres_changes", { event: "*", schema: "public", table: "user_stats" }, (payload) => {
+          .on("postgres_changes", { event: "*", schema: "public", table: "user_stats" }, (payload: any) => {
             // This will trigger a refresh of the dashboard
             refreshCompletedExercises()
           })
@@ -552,7 +631,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         // Set up real-time subscription for saved workouts
         workoutsSubscription = supabase
           .channel("saved-workouts-changes")
-          .on("postgres_changes", { event: "*", schema: "public", table: "saved_workouts" }, (payload) => {
+          .on("postgres_changes", { event: "*", schema: "public", table: "saved_workouts" }, (payload: any) => {
             if (userId) {
               fetchSavedWorkouts(userId)
             }
@@ -562,7 +641,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         // Set up real-time subscription for favorite exercises
         favoritesSubscription = supabase
           .channel("favorite-exercises-changes")
-          .on("postgres_changes", { event: "*", schema: "public", table: "favorite_exercises" }, (payload) => {
+          .on("postgres_changes", { event: "*", schema: "public", table: "favorite_exercises" }, (payload: any) => {
             if (userId) {
               fetchFavoriteExercises(userId)
             }
@@ -593,6 +672,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
     fetchFavoriteExercises,
     fetchSavedWorkouts,
     refreshCompletedExercises,
+    isOnline, // Add isOnline as a dependency
   ])
 
   const markExerciseComplete = useCallback(
@@ -722,11 +802,14 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
       try {
         // Generate a UUID for the workout
         const workoutId = crypto.randomUUID()
+        console.log(`Generated workout ID: ${workoutId}`)
 
         // Validate plan structure with safe fallbacks
         const exercises = Array.isArray(plan.exercises) ? plan.exercises : []
         if (exercises.length === 0) {
           console.warn("Saving workout plan with no exercises")
+        } else {
+          console.log(`Saving workout with ${exercises.length} exercises`)
         }
 
         // Create a name for the workout based on muscle groups or type
@@ -734,6 +817,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
 
         // Safely extract muscle groups with multiple fallback checks
         const muscleGroups = Array.isArray(plan.muscleGroups) ? [...plan.muscleGroups] : []
+        console.log(`Workout muscle groups: ${JSON.stringify(muscleGroups)}`)
 
         // Determine workout name based on muscle groups
         if (muscleGroups.length > 0) {
@@ -762,7 +846,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         // Create a sanitized version of the plan to ensure it's serializable
         const sanitizedPlan = {
           ...plan,
-          exercises: exercises.map((exercise) => ({
+          exercises: exercises.map((exercise: any) => ({
             name: exercise?.name || "Unnamed Exercise",
             sets: exercise?.sets || null,
             reps: exercise?.reps || null,
@@ -797,6 +881,8 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
 
         // If we're not in offline mode, try to save to Supabase
         if (!isOfflineMode) {
+          console.log("Attempting to save workout to Supabase...")
+
           // First check if the table exists to avoid throwing errors
           try {
             const { data: tableCheck, error: tableError } = await supabase
@@ -813,6 +899,10 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
             ) {
               console.log("Saved workouts table doesn't exist, switching to offline mode")
               setIsOfflineMode(true)
+
+              // Try to create the table
+              await createRequiredTables()
+
               return workoutId
             }
           } catch (tableCheckError) {
@@ -822,25 +912,57 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
           }
 
           // Prepare workout data for database
-          const workoutData = JSON.stringify(sanitizedPlan)
+          let workoutData
+          try {
+            workoutData = JSON.stringify(sanitizedPlan)
+            console.log("Successfully stringified workout data")
+          } catch (jsonError) {
+            console.error("Error stringifying workout data:", jsonError)
+            // Create a simpler version without circular references
+            const simplifiedPlan = {
+              ...sanitizedPlan,
+              exercises: sanitizedPlan.exercises.map((ex: any) => ({
+                name: ex.name,
+                sets: ex.sets,
+                reps: ex.reps,
+                muscleGroup: ex.muscleGroup,
+                equipment: ex.equipment,
+              })),
+            }
+            workoutData = JSON.stringify(simplifiedPlan)
+          }
 
           // Insert into saved_workouts
-          const { error } = await supabase.from("saved_workouts").insert({
-            id: workoutId,
-            user_id: userId,
-            name: workoutName,
-            workout_data: workoutData,
-            created_at: new Date().toISOString(),
-          })
+          try {
+            const { error } = await supabase.from("saved_workouts").insert({
+              id: workoutId,
+              user_id: userId,
+              name: workoutName,
+              workout_data: workoutData,
+              created_at: new Date().toISOString(),
+            })
 
-          if (error) {
-            // If the table doesn't exist, switch to offline mode
-            if (error.message && error.message.includes('relation "saved_workouts" does not exist')) {
-              console.error("Saved workouts table doesn't exist")
-              setIsOfflineMode(true)
-              return workoutId
+            if (error) {
+              // If the table doesn't exist, switch to offline mode
+              if (error.message && error.message.includes('relation "saved_workouts" does not exist')) {
+                console.error("Saved workouts table doesn't exist")
+                setIsOfflineMode(true)
+
+                // Try to create the table
+                await createRequiredTables()
+
+                return workoutId
+              }
+
+              // Log the specific error
+              console.error("Supabase insert error:", error.message, error.details, error.hint)
+              throw new Error(`Supabase error: ${error.message}`)
             }
-            throw error
+
+            console.log("Workout saved successfully to Supabase")
+          } catch (insertError) {
+            console.error("Error during Supabase insert operation:", insertError)
+            throw insertError
           }
         }
 
@@ -848,7 +970,21 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         return workoutId
       } catch (error) {
         console.error("Error saving workout plan:", error)
-        setIsOfflineMode(true)
+
+        // Provide more specific error message
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred while saving workout"
+
+        // Only switch to offline mode for connection-related errors
+        if (
+          errorMessage.includes("network") ||
+          errorMessage.includes("connection") ||
+          errorMessage.includes("offline") ||
+          errorMessage.includes("table") ||
+          errorMessage.includes("relation")
+        ) {
+          console.log("Switching to offline mode due to connection issue")
+          setIsOfflineMode(true)
+        }
 
         // Return the ID anyway since we've saved it locally
         const lastSavedWorkout = savedWorkouts.length > 0 ? savedWorkouts[savedWorkouts.length - 1] : null
@@ -856,7 +992,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
           return lastSavedWorkout.id
         }
 
-        throw error // Re-throw to allow component to handle the error
+        throw new Error(`Failed to save workout plan: ${errorMessage}`)
       }
     },
     [userId, isOfflineMode, savedWorkouts, supabase],
@@ -876,13 +1012,14 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
 
         // Ensure equipment is properly formatted
         const equipment = Array.isArray(exercise.equipment) ? exercise.equipment : []
+        const muscleGroup = exercise.muscleGroup || ""
 
         // Create the new favorite object
         const newFavorite = {
           id: favoriteId,
           exerciseId,
           exerciseName: exercise.name,
-          muscleGroup: exercise.muscleGroup || "",
+          muscleGroup: muscleGroup,
           equipment,
         }
 
@@ -931,7 +1068,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
             user_id: userId,
             exercise_id: exerciseId,
             exercise_name: exercise.name,
-            muscle_group: exercise.muscleGroup || "",
+            muscle_group: muscleGroup || "",
             equipment: equipmentJson,
           })
 
@@ -1056,7 +1193,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
   const getCompletionPercentage = (workoutId: string, totalExercises: number) => {
     if (!workoutId || totalExercises === 0) return 0
 
-    const completedCount = Object.values(completedExercises).filter((ex) => ex.workoutId === workoutId).length
+    const completedCount = Object.values(completedExercises).filter((ex: any) => ex.workoutId === workoutId).length
 
     return Math.round((completedCount / totalExercises) * 100)
   }
@@ -1065,11 +1202,15 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
     if (!workoutId) return 0
 
     return Object.values(completedExercises)
-      .filter((ex) => ex.workoutId === workoutId)
+      .filter((ex: any) => ex.workoutId === workoutId)
       .reduce((total, ex) => total + (ex.caloriesBurned || 0), 0)
   }
 
   const getUserId = () => userId
+
+  const setOfflineMode = (offline: boolean) => {
+    setIsOfflineMode(offline)
+  }
 
   return (
     <WorkoutCompletionContext.Provider
@@ -1088,6 +1229,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
         isExerciseFavorite,
         getUserId,
         isOfflineMode,
+        setIsOfflineMode: setOfflineMode,
       }}
     >
       {children}

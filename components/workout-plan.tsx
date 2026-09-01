@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useFavorites } from "@/components/favorites-context"
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
-export default function WorkoutPlan({ plan, cardStyle }) {
-  const [selectedExercise, setSelectedExercise] = useState(null)
+export default function WorkoutPlan({ plan, cardStyle = "modern" }: { plan: any; cardStyle?: string }) {
+  const [selectedExercise, setSelectedExercise] = useState<any>(null)
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
   const planId = plan?.id || `plan_${Date.now()}`
   const isFav = isFavorite(planId)
@@ -31,8 +31,8 @@ export default function WorkoutPlan({ plan, cardStyle }) {
     show: { opacity: 1, y: 0 },
   }
 
-  const capitalizeFirstLetter = (string) => {
-    return string.charAt(0).toUpperCase() + string.replace(/-/g, " ").slice(1)
+  const capitalizeFirstLetter = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.replace(/-/g, " ").slice(1)
   }
 
   const handleFavoriteToggle = () => {
@@ -140,7 +140,7 @@ export default function WorkoutPlan({ plan, cardStyle }) {
         </CardHeader>
         <CardContent>
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
-            {plan.exercises.map((exercise, index) => (
+            {plan.exercises.map((exercise: any, index: number) => (
               <motion.div key={index} variants={item}>
                 <Card className="bg-white/60 border-indigo-200 overflow-hidden">
                   <div className="p-4">

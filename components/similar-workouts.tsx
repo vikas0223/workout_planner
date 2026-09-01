@@ -61,7 +61,7 @@ export default function SimilarWorkouts({ currentWorkout, userProfile, onSelectW
   }
 
   // Generate mock recommendations if real ones aren't available
-  const generateMockRecommendations = (workout) => {
+  const generateMockRecommendations = (workout: any) => {
     const difficulties = ["beginner", "intermediate", "advanced"]
     const durations = [30, 45, 60, 75]
     const muscleGroups = workout.muscleGroups || ["Upper Body Push", "Upper Body Pull", "Lower Body Push", "Core"]
@@ -98,7 +98,7 @@ export default function SimilarWorkouts({ currentWorkout, userProfile, onSelectW
   }
 
   // Handle rating a workout
-  const handleRateWorkout = (workoutId, rating) => {
+  const handleRateWorkout = (workoutId: any, rating: any) => {
     setRatedWorkouts({
       ...ratedWorkouts,
       [workoutId]: rating,
@@ -186,12 +186,14 @@ export default function SimilarWorkouts({ currentWorkout, userProfile, onSelectW
                               <button
                                 className={`rounded-full p-1 ${ratedWorkouts[rec.id] === 1 ? "bg-green-100 text-green-600" : "text-gray-400 hover:text-green-600"}`}
                                 onClick={() => handleRateWorkout(rec.id, 1)}
+                                title="I like this recommendation"
                               >
                                 <ThumbsUp className="h-4 w-4" />
                               </button>
                               <button
                                 className={`rounded-full p-1 ${ratedWorkouts[rec.id] === -1 ? "bg-red-100 text-red-600" : "text-gray-400 hover:text-red-600"}`}
                                 onClick={() => handleRateWorkout(rec.id, -1)}
+                                title="Not interested in this"
                               >
                                 <ThumbsDown className="h-4 w-4" />
                               </button>

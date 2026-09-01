@@ -57,7 +57,7 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
       workoutsByDate.set(date, 0)
     })
 
-    completedWorkouts.forEach((workout) => {
+    completedWorkouts.forEach((workout: any) => {
       const workoutDate = workout.date.split("T")[0]
       if (workoutsByDate.has(workoutDate)) {
         workoutsByDate.set(workoutDate, workoutsByDate.get(workoutDate) + 1)
@@ -77,13 +77,13 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
     const difficultyLevels = ["beginner", "intermediate", "advanced"]
 
     // Count workouts by difficulty
-    const countByDifficulty = {
+    const countByDifficulty: Record<string, number> = {
       beginner: 0,
       intermediate: 0,
       advanced: 0,
     }
 
-    completedWorkouts.forEach((workout) => {
+    completedWorkouts.forEach((workout: any) => {
       if (workout.difficulty && difficultyLevels.includes(workout.difficulty)) {
         countByDifficulty[workout.difficulty]++
       }
@@ -112,11 +112,11 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
   // Process muscle group data
   const processMuscleGroupData = () => {
     const completedWorkouts = userProfile?.completedWorkouts || []
-    const muscleGroupCounts = {}
+    const muscleGroupCounts: Record<string, number> = {}
 
-    completedWorkouts.forEach((workout) => {
+    completedWorkouts.forEach((workout: any) => {
       if (workout.muscleGroups && workout.muscleGroups.length > 0) {
-        workout.muscleGroups.forEach((group) => {
+        workout.muscleGroups.forEach((group: any) => {
           if (!muscleGroupCounts[group]) {
             muscleGroupCounts[group] = 0
           }
@@ -138,8 +138,8 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
     if (completedWorkouts.length === 0) return 0
 
     // Group workouts by week
-    const workoutsByWeek = {}
-    completedWorkouts.forEach((workout) => {
+    const workoutsByWeek: Record<string, any[]> = {}
+    completedWorkouts.forEach((workout: any) => {
       const date = new Date(workout.date)
       const weekNumber = Math.floor(date.getTime() / (7 * 24 * 60 * 60 * 1000))
 
@@ -161,7 +161,7 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
     const completedWorkouts = userProfile?.completedWorkouts || []
     let totalMinutes = 0
 
-    completedWorkouts.forEach((workout) => {
+    completedWorkouts.forEach((workout: any) => {
       if (workout.duration) {
         totalMinutes += workout.duration
       }
@@ -324,7 +324,7 @@ export default function ProgressDashboard({ userProfile }: ProgressDashboardProp
                             outerRadius={100}
                             paddingAngle={5}
                             dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                           >
                             {difficultyData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />

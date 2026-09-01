@@ -28,7 +28,7 @@ export default function WorkoutRecommendations({
   onAddToFavorites,
 }: WorkoutRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<WorkoutRecommendation[]>([])
-  const [userProfile, setUserProfile] = useState(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [ratedWorkouts, setRatedWorkouts] = useState<Record<string, number>>({})
   const [hoveredRating, setHoveredRating] = useState<{ id: string; rating: number } | null>(null)
@@ -96,7 +96,7 @@ export default function WorkoutRecommendations({
   }
 
   // Star rating component with animations
-  const StarRating = ({ workoutId, maxRating = 5 }) => {
+  const StarRating = ({ workoutId, maxRating = 5 }: { workoutId: string; maxRating?: number }) => {
     const currentRating = ratedWorkouts[workoutId] || 0
     const isHovering = hoveredRating && hoveredRating.id === workoutId
     const hoverRating = isHovering ? hoveredRating.rating : 0

@@ -422,7 +422,7 @@ export default function EnhancedDashboard({ userProfile }: EnhancedDashboardProp
   const recommendations = getWorkoutRecommendations()
 
   // Custom tooltip for calories chart
-  const CaloriesChartTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+  const CaloriesChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-2 border border-gray-200 rounded shadow-sm">
@@ -801,7 +801,7 @@ export default function EnhancedDashboard({ userProfile }: EnhancedDashboardProp
 }
 
 // Calendar icon component
-function Calendar(props) {
+function Calendar(props: any) {
   return (
     <svg
       {...props}

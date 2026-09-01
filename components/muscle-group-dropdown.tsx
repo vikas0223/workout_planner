@@ -4,13 +4,13 @@ import { useState, useRef, useEffect } from "react"
 import { ChevronDown, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function MuscleGroupDropdown({ selectedGroups, onChange }) {
+export default function MuscleGroupDropdown({ selectedGroups = [], onChange }: { selectedGroups?: any[]; onChange?: (groups: any[]) => void }) {
   const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef<any>(null)
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
+    function handleClickOutside(event: any) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false)
       }
@@ -65,17 +65,17 @@ export default function MuscleGroupDropdown({ selectedGroups, onChange }) {
     },
   ]
 
-  const handleSelect = (groupId) => {
+  const handleSelect = (groupId: any) => {
     if (groupId === "All") {
       // If All is selected, include all muscle groups except "All" itself
       const allGroups = muscleGroups.filter((group) => group.id !== "All").map((group) => group.id)
-      onChange(allGroups)
+      onChange?.(allGroups)
     } else if (selectedGroups.includes(groupId)) {
       // If the group is already selected, remove it
-      onChange(selectedGroups.filter((id) => id !== groupId))
+      onChange?.(selectedGroups.filter((id: any) => id !== groupId))
     } else {
       // Add the group to the selection
-      onChange([...selectedGroups, groupId])
+      onChange?.([...selectedGroups, groupId])
     }
   }
 

@@ -22,7 +22,7 @@ export default function LoadingAnimation() {
       transition: {
         repeat: Number.POSITIVE_INFINITY,
         duration: 1,
-        ease: "easeInOut",
+        ease: "easeInOut" as any,
       },
     },
   }
@@ -69,7 +69,7 @@ export default function LoadingAnimation() {
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
+            transition={{ duration: 1.5, ease: "easeInOut" as any }}
           />
         </motion.div>
       </motion.div>

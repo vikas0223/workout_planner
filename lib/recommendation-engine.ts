@@ -41,6 +41,7 @@ export interface UserProfile {
   name: string
   gender: string
   age: number
+  fitnessLevel?: string
   weight: string
   preferredEquipment: string[]
   preferredMuscleGroups: string[]
@@ -83,8 +84,9 @@ export function createUserProfile(formData: any, userId = `user_${Date.now()}`):
     id: userId,
     name: formData.name,
     gender: formData.gender,
-    age: Number.parseInt(formData.age),
+    age: Number.parseInt(formData.age || "25"),
     weight: formData.weight,
+    fitnessLevel: formData.difficulty || "intermediate",
     preferredEquipment: formData.equipment,
     preferredMuscleGroups: formData.muscleGroups,
     completedWorkouts: [],

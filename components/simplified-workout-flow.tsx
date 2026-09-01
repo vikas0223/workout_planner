@@ -8,26 +8,21 @@ import { ArrowLeft, ArrowRight, Activity } from "lucide-react"
 import MuscleGroupDropdown from "@/components/muscle-group-dropdown"
 import EquipmentSelectionGrid from "@/components/equipment-selection-grid"
 
-export default function SimplifiedWorkoutFlow({ onComplete }) {
+export default function SimplifiedWorkoutFlow({ onComplete }: { onComplete?: (data: any) => void }) {
   const [step, setStep] = useState(0)
-  const [formData, setFormData] = useState({
-    muscleGroups: [],
-    equipment: [],
-    goal: "strength", // Default goal
-    difficulty: "intermediate", // Default difficulty
-  })
-  const [errors, setErrors] = useState({})
+  const [formData, setFormData] = useState<Record<string, any>>({ goal: "", equipment: [], muscleGroups: [], duration: 30, fitnessLevel: "intermediate", experience: "some" })
+  const [errors, setErrors] = useState<Record<string, any>>({})
 
   const cardStyle = "backdrop-filter backdrop-blur-lg bg-white/40 border border-white/50 shadow-xl"
 
   const validateStep = () => {
-    const newErrors = {}
+    const newErrors: Record<string, string> = {}
 
-    if (step === 0 && formData.muscleGroups.length === 0) {
+    if (step === 0 && ((formData as any).muscleGroups || []).length === 0) {
       newErrors.muscleGroups = "Please select at least one muscle group"
     }
 
-    if (step === 1 && formData.equipment.length === 0) {
+    if (step === 1 && ((formData as any).equipment || []).length === 0) {
       newErrors.equipment = "Please select at least one equipment option"
     }
 
@@ -40,7 +35,7 @@ export default function SimplifiedWorkoutFlow({ onComplete }) {
       if (step < 1) {
         setStep(step + 1)
       } else {
-        onComplete(formData)
+        onComplete?.(formData)
       }
     }
   }
@@ -66,7 +61,7 @@ export default function SimplifiedWorkoutFlow({ onComplete }) {
             </CardHeader>
             <CardContent className="space-y-4">
               <MuscleGroupDropdown
-                selectedGroups={formData.muscleGroups}
+                selectedGroups={((formData as any).muscleGroups || [])}
                 onChange={(groups) => {
                   setFormData({
                     ...formData,
@@ -108,7 +103,7 @@ export default function SimplifiedWorkoutFlow({ onComplete }) {
             </CardHeader>
             <CardContent>
               <EquipmentSelectionGrid
-                selectedEquipment={formData.equipment}
+                selectedEquipment={((formData as any).equipment || [])}
                 onChange={(equipment) => {
                   setFormData({
                     ...formData,
