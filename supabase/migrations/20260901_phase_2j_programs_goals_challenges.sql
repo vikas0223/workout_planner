@@ -149,6 +149,25 @@ CREATE POLICY "Anyone authenticated or anonymous can view challenges"
     FOR SELECT
     USING (true);
 
+-- Seed Platform Challenges Catalog
+INSERT INTO public.challenges (id, name, description, type, target_value, unit, start_date, end_date, status)
+VALUES
+    ('chal_cat_7d_consistency', '7-Day Consistency Kickoff', 'Complete 4 workouts over a 7-day period to build immediate training momentum.', 'workout_count', 4, 'workouts', '2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'active'),
+    ('chal_cat_100_sets', 'Century Club: 100 Performed Sets', 'Log 100 working sets across any completed workout sessions.', 'set_count', 100, 'sets', '2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'active'),
+    ('chal_cat_10_workouts', 'Iron Milestone: 10 Workouts', 'Complete 10 total workout sessions across any routines or programs.', 'workout_count', 10, 'workouts', '2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'active'),
+    ('chal_cat_5d_streak', 'Streak Starter: 5-Day Workout Streak', 'Build a continuous 5-day active workout streak.', 'streak', 5, 'days', '2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'active'),
+    ('chal_cat_10t_volume', 'Titan Volume: 10,000 kg Moved', 'Accumulate 10,000 kg in total load volume across your workouts.', 'volume', 10000, 'kg', '2026-01-01T00:00:00Z', '2026-12-31T23:59:59Z', 'active')
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    description = EXCLUDED.description,
+    type = EXCLUDED.type,
+    target_value = EXCLUDED.target_value,
+    unit = EXCLUDED.unit,
+    start_date = EXCLUDED.start_date,
+    end_date = EXCLUDED.end_date,
+    status = EXCLUDED.status,
+    updated_at = timezone('utc'::text, now());
+
 -- 6. User Challenge Progress / Participation Table
 CREATE TABLE IF NOT EXISTS public.challenge_progress (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

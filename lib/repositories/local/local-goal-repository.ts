@@ -32,16 +32,12 @@ export class LocalGoalRepository implements GoalRepository {
 
   public async listGoals(userId?: string, status?: string): Promise<FitnessGoalTarget[]> {
     try {
-      let records: LocalFitnessGoalRecord[];
-      if (userId) {
-        records = await this.engine.getByIndex<LocalFitnessGoalRecord>(
-          STORES.FITNESS_GOALS,
-          'ownerId',
-          userId
-        );
-      } else {
-        records = await this.engine.getAll<LocalFitnessGoalRecord>(STORES.FITNESS_GOALS);
-      }
+      const ownerId = userId || 'guest_user';
+      const records = await this.engine.getByIndex<LocalFitnessGoalRecord>(
+        STORES.FITNESS_GOALS,
+        'ownerId',
+        ownerId
+      );
 
       let active = records.filter((r) => !r.deletedAt);
       if (status) {
@@ -88,7 +84,7 @@ export class LocalGoalRepository implements GoalRepository {
       entityType: 'fitness_goals',
       entityId: goal.id,
       idempotencyKey: `goal_${goal.id}_${now}`,
-      payload: goal as unknown as Record<string, unknown>,
+      payload: goalRecord.goal as unknown as Record<string, unknown>,
       baseVersion: goalRecord.version,
       baseUpdatedAt: now,
       retryCount: 0,
@@ -116,6 +112,23 @@ export class LocalGoalRepository implements GoalRepository {
     existing.clientUpdatedAt = now;
     existing.syncStatus = 'queued';
     await this.engine.put(STORES.FITNESS_GOALS, existing);
+
+    const syncItem: SyncQueueRecord = {
+      id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      operation: 'delete',
+      entityType: 'fitness_goals',
+      entityId: id,
+      idempotencyKey: `goal_del_${id}_${now}`,
+      payload: { id, deletedAt: now },
+      baseVersion: existing.version,
+      baseUpdatedAt: now,
+      retryCount: 0,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+      nextAttemptAt: now,
+    };
+    await this.engine.put(STORES.SYNC_QUEUE, syncItem);
 
     this.invalidationBus.emit({
       type: 'goal_changed',

@@ -96,16 +96,24 @@ export class SupabaseChallengeRepository implements ChallengeRepository {
 
   public async saveChallengeProgress(progress: ChallengeProgress): Promise<void> {
     const now = new Date().toISOString();
-    await this.client.from('challenge_progress').upsert({
-      id: progress.id,
-      challenge_id: progress.challengeId,
-      user_id: progress.userId,
-      status: progress.status,
-      joined_at: progress.joinedAt,
-      completed_at: progress.completedAt || null,
-      updated_at: now,
-      client_updated_at: progress.updatedAt || now,
-      deleted_at: null,
-    });
+    const { error } = await this.client.from('challenge_progress').upsert(
+      {
+        id: progress.id,
+        challenge_id: progress.challengeId,
+        user_id: progress.userId,
+        status: progress.status,
+        joined_at: progress.joinedAt,
+        completed_at: progress.completedAt || null,
+        updated_at: now,
+        client_updated_at: progress.updatedAt || now,
+        deleted_at: null,
+      },
+      { onConflict: 'user_id,challenge_id' }
+    );
+
+    if (error) {
+      console.error('[SupabaseChallengeRepository] Failed to save challenge progress:', error);
+      throw error;
+    }
   }
 }

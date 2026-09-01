@@ -99,4 +99,51 @@ describe('Phase 2J: Goals Domain & Dynamic Evaluation', () => {
     const deleted = await goalRepo.getGoalById('g_persist_1');
     expect(deleted).toBeNull();
   });
+
+  it('weight goal caution: requiresMetricLog when no body metric history is available', () => {
+    const weightGoal: FitnessGoalTarget = {
+      id: 'g_weight_1',
+      type: 'weight',
+      direction: 'decrease',
+      targetValue: 70,
+      unit: 'kg',
+      startDate: '2026-09-01T00:00:00.000Z',
+      status: 'active',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      updatedAt: '2026-09-01T00:00:00.000Z',
+    };
+
+    // No body metrics passed
+    const result = GoalService.evaluateGoal(weightGoal, [], []);
+    expect(result.currentValue).toBeNull();
+    expect(result.requiresMetricLog).toBe(true);
+    expect(result.trendText).toBe('Add your current weight');
+    expect(result.isAchieved).toBe(false);
+  });
+
+  it('weight goal: accurately evaluates progress from latest BodyMetricEntry', () => {
+    const weightGoal: FitnessGoalTarget = {
+      id: 'g_weight_2',
+      type: 'weight',
+      direction: 'decrease',
+      startValue: 80,
+      targetValue: 70,
+      unit: 'kg',
+      startDate: '2026-09-01T00:00:00.000Z',
+      status: 'active',
+      createdAt: '2026-09-01T00:00:00.000Z',
+      updatedAt: '2026-09-01T00:00:00.000Z',
+    };
+
+    const metricEntries = [
+      { id: 'bm1', date: '2026-09-01', weight: 80, createdAt: '2026-09-01T00:00:00Z', updatedAt: '2026-09-01T00:00:00Z' },
+      { id: 'bm2', date: '2026-09-15', weight: 75, createdAt: '2026-09-15T00:00:00Z', updatedAt: '2026-09-15T00:00:00Z' }, // Latest
+    ];
+
+    const result = GoalService.evaluateGoal(weightGoal, [], metricEntries);
+    expect(result.currentValue).toBe(75);
+    expect(result.percentComplete).toBe(50); // Moved 5kg out of 10kg target = 50%
+    expect(result.remaining).toBe(5);
+    expect(result.isAchieved).toBe(false);
+  });
 });

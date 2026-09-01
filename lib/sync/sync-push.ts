@@ -257,6 +257,16 @@ export class SyncPushWorker {
           await this.programRepo.saveProgram(payload as any);
         }
         break;
+      case 'program_weeks':
+        // Weeks are synchronized as part of the program aggregate
+        break;
+      case 'program_days':
+        if (operation === 'delete') {
+          // Handled via parent program delete
+        } else {
+          await this.programRepo.saveProgramDay(payload as any);
+        }
+        break;
       case 'fitness_goals':
         if (operation === 'delete') {
           await this.goalRepo.deleteGoal(item.entityId);

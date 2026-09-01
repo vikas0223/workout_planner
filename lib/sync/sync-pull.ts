@@ -65,6 +65,8 @@ export class SyncPullWorker {
       | 'generated_workouts'
       | 'workout_sessions'
       | 'programs'
+      | 'program_weeks'
+      | 'program_days'
       | 'fitness_goals'
       | 'challenge_progress'
       | 'favorites',
@@ -101,18 +103,33 @@ export class SyncPullWorker {
       const localRecord = await this.db.get<LocalRecordMeta & Record<string, unknown>>(localStoreName, entityId);
 
       if (localRecord && localRecord.syncStatus && localRecord.syncStatus !== 'synced') {
-        // Local record is dirty -> run conflict resolution
+        // Local record is dirty -> run conflict resolution with unwrapped domain payloads
+        const remoteMapped = this.mapRemoteRowToLocal(tableName, row);
+        const localDomain = (localRecord.program || localRecord.goal || localRecord.progress || localRecord.template || localRecord.session || localRecord) as Record<string, unknown>;
+        const remoteDomain = (remoteMapped.program || remoteMapped.goal || remoteMapped.progress || remoteMapped.template || remoteMapped.session || remoteMapped) as Record<string, unknown>;
+
         const resolution = await this.conflictResolver.resolveConflict(
           tableName,
           entityId,
-          localRecord,
-          this.mapRemoteRowToLocal(tableName, row)
+          localDomain,
+          remoteDomain
         );
 
         if (resolution.resolved) {
+          let rewrappedPayload: Record<string, unknown> = resolution.mergedPayload;
+          if (tableName === 'programs') {
+            rewrappedPayload = { program: resolution.mergedPayload };
+          } else if (tableName === 'fitness_goals') {
+            rewrappedPayload = { goal: resolution.mergedPayload };
+          } else if (tableName === 'challenge_progress') {
+            rewrappedPayload = { progress: resolution.mergedPayload };
+          } else if (tableName === 'program_days') {
+            rewrappedPayload = { programDay: resolution.mergedPayload };
+          }
+
           await this.db.put(localStoreName, {
             ...localRecord,
-            ...resolution.mergedPayload,
+            ...rewrappedPayload,
             syncStatus: 'synced',
             lastSyncedAt: new Date().toISOString(),
           });
@@ -152,7 +169,7 @@ export class SyncPullWorker {
         type: 'sync_applied',
         timestamp: Date.now(),
       });
-    } else if (tableName === 'programs') {
+    } else if (tableName === 'programs' || tableName === 'program_weeks' || tableName === 'program_days') {
       ProgressInvalidationBus.getInstance().emit({
         type: 'program_changed',
         timestamp: Date.now(),
@@ -204,6 +221,41 @@ export class SyncPullWorker {
             createdAt: row.created_at,
             updatedAt: row.updated_at,
           },
+        };
+      case 'program_weeks':
+        return {
+          programWeek: {
+            id: row.id,
+            programId: row.program_id,
+            weekNumber: row.week_number,
+            label: row.label,
+            days: [],
+          },
+          programId: row.program_id,
+          weekNumber: row.week_number,
+        };
+      case 'program_days':
+        return {
+          programDay: {
+            id: row.id,
+            programId: row.program_id,
+            programWeekId: row.program_week_id,
+            dayNumber: row.day_number,
+            type: row.type,
+            label: row.label,
+            workoutTemplateId: row.workout_template_id,
+            status: row.status,
+            scheduledDate: row.scheduled_date,
+            effectiveDate: row.effective_date,
+            completedSessionId: row.completed_session_id,
+            completedAt: row.completed_at,
+            notes: row.notes,
+          },
+          programId: row.program_id,
+          programWeekId: row.program_week_id,
+          dayNumber: row.day_number,
+          workoutTemplateId: row.workout_template_id,
+          status: row.status,
         };
       case 'fitness_goals':
         return {

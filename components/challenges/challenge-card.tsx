@@ -73,7 +73,7 @@ export function ChallengeCard({ evaluated, onJoin, onLeave }: ChallengeCardProps
                 Joined
               </span>
             ) : (
-              <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/80 dark:text-foreground/90">
                 <Clock className="h-3 w-3" />
                 {daysRemaining}d left
               </span>

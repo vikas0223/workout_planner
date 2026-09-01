@@ -33,7 +33,10 @@ export class SupabaseGoalRepository implements GoalRepository {
       label: row.label || undefined,
       targetValue: Number(row.target_value),
       unit: row.unit,
-      startValue: row.start_value ? Number(row.start_value) : undefined,
+      startValue:
+        row.start_value !== null && row.start_value !== undefined
+          ? Number(row.start_value)
+          : undefined,
       startDate: row.start_date,
       targetDate: row.target_date || undefined,
       exerciseId: row.exercise_id || undefined,
@@ -68,7 +71,10 @@ export class SupabaseGoalRepository implements GoalRepository {
       label: r.label || undefined,
       targetValue: Number(r.target_value),
       unit: r.unit,
-      startValue: r.start_value ? Number(r.start_value) : undefined,
+      startValue:
+        r.start_value !== null && r.start_value !== undefined
+          ? Number(r.start_value)
+          : undefined,
       startDate: r.start_date,
       targetDate: r.target_date || undefined,
       exerciseId: r.exercise_id || undefined,

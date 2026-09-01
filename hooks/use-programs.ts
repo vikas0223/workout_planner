@@ -90,6 +90,13 @@ export function usePrograms(userId?: string) {
   };
 
   const setActive = async (programId: string) => {
+    const all = await programRepo.listPrograms(userId);
+    for (const p of all) {
+      if (p.status === 'active' && p.id !== programId) {
+        p.status = 'paused';
+        await programRepo.saveProgram(p);
+      }
+    }
     const target = await programRepo.getProgramById(programId);
     if (target) {
       target.status = 'active';

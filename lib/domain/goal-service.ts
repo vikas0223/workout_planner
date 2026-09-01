@@ -4,28 +4,31 @@
  * Zero duplicate metric counters.
  */
 
-import { FitnessGoalTarget, WorkoutSession } from '@/types/domain';
+import { FitnessGoalTarget, WorkoutSession, BodyMetricEntry } from '@/types/domain';
 import { ProgressAnalyticsService } from './progress-analytics';
 import { PersonalRecordService } from './personal-records';
 
 export interface EvaluatedGoalProgress {
   goal: FitnessGoalTarget;
-  currentValue: number;
+  currentValue: number | null;
   percentComplete: number;
   remaining: number;
   isAchieved: boolean;
   trendText: string;
+  requiresMetricLog?: boolean;
 }
 
 export class GoalService {
   /**
-   * Evaluates dynamic goal progress for a given goal target and session history.
+   * Evaluates dynamic goal progress for a given goal target, session history, and body metrics.
    */
   public static evaluateGoal(
     goal: FitnessGoalTarget,
-    allSessions: WorkoutSession[]
+    allSessions: WorkoutSession[],
+    bodyMetrics?: BodyMetricEntry[]
   ): EvaluatedGoalProgress {
-    let currentValue = 0;
+    let currentValue: number | null = 0;
+    let requiresMetricLog = false;
     const completedSessions = allSessions.filter((s) => s.status === 'completed');
 
     // Filter sessions relevant to goal start date if set
@@ -63,8 +66,29 @@ export class GoalService {
       }
       case 'weight':
       case 'body_metric': {
-        // Uses startValue or targetValue reference
-        currentValue = goal.startValue || 0;
+        if (bodyMetrics && bodyMetrics.length > 0) {
+          // Sort by date desc to find newest entry with a usable recorded weight
+          const sorted = [...bodyMetrics].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          const validEntry = sorted.find(
+            (entry) => entry.weight !== null && entry.weight !== undefined && !isNaN(entry.weight)
+          );
+          if (validEntry && validEntry.weight !== undefined) {
+            currentValue = validEntry.weight;
+          } else if (goal.startValue !== undefined) {
+            currentValue = goal.startValue;
+          } else {
+            currentValue = null;
+            requiresMetricLog = true;
+          }
+        } else if (goal.startValue !== undefined) {
+          // If startValue provided but no new log entries, prompt user to add current weight
+          currentValue = goal.startValue;
+        } else {
+          currentValue = null;
+          requiresMetricLog = true;
+        }
         break;
       }
       default: {
@@ -77,28 +101,32 @@ export class GoalService {
     const target = goal.targetValue;
     const direction = goal.direction || 'increase';
 
+    if (currentValue === null || requiresMetricLog) {
+      return {
+        goal,
+        currentValue: null,
+        percentComplete: 0,
+        remaining: target,
+        isAchieved: false,
+        trendText: 'Add your current weight',
+        requiresMetricLog: true,
+      };
+    }
+
     let percentComplete = 0;
     let remaining = 0;
     let isAchieved = false;
 
     if (direction === 'increase') {
-      const totalDelta = target - start;
-      const progressDelta = currentValue - start;
-      if (totalDelta <= 0) {
-        percentComplete = currentValue >= target ? 100 : 0;
-      } else {
-        percentComplete = Math.min(100, Math.max(0, Math.round((progressDelta / totalDelta) * 100)));
-      }
+      const delta = target - start;
+      const progress = currentValue - start;
+      percentComplete = delta > 0 ? Math.min(100, Math.max(0, Math.round((progress / delta) * 100))) : 0;
       remaining = Math.max(0, target - currentValue);
       isAchieved = currentValue >= target;
     } else if (direction === 'decrease') {
-      const totalDelta = start - target;
-      const progressDelta = start - currentValue;
-      if (totalDelta <= 0) {
-        percentComplete = currentValue <= target ? 100 : 0;
-      } else {
-        percentComplete = Math.min(100, Math.max(0, Math.round((progressDelta / totalDelta) * 100)));
-      }
+      const delta = start - target;
+      const progress = start - currentValue;
+      percentComplete = delta > 0 ? Math.min(100, Math.max(0, Math.round((progress / delta) * 100))) : 0;
       remaining = Math.max(0, currentValue - target);
       isAchieved = currentValue <= target;
     } else {
@@ -132,8 +160,9 @@ export class GoalService {
    */
   public static evaluateAllGoals(
     goals: FitnessGoalTarget[],
-    allSessions: WorkoutSession[]
+    allSessions: WorkoutSession[],
+    bodyMetrics?: BodyMetricEntry[]
   ): EvaluatedGoalProgress[] {
-    return goals.map((g) => this.evaluateGoal(g, allSessions));
+    return goals.map((g) => this.evaluateGoal(g, allSessions, bodyMetrics));
   }
 }

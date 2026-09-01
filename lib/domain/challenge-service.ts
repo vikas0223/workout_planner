@@ -6,21 +6,27 @@
 
 import { Challenge, ChallengeProgress, WorkoutSession } from '@/types/domain';
 import { ProgressAnalyticsService } from './progress-analytics';
+import { PersonalRecordService } from './personal-records';
 
 export interface EvaluatedChallengeProgress {
   challenge: Challenge;
   participation?: ChallengeProgress;
   isJoined: boolean;
   currentValue: number;
+  targetValue: number;
   percentComplete: number;
+  remaining: number;
   isCompleted: boolean;
   daysRemaining: number;
   statusLabel: string;
+  progressText?: string;
 }
 
 export class ChallengeService {
   /**
    * Evaluates dynamic progress for a specific challenge and user participation state.
+   * Challenge periods are evaluated using the user's current local calendar timezone (Phase 2I convention).
+   * For participants, the effective window derives from joinedAt + durationDays when configured.
    */
   public static evaluateChallenge(
     challenge: Challenge,
@@ -28,7 +34,33 @@ export class ChallengeService {
     allSessions: WorkoutSession[]
   ): EvaluatedChallengeProgress {
     const isJoined = Boolean(participation && participation.status === 'active');
-    const joinedAt = participation?.joinedAt || challenge.startDate;
+    const joinedAtStr = participation?.joinedAt || challenge.startDate;
+
+    // Convert start to beginning of local day (00:00:00.000)
+    const startDateObj = new Date(joinedAtStr);
+    const windowStartMs = new Date(
+      startDateObj.getFullYear(),
+      startDateObj.getMonth(),
+      startDateObj.getDate(),
+      0, 0, 0, 0
+    ).getTime();
+
+    // Derive end date: if participant has joined and challenge has durationDays, use joinedAt + durationDays (calendar-day arithmetic)
+    let endDateObj: Date;
+    if (participation?.joinedAt && challenge.durationDays) {
+      const jDate = new Date(participation.joinedAt);
+      endDateObj = new Date(jDate);
+      endDateObj.setDate(jDate.getDate() + challenge.durationDays);
+    } else {
+      endDateObj = new Date(challenge.endDate);
+    }
+
+    const windowEndMs = new Date(
+      endDateObj.getFullYear(),
+      endDateObj.getMonth(),
+      endDateObj.getDate(),
+      23, 59, 59, 999
+    ).getTime();
 
     // Filter completed sessions during challenge window starting from user join date
     const relevantSessions = allSessions.filter((s) => {
@@ -36,10 +68,7 @@ export class ChallengeService {
       const sDate = s.completedAt || s.startedAt;
       if (!sDate) return false;
       const t = new Date(sDate).getTime();
-      return (
-        t >= new Date(joinedAt).getTime() &&
-        t <= new Date(challenge.endDate).getTime()
-      );
+      return t >= windowStartMs && t <= windowEndMs;
     });
 
     let currentValue = 0;
@@ -70,7 +99,8 @@ export class ChallengeService {
         break;
       }
       case 'personal_record': {
-        currentValue = relevantSessions.length > 0 ? 1 : 0;
+        const prMap = PersonalRecordService.computePersonalRecords(relevantSessions);
+        currentValue = Object.keys(prMap).length;
         break;
       }
       default: {
@@ -83,9 +113,10 @@ export class ChallengeService {
     const isCompleted = currentValue >= target;
     const percentComplete =
       target > 0 ? Math.min(100, Math.round((currentValue / target) * 100)) : 0;
+    const remaining = Math.max(0, target - currentValue);
 
     const now = new Date().getTime();
-    const end = new Date(challenge.endDate).getTime();
+    const end = windowEndMs;
     const msRemaining = Math.max(0, end - now);
     const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
 
@@ -99,10 +130,13 @@ export class ChallengeService {
       participation,
       isJoined,
       currentValue,
+      targetValue: target,
       percentComplete,
+      remaining,
       isCompleted,
       daysRemaining,
       statusLabel,
+      progressText: statusLabel,
     };
   }
 

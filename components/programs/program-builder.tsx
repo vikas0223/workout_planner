@@ -67,15 +67,16 @@ export function ProgramBuilder() {
 
   const handleAddWeek = () => {
     const nextNum = weeks.length + 1;
+    const uid = Math.random().toString(36).substring(2, 8);
     const newWeek: ProgramWeek = {
-      id: `pw_builder_${nextNum}`,
+      id: `pw_builder_${uid}`,
       programId: 'new_program',
       weekNumber: nextNum,
       label: `Week ${nextNum}`,
       days: Array.from({ length: 7 }, (_, dIdx) => ({
-        id: `pd_b_${nextNum}_${dIdx + 1}`,
+        id: `pd_b_${uid}_${dIdx + 1}`,
         programId: 'new_program',
-        programWeekId: `pw_builder_${nextNum}`,
+        programWeekId: `pw_builder_${uid}`,
         dayNumber: dIdx + 1,
         type: dIdx === 2 || dIdx === 6 ? 'rest' : 'workout',
         label: dIdx === 2 || dIdx === 6 ? 'Rest Day' : `Workout Day ${dIdx + 1}`,
@@ -121,7 +122,10 @@ export function ProgramBuilder() {
           const dayOffset = wIdx * 7 + (d.dayNumber - 1);
           const dDate = new Date(now);
           dDate.setDate(now.getDate() + dayOffset);
-          const schedStr = dDate.toISOString().split('T')[0];
+          const dYear = dDate.getFullYear();
+          const dMonth = String(dDate.getMonth() + 1).padStart(2, '0');
+          const dDay = String(dDate.getDate()).padStart(2, '0');
+          const schedStr = `${dYear}-${dMonth}-${dDay}`;
 
           return {
             ...d,
@@ -175,6 +179,7 @@ export function ProgramBuilder() {
         <div className="flex items-center gap-3">
           <Link
             href="/programs"
+            aria-label="Back to Programs"
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -204,8 +209,9 @@ export function ProgramBuilder() {
           <h2 className="text-base font-bold text-foreground">Program Details</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-medium text-foreground">Program Name *</label>
+              <label htmlFor="input-prog-name" className="text-xs font-medium text-foreground">Program Name *</label>
               <input
+                id="input-prog-name"
                 type="text"
                 required
                 placeholder="e.g. 8-Week Hypertrophy & Power"
@@ -216,8 +222,9 @@ export function ProgramBuilder() {
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-medium text-foreground">Description / Focus</label>
+              <label htmlFor="input-prog-desc" className="text-xs font-medium text-foreground">Description / Focus</label>
               <textarea
+                id="input-prog-desc"
                 rows={2}
                 placeholder="Outline the training philosophy, volume progression, and target outcomes..."
                 value={description}
@@ -227,8 +234,9 @@ export function ProgramBuilder() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Primary Goal</label>
+              <label htmlFor="select-prog-goal" className="text-xs font-medium text-foreground">Primary Goal</label>
               <select
+                id="select-prog-goal"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -242,8 +250,9 @@ export function ProgramBuilder() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Difficulty Level</label>
+              <label htmlFor="select-prog-diff" className="text-xs font-medium text-foreground">Difficulty Level</label>
               <select
+                id="select-prog-diff"
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as ExperienceLevel)}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
@@ -288,6 +297,7 @@ export function ProgramBuilder() {
               <div className="flex items-center justify-between">
                 <input
                   type="text"
+                  aria-label={`Label for Week ${week.weekNumber}`}
                   value={week.label || `Week ${week.weekNumber}`}
                   onChange={(e) => {
                     const copy = [...weeks];
@@ -303,6 +313,7 @@ export function ProgramBuilder() {
                     onClick={() => handleRemoveWeek(week.weekNumber)}
                     className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition"
                     title="Delete Week"
+                    aria-label={`Delete Week ${week.weekNumber}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -316,6 +327,7 @@ export function ProgramBuilder() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-foreground">Day {day.dayNumber}</span>
                       <select
+                        aria-label={`Week ${week.weekNumber} Day ${day.dayNumber} Type`}
                         value={day.type}
                         onChange={(e) => handleUpdateDay(wIdx, dIdx, 'type', e.target.value as ProgramDayType)}
                         className="rounded-lg border border-border bg-card px-2 py-0.5 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -329,6 +341,7 @@ export function ProgramBuilder() {
 
                     <input
                       type="text"
+                      aria-label={`Week ${week.weekNumber} Day ${day.dayNumber} Label`}
                       placeholder="Day label (e.g. Upper Power)"
                       value={day.label || ''}
                       onChange={(e) => handleUpdateDay(wIdx, dIdx, 'label', e.target.value)}
@@ -337,10 +350,12 @@ export function ProgramBuilder() {
 
                     {day.type === 'workout' && (
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        <label htmlFor={`select-tpl-${week.id}-${day.id}`} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                           Linked Template
                         </label>
                         <select
+                          id={`select-tpl-${week.id}-${day.id}`}
+                          aria-label={`Week ${week.weekNumber} Day ${day.dayNumber} Linked Template`}
                           value={day.workoutTemplateId || ''}
                           onChange={(e) => handleUpdateDay(wIdx, dIdx, 'workoutTemplateId', e.target.value)}
                           className="w-full rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"

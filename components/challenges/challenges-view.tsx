@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useChallenges } from '@/hooks/use-challenges';
 import { ChallengeCard } from './challenge-card';
-import { Trophy, Flame, Sparkles, CheckCircle2, Layers } from 'lucide-react';
+import { Trophy, Flame, Sparkles, CheckCircle2, Layers, ArrowLeft } from 'lucide-react';
 
 export function ChallengesView() {
   const { evaluatedChallenges, loading, joinChallenge, leaveChallenge } = useChallenges();
@@ -26,11 +27,20 @@ export function ChallengesView() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Community & Fitness Challenges</h1>
-        <p className="text-xs text-muted-foreground">
-          Join targeted training milestones to test your consistency, set volume, and workout streaks.
-        </p>
+      <div className="flex items-center gap-3">
+        <Link
+          href="/"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          title="Back to Home / Dashboard"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Community & Fitness Challenges</h1>
+          <p className="text-xs text-muted-foreground">
+            Join targeted training milestones to test your consistency, set volume, and workout streaks.
+          </p>
+        </div>
       </div>
 
       {/* Active Participations */}

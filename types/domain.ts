@@ -766,6 +766,7 @@ export interface Challenge {
   type: ChallengeMetricType;
   targetValue: number;
   unit: string;
+  durationDays?: number;
   startDate: string;
   endDate: string;
   status: ChallengeStatus;

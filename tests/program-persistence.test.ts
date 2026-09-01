@@ -65,7 +65,7 @@ describe('Phase 2J: Program Persistence & IndexedDB v2 Migration', () => {
     await programRepo.saveProgram(program);
 
     const retrieved = await programRepo.getProgramById(programId);
-    expect(retrieved).toBeDefined();
+    expect(retrieved).not.toBeNull();
     expect(retrieved?.id).toBe(programId);
     expect(retrieved?.name).toBe('Persistence Test Cycle');
     expect(retrieved?.weeks.length).toBe(1);
@@ -99,5 +99,10 @@ describe('Phase 2J: Program Persistence & IndexedDB v2 Migration', () => {
 
     const retrieved = await programRepo.getProgramById(programId);
     expect(retrieved).toBeNull();
+
+    const rawWeeks = await engine.getAll<any>(STORES.PROGRAM_WEEKS);
+    const rawDays = await engine.getAll<any>(STORES.PROGRAM_DAYS);
+    expect(rawWeeks.find((w) => w.id === 'pw_del_1')?.deletedAt).toBeTruthy();
+    expect(rawDays.find((d) => d.id === 'pd_del_1_1')?.deletedAt).toBeTruthy();
   });
 });

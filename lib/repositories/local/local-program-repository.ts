@@ -74,16 +74,12 @@ export class LocalProgramRepository implements ProgramRepository {
 
   public async listPrograms(userId?: string): Promise<Program[]> {
     try {
-      let records: LocalProgramRecord[];
-      if (userId) {
-        records = await this.engine.getByIndex<LocalProgramRecord>(
-          STORES.PROGRAMS,
-          'ownerId',
-          userId
-        );
-      } else {
-        records = await this.engine.getAll<LocalProgramRecord>(STORES.PROGRAMS);
-      }
+      const ownerId = userId || 'guest_user';
+      const records = await this.engine.getByIndex<LocalProgramRecord>(
+        STORES.PROGRAMS,
+        'ownerId',
+        ownerId
+      );
 
       const activeRecords = records.filter((r) => !r.deletedAt);
       const programs: Program[] = [];
@@ -114,21 +110,48 @@ export class LocalProgramRepository implements ProgramRepository {
       const existing = await this.listPrograms(program.userId);
       for (const p of existing) {
         if (p.id !== program.id && p.status === 'active') {
-          await this.engine.put<LocalProgramRecord>(STORES.PROGRAMS, {
+          const oldRec = await this.engine.get<LocalProgramRecord>(STORES.PROGRAMS, p.id);
+          const pausedVersion = (oldRec?.version || 0) + 1;
+          const pausedProgram = { ...p, status: 'paused' as const, updatedAt: now };
+          const pausedRecord: LocalProgramRecord = {
             id: p.id,
             ownerKind: p.userId ? 'user' : 'guest',
             ownerId: p.userId || 'guest_user',
-            program: { ...p, status: 'paused', updatedAt: now },
-            version: 1,
+            program: pausedProgram,
+            version: pausedVersion,
             syncStatus: 'queued',
             createdAt: p.createdAt,
             updatedAt: now,
             clientUpdatedAt: now,
             deletedAt: null,
-          });
+          };
+          await this.engine.put<LocalProgramRecord>(STORES.PROGRAMS, pausedRecord);
+
+          const syncItem: SyncQueueRecord = {
+            id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            operation: 'upsert',
+            entityType: 'programs',
+            entityId: p.id,
+            idempotencyKey: `prog_${p.id}_${now}`,
+            payload: pausedProgram as unknown as Record<string, unknown>,
+            baseVersion: pausedVersion,
+            baseUpdatedAt: now,
+            retryCount: 0,
+            status: 'pending',
+            createdAt: now,
+            updatedAt: now,
+            nextAttemptAt: now,
+            lastAttemptAt: null,
+            processedAt: null,
+            errorData: null,
+          };
+          await this.engine.put(STORES.SYNC_QUEUE, syncItem);
         }
       }
     }
+
+    const existingProgRec = await this.engine.get<LocalProgramRecord>(STORES.PROGRAMS, program.id);
+    const newProgVersion = (existingProgRec?.version || 0) + 1;
 
     // 1. Save Program record
     const programRecord: LocalProgramRecord = {
@@ -139,7 +162,7 @@ export class LocalProgramRepository implements ProgramRepository {
         ...program,
         updatedAt: now,
       },
-      version: 1,
+      version: newProgVersion,
       syncStatus: 'queued',
       createdAt: program.createdAt || now,
       updatedAt: now,
@@ -148,9 +171,45 @@ export class LocalProgramRepository implements ProgramRepository {
     };
     await this.engine.put(STORES.PROGRAMS, programRecord);
 
-    // 2. Save Weeks and Days
+    // 2. Soft-delete removed weeks and days not present in incoming program
+    const existingStoredWeeks = await this.engine.getByIndex<LocalProgramWeekRecord>(
+      STORES.PROGRAM_WEEKS,
+      'programId',
+      program.id
+    );
+    const incomingWeekIds = new Set((program.weeks || []).map((w) => w.id));
+    for (const oldW of existingStoredWeeks) {
+      if (!incomingWeekIds.has(oldW.id) && !oldW.deletedAt) {
+        oldW.deletedAt = now;
+        oldW.updatedAt = now;
+        oldW.clientUpdatedAt = now;
+        oldW.syncStatus = 'queued';
+        await this.engine.put(STORES.PROGRAM_WEEKS, oldW);
+      }
+    }
+
+    const existingStoredDays = await this.engine.getByIndex<LocalProgramDayRecord>(
+      STORES.PROGRAM_DAYS,
+      'programId',
+      program.id
+    );
+    const incomingDayIds = new Set(
+      (program.weeks || []).flatMap((w) => (w.days || []).map((d) => d.id))
+    );
+    for (const oldD of existingStoredDays) {
+      if (!incomingDayIds.has(oldD.id) && !oldD.deletedAt) {
+        oldD.deletedAt = now;
+        oldD.updatedAt = now;
+        oldD.clientUpdatedAt = now;
+        oldD.syncStatus = 'queued';
+        await this.engine.put(STORES.PROGRAM_DAYS, oldD);
+      }
+    }
+
+    // 3. Save Weeks and Days
     if (program.weeks && program.weeks.length > 0) {
       for (const week of program.weeks) {
+        const existingWeekRec = await this.engine.get<LocalProgramWeekRecord>(STORES.PROGRAM_WEEKS, week.id);
         const weekRecord: LocalProgramWeekRecord = {
           id: week.id,
           ownerKind,
@@ -161,9 +220,9 @@ export class LocalProgramRepository implements ProgramRepository {
             ...week,
             programId: program.id,
           },
-          version: 1,
+          version: (existingWeekRec?.version || 0) + 1,
           syncStatus: 'queued',
-          createdAt: now,
+          createdAt: existingWeekRec?.createdAt || now,
           updatedAt: now,
           clientUpdatedAt: now,
           deletedAt: null,
@@ -172,6 +231,7 @@ export class LocalProgramRepository implements ProgramRepository {
 
         if (week.days && week.days.length > 0) {
           for (const day of week.days) {
+            const existingDayRec = await this.engine.get<LocalProgramDayRecord>(STORES.PROGRAM_DAYS, day.id);
             const dayRecord: LocalProgramDayRecord = {
               id: day.id,
               ownerKind,
@@ -186,9 +246,9 @@ export class LocalProgramRepository implements ProgramRepository {
                 programId: program.id,
                 programWeekId: week.id,
               },
-              version: 1,
+              version: (existingDayRec?.version || 0) + 1,
               syncStatus: 'queued',
-              createdAt: now,
+              createdAt: existingDayRec?.createdAt || now,
               updatedAt: now,
               clientUpdatedAt: now,
               deletedAt: null,
@@ -199,7 +259,7 @@ export class LocalProgramRepository implements ProgramRepository {
       }
     }
 
-    // 3. Queue sync outbox
+    // 4. Queue sync outbox
     const syncItem: SyncQueueRecord = {
       id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       operation: 'upsert',
@@ -207,7 +267,7 @@ export class LocalProgramRepository implements ProgramRepository {
       entityId: program.id,
       idempotencyKey: `prog_${program.id}_${now}`,
       payload: program as unknown as Record<string, unknown>,
-      baseVersion: 1,
+      baseVersion: newProgVersion,
       baseUpdatedAt: now,
       retryCount: 0,
       status: 'pending',
@@ -217,7 +277,7 @@ export class LocalProgramRepository implements ProgramRepository {
     };
     await this.engine.put(STORES.SYNC_QUEUE, syncItem);
 
-    // 4. Invalidation event
+    // 5. Invalidation event
     this.invalidationBus.emit({
       type: 'program_changed',
       entityId: program.id,
@@ -265,6 +325,24 @@ export class LocalProgramRepository implements ProgramRepository {
       await this.engine.put(STORES.PROGRAM_DAYS, d);
     }
 
+    // Enqueue sync queue delete record
+    const syncItem: SyncQueueRecord = {
+      id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      operation: 'delete',
+      entityType: 'programs',
+      entityId: id,
+      idempotencyKey: `prog_del_${id}_${now}`,
+      payload: { id, deletedAt: now },
+      baseVersion: existing.version,
+      baseUpdatedAt: now,
+      retryCount: 0,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+      nextAttemptAt: now,
+    };
+    await this.engine.put(STORES.SYNC_QUEUE, syncItem);
+
     this.invalidationBus.emit({
       type: 'program_changed',
       entityId: id,
@@ -275,8 +353,9 @@ export class LocalProgramRepository implements ProgramRepository {
   public async saveProgramDay(day: ProgramDay): Promise<void> {
     const now = new Date().toISOString();
     const existing = await this.engine.get<LocalProgramDayRecord>(STORES.PROGRAM_DAYS, day.id);
-    const ownerId = existing?.ownerId || 'guest_user';
-    const ownerKind = existing?.ownerKind || 'guest';
+    const parent = await this.engine.get<LocalProgramRecord>(STORES.PROGRAMS, day.programId);
+    const ownerId = parent?.ownerId || existing?.ownerId || 'guest_user';
+    const ownerKind = parent?.ownerKind || existing?.ownerKind || 'guest';
 
     const dayRecord: LocalProgramDayRecord = {
       id: day.id,
@@ -297,6 +376,23 @@ export class LocalProgramRepository implements ProgramRepository {
     };
 
     await this.engine.put(STORES.PROGRAM_DAYS, dayRecord);
+
+    const syncItem: SyncQueueRecord = {
+      id: `sync_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      operation: 'upsert',
+      entityType: 'program_days',
+      entityId: day.id,
+      idempotencyKey: `prog_day_${day.id}_${now}`,
+      payload: day as unknown as Record<string, unknown>,
+      baseVersion: dayRecord.version,
+      baseUpdatedAt: now,
+      retryCount: 0,
+      status: 'pending',
+      createdAt: now,
+      updatedAt: now,
+      nextAttemptAt: now,
+    };
+    await this.engine.put(STORES.SYNC_QUEUE, syncItem);
 
     this.invalidationBus.emit({
       type: 'program_changed',

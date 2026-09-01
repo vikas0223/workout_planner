@@ -16,7 +16,13 @@ export function ProgramCatalogCard({
   isCurrentActive = false,
 }: ProgramCatalogCardProps) {
   const [adopting, setAdopting] = useState(false);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleAdopt = async () => {
@@ -37,7 +43,7 @@ export function ProgramCatalogCard({
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">
             {program.weeksCount} Weeks
           </span>
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-foreground/80 dark:text-foreground/90 font-medium">
             {program.daysPerWeek} Days/Wk
           </span>
           <span className="rounded-full bg-secondary px-2.5 py-0.5 text-secondary-foreground capitalize">

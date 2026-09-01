@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useGoals } from '@/hooks/use-goals';
 import { GoalCard } from './goal-card';
 import { CreateGoalModal } from './create-goal-modal';
-import { Target, Plus, Trophy, CheckCircle2, TrendingUp } from 'lucide-react';
+import { Target, Plus, Trophy, CheckCircle2, TrendingUp, ArrowLeft } from 'lucide-react';
 
 export function GoalsView() {
   const { evaluatedGoals, loading, saveGoal, deleteGoal } = useGoals();
@@ -28,11 +29,20 @@ export function GoalsView() {
     <div className="space-y-8">
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Fitness Goals</h1>
-          <p className="text-xs text-muted-foreground">
-            Set quantifiable milestones for volume, frequency, strength, and session completion.
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            title="Back to Home / Dashboard"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Fitness Goals</h1>
+            <p className="text-xs text-muted-foreground">
+              Set quantifiable milestones for volume, frequency, strength, and session completion.
+            </p>
+          </div>
         </div>
 
         <button

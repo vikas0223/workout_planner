@@ -79,7 +79,7 @@
 | Entity | Domain Type | IndexedDB | Supabase | Sync Queue | Status |
 |--------|:-----------:|:---------:|:--------:|:----------:|--------|
 | Reminder | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| Challenge | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
+| Challenge | ✅ | ✅ (DB v2) | ✅ | — | **Read-only Catalog / Custom** |
 | ShareableWorkout | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
 | WorkoutShare | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
 
@@ -101,24 +101,16 @@
 
 ---
 
-## Future Supabase Tables (Not Created in 2H.5)
+## Future Supabase Tables (Post-Phase 2J)
 
-When future phases implement persistence for domain-only entities, the following tables will be needed:
+When future phases implement persistence for remaining domain-only entities, the following tables will be needed:
 
 | Future Table | Phase | Notes |
 |---|---|---|
-| `training_preferences` | 2I | Embedded in user profile or separate table |
-| `body_metrics` | 2I | Time-series body measurements |
-| `recovery_snapshots` | 2I | Non-medical readiness data |
-| `programs` | 2J | Multi-week training programs |
-| `program_weeks` | 2J | Embedded or separate table |
-| `program_days` | 2J | References workout_templates |
-| `fitness_goal_targets` | 2J | User-level goals |
-| `personal_records` | 2J | Per-exercise PR tracking |
-| `streaks` | 2J | Consecutive activity tracking |
-| `challenges` | 2J | Challenge definitions |
-| `challenge_progress` | 2J | User progress toward challenges |
-| `reminders` | 2J | Scheduled notifications |
+| `training_preferences` | Future | Embedded in user profile or separate table |
+| `body_metrics` | Future | Time-series body measurements |
+| `recovery_snapshots` | Future | Non-medical readiness data |
+| `reminders` | Future | Scheduled notifications |
 | `shareable_workouts` | 2N | Privacy-respecting workout sharing |
 | `workout_shares` | 2N | Share links and permissions |
 | `integration_providers` | 2O | Provider registry |
@@ -127,11 +119,19 @@ When future phases implement persistence for domain-only entities, the following
 
 ---
 
-## IndexedDB Stores (No Changes in 2H.5)
+## IndexedDB Stores (Phase 2J — DB_VERSION 2)
 
-**DB_VERSION remains 1.**
+**DB_VERSION is 2.**
 
-No new stores added. Existing stores:
+New stores added in Phase 2J:
+- `programs`
+- `program_weeks`
+- `program_days`
+- `fitness_goals`
+- `challenges`
+- `challenge_progress`
+
+Existing stores (retained from DB v1):
 - `local_profiles`
 - `local_workout_templates`
 - `local_generated_workouts`
@@ -148,4 +148,4 @@ No new stores added. Existing stores:
 - `catalog_joints`
 - `anatomy_regions`
 
-New optional fields (groupId, groupType, groupPosition, side, presentationMode, quickProfile) are backward-compatible within existing stores — they will be persisted as `undefined` until the UI writes them.
+All legacy v1 session, set, template, and profile data remain 100% backward-compatible and preserved during the v1 $\to$ v2 upgrade.

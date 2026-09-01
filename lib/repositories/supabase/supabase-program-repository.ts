@@ -103,17 +103,89 @@ export class SupabaseProgramRepository implements ProgramRepository {
     }
 
     const { data: rows, error } = await query;
-    if (error || !rows) return [];
+    if (error || !rows || rows.length === 0) return [];
 
-    const programs: Program[] = [];
-    for (const r of rows) {
-      const full = await this.getProgramById(r.id);
-      if (full) programs.push(full);
+    const programIds = rows.map((r: any) => r.id);
+
+    // Batch fetch related weeks and days
+    const [{ data: weekRows }, { data: dayRows }] = await Promise.all([
+      this.client
+        .from('program_weeks')
+        .select('*')
+        .in('program_id', programIds)
+        .is('deleted_at', null)
+        .order('week_number', { ascending: true }),
+      this.client
+        .from('program_days')
+        .select('*')
+        .in('program_id', programIds)
+        .is('deleted_at', null)
+        .order('day_number', { ascending: true }),
+    ]);
+
+    const weeksByProgramId = new Map<string, any[]>();
+    for (const w of weekRows || []) {
+      const list = weeksByProgramId.get(w.program_id) || [];
+      list.push(w);
+      weeksByProgramId.set(w.program_id, list);
     }
-    return programs;
+
+    const daysByWeekId = new Map<string, any[]>();
+    for (const d of dayRows || []) {
+      const list = daysByWeekId.get(d.program_week_id) || [];
+      list.push(d);
+      daysByWeekId.set(d.program_week_id, list);
+    }
+
+    return rows.map((row: any) => {
+      const pWeeks = (weeksByProgramId.get(row.id) || []).map((w: any) => {
+        const pDays = (daysByWeekId.get(w.id) || []).map((d: any) => ({
+          id: d.id,
+          programId: d.program_id,
+          programWeekId: d.program_week_id,
+          dayNumber: d.day_number,
+          type: d.type,
+          label: d.label || undefined,
+          workoutTemplateId: d.workout_template_id || undefined,
+          status: d.status,
+          scheduledDate: d.scheduled_date || undefined,
+          effectiveDate: d.effective_date || undefined,
+          completedSessionId: d.completed_session_id || undefined,
+          completedAt: d.completed_at || undefined,
+          notes: d.notes || undefined,
+        }));
+
+        return {
+          id: w.id,
+          programId: w.program_id,
+          weekNumber: w.week_number,
+          label: w.label || undefined,
+          days: pDays,
+        };
+      });
+
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        description: row.description || undefined,
+        goal: row.goal || undefined,
+        difficulty: row.difficulty || undefined,
+        weeks: pWeeks,
+        status: row.status,
+        startDate: row.start_date || undefined,
+        completedAt: row.completed_at || undefined,
+        currentWeekNumber: row.current_week_number || 1,
+        currentDayNumber: row.current_day_number || 1,
+        isCustom: row.is_custom || false,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+      };
+    });
   }
 
   public async saveProgram(program: Program): Promise<void> {
+    const now = new Date().toISOString();
     const payload = {
       id: program.id,
       user_id: program.userId,
@@ -127,29 +199,36 @@ export class SupabaseProgramRepository implements ProgramRepository {
       current_week_number: program.currentWeekNumber || 1,
       current_day_number: program.currentDayNumber || 1,
       is_custom: program.isCustom || false,
-      updated_at: new Date().toISOString(),
-      client_updated_at: program.updatedAt,
+      updated_at: now,
+      client_updated_at: program.updatedAt || now,
       deleted_at: null,
     };
 
-    await this.client.from('programs').upsert(payload);
+    const { error: progError } = await this.client.from('programs').upsert(payload);
+    if (progError) {
+      console.error('[SupabaseProgramRepository] Failed to save program:', progError);
+      throw progError;
+    }
 
-    if (program.weeks) {
+    if (program.weeks && program.weeks.length > 0) {
+      const weekRows: any[] = [];
+      const dayRows: any[] = [];
+
       for (const w of program.weeks) {
-        await this.client.from('program_weeks').upsert({
+        weekRows.push({
           id: w.id,
           program_id: program.id,
           user_id: program.userId,
           week_number: w.weekNumber,
           label: w.label,
-          updated_at: new Date().toISOString(),
-          client_updated_at: new Date().toISOString(),
+          updated_at: now,
+          client_updated_at: now,
           deleted_at: null,
         });
 
-        if (w.days) {
+        if (w.days && w.days.length > 0) {
           for (const d of w.days) {
-            await this.client.from('program_days').upsert({
+            dayRows.push({
               id: d.id,
               program_id: program.id,
               program_week_id: w.id,
@@ -164,27 +243,95 @@ export class SupabaseProgramRepository implements ProgramRepository {
               completed_session_id: d.completedSessionId || null,
               completed_at: d.completedAt,
               notes: d.notes,
-              updated_at: new Date().toISOString(),
-              client_updated_at: new Date().toISOString(),
+              updated_at: now,
+              client_updated_at: now,
               deleted_at: null,
             });
           }
         }
+      }
+
+      // 2. Reconcile persisted weeks and days: soft-delete remote rows absent in incoming program
+      const { data: existingWeeks, error: exWeekErr } = await this.client
+        .from('program_weeks')
+        .select('id')
+        .eq('program_id', program.id)
+        .is('deleted_at', null);
+      if (exWeekErr) throw exWeekErr;
+
+      const incomingWeekIds = new Set((program.weeks || []).map((w) => w.id));
+      const removedWeekIds = (existingWeeks || [])
+        .map((w: { id: string }) => w.id)
+        .filter((id: string) => !incomingWeekIds.has(id));
+
+      if (removedWeekIds.length > 0) {
+        const { error: delWeekError } = await this.client
+          .from('program_weeks')
+          .update({ deleted_at: now, updated_at: now })
+          .in('id', removedWeekIds);
+        if (delWeekError) throw delWeekError;
+      }
+
+      const { data: existingDays, error: exDayErr } = await this.client
+        .from('program_days')
+        .select('id')
+        .eq('program_id', program.id)
+        .is('deleted_at', null);
+      if (exDayErr) throw exDayErr;
+
+      const incomingDayIds = new Set(
+        (program.weeks || []).flatMap((w) => (w.days || []).map((d) => d.id))
+      );
+      const removedDayIds = (existingDays || [])
+        .map((d: { id: string }) => d.id)
+        .filter((id: string) => !incomingDayIds.has(id));
+
+      if (removedDayIds.length > 0) {
+        const { error: delDayError } = await this.client
+          .from('program_days')
+          .update({ deleted_at: now, updated_at: now })
+          .in('id', removedDayIds);
+        if (delDayError) throw delDayError;
+      }
+
+      if (weekRows.length > 0) {
+        const { error: weekError } = await this.client.from('program_weeks').upsert(weekRows);
+        if (weekError) throw weekError;
+      }
+      if (dayRows.length > 0) {
+        const { error: dayError } = await this.client.from('program_days').upsert(dayRows);
+        if (dayError) throw dayError;
       }
     }
   }
 
   public async deleteProgram(id: string): Promise<void> {
     const now = new Date().toISOString();
-    await this.client.from('programs').update({ deleted_at: now, updated_at: now }).eq('id', id);
+    const [{ error: e1 }, { error: e2 }, { error: e3 }] = await Promise.all([
+      this.client.from('programs').update({ deleted_at: now, updated_at: now }).eq('id', id),
+      this.client.from('program_weeks').update({ deleted_at: now, updated_at: now }).eq('program_id', id),
+      this.client.from('program_days').update({ deleted_at: now, updated_at: now }).eq('program_id', id),
+    ]);
+    const err = e1 || e2 || e3;
+    if (err) {
+      console.error('[SupabaseProgramRepository] Error deleting program hierarchy:', err);
+      throw err;
+    }
   }
 
   public async saveProgramDay(day: ProgramDay): Promise<void> {
     const now = new Date().toISOString();
-    await this.client.from('program_days').upsert({
+    const { data: parent } = await this.client
+      .from('programs')
+      .select('user_id')
+      .eq('id', day.programId)
+      .maybeSingle();
+
+    const { error } = await this.client.from('program_days').upsert({
       id: day.id,
       program_id: day.programId,
       program_week_id: day.programWeekId,
+      user_id: parent?.user_id,
       day_number: day.dayNumber,
       type: day.type,
       label: day.label,
@@ -199,6 +346,11 @@ export class SupabaseProgramRepository implements ProgramRepository {
       client_updated_at: now,
       deleted_at: null,
     });
+
+    if (error) {
+      console.error('[SupabaseProgramRepository] Failed to save program day:', error);
+      throw error;
+    }
   }
 
   public async getProgramDayById(id: string): Promise<ProgramDay | null> {

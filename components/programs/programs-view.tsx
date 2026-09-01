@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePrograms } from '@/hooks/use-programs';
 import { ActiveProgramCard } from './active-program-card';
 import { ProgramCatalogCard } from './program-catalog-card';
-import { Plus, BookOpen, Layers, CheckCircle2, Play, Pause, Trash2, Calendar } from 'lucide-react';
+import { Plus, BookOpen, Layers, CheckCircle2, Play, Pause, Trash2, Calendar, ArrowLeft } from 'lucide-react';
 
 export function ProgramsView() {
   const {
@@ -38,13 +38,23 @@ export function ProgramsView() {
 
   return (
     <div className="space-y-8">
-      {/* Top Action Bar */}
+      {/* Back Navigation & Top Action Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Training Programs</h1>
-          <p className="text-xs text-muted-foreground">
-            Structured periodization cycles, multi-week progressions, and daily adherence tracking.
-          </p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            aria-label="Back to Home / Dashboard"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            title="Back to Home / Dashboard"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Training Programs</h1>
+            <p className="text-xs text-muted-foreground">
+              Structured periodization cycles, multi-week progressions, and daily adherence tracking.
+            </p>
+          </div>
         </div>
 
         <Link
@@ -74,7 +84,7 @@ export function ProgramsView() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h3 className="mt-3 text-base font-bold text-foreground">No Active Program Selected</h3>
+          <h2 className="mt-3 text-base font-bold text-foreground">No Active Program Selected</h2>
           <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
             Adopt a battle-tested routine from the platform catalog below or design your own custom multi-week cycle to unlock automated scheduling.
           </p>
@@ -130,7 +140,11 @@ export function ProgramsView() {
                       Set Active
                     </button>
                     <button
-                      onClick={() => deleteProgram(prog.id)}
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this program?')) {
+                          deleteProgram(prog.id);
+                        }
+                      }}
                       className="rounded-lg p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
                       title="Delete Program"
                     >

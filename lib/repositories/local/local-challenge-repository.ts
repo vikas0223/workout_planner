@@ -28,9 +28,16 @@ export class LocalChallengeRepository implements ChallengeRepository {
       const customRecords = await this.engine.getAll<LocalChallengeRecord>(STORES.CHALLENGES);
       const validCustom = customRecords.filter((r) => !r.deletedAt).map((r) => r.challenge);
 
-      // 2. Merge with platform challenge catalog
-      const catalog = PLATFORM_CHALLENGE_CATALOG;
-      return [...catalog, ...validCustom];
+      // 2. Merge with platform challenge catalog, letting custom overrides take precedence
+      const challengeMap = new Map<string, Challenge>();
+      for (const cat of PLATFORM_CHALLENGE_CATALOG) {
+        challengeMap.set(cat.id, cat);
+      }
+      for (const custom of validCustom) {
+        challengeMap.set(custom.id, custom);
+      }
+
+      return Array.from(challengeMap.values());
     } catch (err) {
       console.error('[LocalChallengeRepository] Failed to list challenges:', err);
       return PLATFORM_CHALLENGE_CATALOG;
@@ -64,16 +71,12 @@ export class LocalChallengeRepository implements ChallengeRepository {
 
   public async listUserParticipations(userId?: string): Promise<ChallengeProgress[]> {
     try {
-      let records: LocalChallengeProgressRecord[];
-      if (userId) {
-        records = await this.engine.getByIndex<LocalChallengeProgressRecord>(
-          STORES.CHALLENGE_PROGRESS,
-          'ownerId',
-          userId
-        );
-      } else {
-        records = await this.engine.getAll<LocalChallengeProgressRecord>(STORES.CHALLENGE_PROGRESS);
-      }
+      const ownerId = userId || 'guest_user';
+      const records = await this.engine.getByIndex<LocalChallengeProgressRecord>(
+        STORES.CHALLENGE_PROGRESS,
+        'ownerId',
+        ownerId
+      );
 
       return records.filter((r) => !r.deletedAt).map((r) => r.progress);
     } catch (err) {

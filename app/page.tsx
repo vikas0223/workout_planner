@@ -41,6 +41,7 @@ export default function Home() {
             </Link>
             <Link
               href="/exercises"
+              aria-label="Exercises"
               className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
             >
               <LayoutGrid className="w-3.5 h-3.5" />

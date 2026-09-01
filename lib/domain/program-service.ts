@@ -94,11 +94,14 @@ export class ProgramService {
     // 2. Clone Weeks and Days with explicit scheduled dates
     const weeks: ProgramWeek[] = blueprint.weeks.map((w, wIdx) => {
       const weekId = `pw_${programId}_w${w.weekNumber}`;
-      const days: ProgramDay[] = w.days.map((d, dIdx) => {
+      const days: ProgramDay[] = w.days.map((d) => {
         const dayOffset = wIdx * 7 + (d.dayNumber - 1);
         const dayDate = new Date(startDate);
         dayDate.setDate(startDate.getDate() + dayOffset);
-        const scheduledDateStr = dayDate.toISOString().split('T')[0];
+        const dy = dayDate.getFullYear();
+        const dm = String(dayDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(dayDate.getDate()).padStart(2, '0');
+        const scheduledDateStr = `${dy}-${dm}-${dd}`;
 
         const mappedTemplateId = d.workoutTemplateId
           ? templateIdMap[d.workoutTemplateId] || d.workoutTemplateId
@@ -219,7 +222,7 @@ export class ProgramService {
 
     await this.programRepo.saveProgramDay(updatedDay);
 
-    // Recheck program overall completion
+    // Recheck program overall completion based only on completion-bearing workout days
     if (program) {
       const refreshedProgram = await this.programRepo.getProgramById(programId);
       if (refreshedProgram) {
@@ -236,9 +239,74 @@ export class ProgramService {
   }
 
   /**
-   * Pure Adherence calculation for a program.
+   * Identifies whether a program day is completion-bearing.
+   * Days with type 'workout' or referencing a valid 'workoutTemplateId' require a completed WorkoutSession.
+   * Pure 'rest' and 'recovery' days without workout templates do NOT block overall program completion.
    */
-  public calculateAdherence(program: Program): ProgramAdherenceMetrics {
+  public static isCompletionBearingDay(day: ProgramDay): boolean {
+    return day.type === 'workout' || Boolean(day.workoutTemplateId);
+  }
+
+  /**
+   * Derives current program week number dynamically from start date + schedule.
+   * Avoids stale manual counter state when user resumes after time away.
+   * Falls back to persisted currentWeekNumber if explicitly paused.
+   */
+  public static deriveCurrentWeekNumber(program: Program, asOfDate: Date = new Date()): number {
+    if (!program.weeks || program.weeks.length === 0) return 1;
+
+    // Respect paused state if program was manually paused
+    if (program.status === 'paused' && program.currentWeekNumber) {
+      return program.currentWeekNumber;
+    }
+
+    if (program.startDate) {
+      const start = new Date(program.startDate).getTime();
+      const now = asOfDate.getTime();
+      if (now >= start) {
+        const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        const calculatedWeek = Math.floor(diffDays / 7) + 1;
+        return Math.min(program.weeks.length, Math.max(1, calculatedWeek));
+      }
+      return 1;
+    }
+
+    // Schedule-based fallback: first week with an uncompleted planned/rescheduled day
+    for (const week of program.weeks) {
+      if (week.days.some((d) => d.status === 'planned' || d.status === 'rescheduled')) {
+        return week.weekNumber;
+      }
+    }
+
+    return program.weeks.length;
+  }
+
+  /**
+   * Derives current day number within the week (1-7).
+   */
+  public static deriveCurrentDayNumber(program: Program, asOfDate: Date = new Date()): number {
+    if (program.startDate) {
+      const start = new Date(program.startDate).getTime();
+      const now = asOfDate.getTime();
+      if (now >= start) {
+        const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        return (diffDays % 7) + 1;
+      }
+    }
+    const currentWeekNum = this.deriveCurrentWeekNumber(program, asOfDate);
+    const week = program.weeks.find((w) => w.weekNumber === currentWeekNum);
+    if (week) {
+      const uncompletedDay = week.days.find((d) => d.status === 'planned' || d.status === 'rescheduled');
+      if (uncompletedDay) return uncompletedDay.dayNumber;
+    }
+    return 1;
+  }
+
+  /**
+   * Pure Adherence calculation for a program.
+   * Only completion-bearing workout days are evaluated for completion.
+   */
+  public calculateAdherence(program: Program, asOfDate: Date = new Date()): ProgramAdherenceMetrics {
     let totalDays = 0;
     let totalWorkoutDays = 0;
     let completedWorkoutDays = 0;
@@ -248,7 +316,7 @@ export class ProgramService {
     for (const week of program.weeks || []) {
       for (const day of week.days || []) {
         totalDays++;
-        if (day.type === 'workout') {
+        if (ProgramService.isCompletionBearingDay(day)) {
           totalWorkoutDays++;
           if (day.status === 'completed') {
             completedWorkoutDays++;
@@ -278,8 +346,8 @@ export class ProgramService {
       adherencePercentage,
       rescheduledDaysCount,
       skippedDaysCount,
-      currentWeekNumber: program.currentWeekNumber || 1,
-      currentDayNumber: program.currentDayNumber || 1,
+      currentWeekNumber: ProgramService.deriveCurrentWeekNumber(program, asOfDate),
+      currentDayNumber: ProgramService.deriveCurrentDayNumber(program, asOfDate),
       isComplete,
     };
   }
@@ -289,12 +357,22 @@ export class ProgramService {
    */
   public getTodaysProgramDay(
     program: Program,
-    todayStr: string = new Date().toISOString().split('T')[0]
+    todayStr?: string
   ): { week: ProgramWeek; day: ProgramDay } | null {
+    const targetStr =
+      todayStr ||
+      (() => {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      })();
+
     for (const week of program.weeks || []) {
       for (const day of week.days || []) {
         const targetDate = day.effectiveDate || day.scheduledDate;
-        if (targetDate === todayStr) {
+        if (targetDate === targetStr) {
           return { week, day };
         }
       }

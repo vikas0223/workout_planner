@@ -79,12 +79,21 @@ export function ActiveProgramCard({
           </div>
         </div>
 
-        <Link
-          href={`/programs/${program.id}`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          View Full Plan <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onPause}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            Pause
+          </button>
+          <Link
+            href={`/programs/${program.id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            View Full Plan <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </div>
 
       {/* Adherence & Progress Bar */}
@@ -116,9 +125,11 @@ export function ActiveProgramCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
-            <span>
-              {currentWeek?.label || `Week ${currentWeek?.weekNumber || 1}`} • Day {currentDay?.dayNumber || 1}
-            </span>
+            {todaysDay && (
+              <span>
+                {currentWeek?.label || `Week ${currentWeek?.weekNumber || 1}`} • Day {currentDay?.dayNumber || 1}
+              </span>
+            )}
           </div>
           {currentDay && (
             <span
