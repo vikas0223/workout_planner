@@ -60,7 +60,14 @@ export class SyncPullWorker {
    * Advances cursor ONLY if the entire batch successfully applies to IndexedDB.
    */
   public async pullStoreChanges(
-    tableName: 'workout_templates' | 'generated_workouts' | 'workout_sessions' | 'favorites',
+    tableName:
+      | 'workout_templates'
+      | 'generated_workouts'
+      | 'workout_sessions'
+      | 'programs'
+      | 'fitness_goals'
+      | 'challenge_progress'
+      | 'favorites',
     localStoreName: StoreName
   ): Promise<PullResult> {
     const cursor = await this.getCursor(tableName);
@@ -99,23 +106,21 @@ export class SyncPullWorker {
           tableName,
           entityId,
           localRecord,
-          row
+          this.mapRemoteRowToLocal(tableName, row)
         );
 
-        conflictsDetected++;
-        const finalRecord = {
-          ...resolution.mergedPayload,
-          id: entityId,
-          ownerKind: 'user' as const,
-          ownerId: userId,
-          syncStatus: resolution.resolved ? 'synced' : 'conflict',
-          lastSyncedAt: new Date().toISOString(),
-          version: (row.version as number) || (localRecord.version as number) || 1,
-        };
-
-        await this.db.put(localStoreName, finalRecord);
+        if (resolution.resolved) {
+          await this.db.put(localStoreName, {
+            ...localRecord,
+            ...resolution.mergedPayload,
+            syncStatus: 'synced',
+            lastSyncedAt: new Date().toISOString(),
+          });
+        } else {
+          conflictsDetected++;
+        }
       } else {
-        // Clean local or new record -> apply remote record directly
+        // Clean update or insert
         const mappedPayload = this.mapRemoteRowToLocal(tableName, row);
         const newRecord: LocalRecordMeta & Record<string, unknown> = {
           ...mappedPayload,
@@ -143,7 +148,25 @@ export class SyncPullWorker {
     await this.setCursor(tableName, maxRemoteTimestamp);
 
     if (tableName === 'workout_sessions') {
-      ProgressInvalidationBus.getInstance().emit('sync_applied');
+      ProgressInvalidationBus.getInstance().emit({
+        type: 'sync_applied',
+        timestamp: Date.now(),
+      });
+    } else if (tableName === 'programs') {
+      ProgressInvalidationBus.getInstance().emit({
+        type: 'program_changed',
+        timestamp: Date.now(),
+      });
+    } else if (tableName === 'fitness_goals') {
+      ProgressInvalidationBus.getInstance().emit({
+        type: 'goal_changed',
+        timestamp: Date.now(),
+      });
+    } else if (tableName === 'challenge_progress') {
+      ProgressInvalidationBus.getInstance().emit({
+        type: 'challenge_changed',
+        timestamp: Date.now(),
+      });
     }
 
     return {
@@ -162,6 +185,58 @@ export class SyncPullWorker {
         return { workout: SupabaseDomainMappers.generatedWorkoutToDomain(row, []) };
       case 'workout_sessions':
         return { session: SupabaseDomainMappers.sessionToDomain(row, []) };
+      case 'programs':
+        return {
+          program: {
+            id: row.id,
+            userId: row.user_id,
+            name: row.name,
+            description: row.description,
+            goal: row.goal,
+            difficulty: row.difficulty,
+            status: row.status,
+            startDate: row.start_date,
+            completedAt: row.completed_at,
+            currentWeekNumber: row.current_week_number,
+            currentDayNumber: row.current_day_number,
+            isCustom: row.is_custom,
+            weeks: [],
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          },
+        };
+      case 'fitness_goals':
+        return {
+          goal: {
+            id: row.id,
+            userId: row.user_id,
+            type: row.type,
+            direction: row.direction,
+            label: row.label,
+            targetValue: Number(row.target_value),
+            unit: row.unit,
+            startValue: row.start_value ? Number(row.start_value) : undefined,
+            startDate: row.start_date,
+            targetDate: row.target_date,
+            exerciseId: row.exercise_id,
+            status: row.status,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          },
+        };
+      case 'challenge_progress':
+        return {
+          progress: {
+            id: row.id,
+            challengeId: row.challenge_id,
+            userId: row.user_id,
+            status: row.status,
+            joinedAt: row.joined_at,
+            completedAt: row.completed_at,
+            updatedAt: row.updated_at,
+          },
+          challengeId: row.challenge_id,
+        };
       case 'favorites':
         return { entityId: row.entity_id, entityType: row.entity_type };
       default:

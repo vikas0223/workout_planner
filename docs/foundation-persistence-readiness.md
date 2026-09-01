@@ -60,26 +60,26 @@
 
 | Entity | Domain Type | IndexedDB | Supabase | Sync Queue | Status |
 |--------|:-----------:|:---------:|:--------:|:----------:|--------|
-| Program | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| ProgramWeek | ✅ | 🔲 | 🔲 | — | **Domain-only** (embedded in Program) |
-| ProgramDay | ✅ | 🔲 | 🔲 | — | **Domain-only** (embedded in ProgramWeek) |
+| Program | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
+| ProgramWeek | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
+| ProgramDay | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
 
 ## PROGRESS Domain
 
 | Entity | Domain Type | IndexedDB | Supabase | Sync Queue | Status |
 |--------|:-----------:|:---------:|:--------:|:----------:|--------|
 | DashboardMetrics | ✅ | — (computed) | — | — | **Computed** (derived from sessions) |
-| PersonalRecord | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| FitnessGoalTarget | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| Streak | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| ChallengeProgress | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
+| PersonalRecord | ✅ | — (computed) | — | — | **Computed** (derived from sessions) |
+| FitnessGoalTarget | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
+| Streak | ✅ | — (computed) | — | — | **Computed** (derived from sessions) |
+| ChallengeProgress | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
 
 ## ENGAGEMENT Domain
 
 | Entity | Domain Type | IndexedDB | Supabase | Sync Queue | Status |
 |--------|:-----------:|:---------:|:--------:|:----------:|--------|
 | Reminder | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
-| Challenge | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
+| Challenge | ✅ | ✅ (DB v2) | ✅ | ✅ | **Cloud-synced** |
 | ShareableWorkout | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
 | WorkoutShare | ✅ | 🔲 | 🔲 | 🔲 | **Domain-only** |
 

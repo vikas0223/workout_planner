@@ -12,6 +12,11 @@ import {
   WorkoutSet,
   WorkoutFeedback,
   PreviousPerformanceSummary,
+  Program,
+  ProgramDay,
+  FitnessGoalTarget,
+  Challenge,
+  ChallengeProgress,
 } from '@/types/domain';
 
 export interface UserRepository {
@@ -52,4 +57,29 @@ export interface FavoritesRepository {
   addFavorite(exerciseOrWorkoutId: string, userId?: string): Promise<void>;
   removeFavorite(exerciseOrWorkoutId: string, userId?: string): Promise<void>;
   isFavorite(exerciseOrWorkoutId: string, userId?: string): Promise<boolean>;
+}
+
+export interface ProgramRepository {
+  getProgramById(id: string): Promise<Program | null>;
+  getActiveProgram(userId?: string): Promise<Program | null>;
+  listPrograms(userId?: string): Promise<Program[]>;
+  saveProgram(program: Program): Promise<void>;
+  deleteProgram(id: string): Promise<void>;
+  saveProgramDay(day: ProgramDay): Promise<void>;
+  getProgramDayById(id: string): Promise<ProgramDay | null>;
+}
+
+export interface GoalRepository {
+  getGoalById(id: string): Promise<FitnessGoalTarget | null>;
+  listGoals(userId?: string, status?: string): Promise<FitnessGoalTarget[]>;
+  saveGoal(goal: FitnessGoalTarget): Promise<void>;
+  deleteGoal(id: string): Promise<void>;
+}
+
+export interface ChallengeRepository {
+  listChallenges(): Promise<Challenge[]>;
+  getChallengeById(id: string): Promise<Challenge | null>;
+  getUserChallengeProgress(challengeId: string, userId?: string): Promise<ChallengeProgress | null>;
+  listUserParticipations(userId?: string): Promise<ChallengeProgress[]>;
+  saveChallengeProgress(progress: ChallengeProgress): Promise<void>;
 }

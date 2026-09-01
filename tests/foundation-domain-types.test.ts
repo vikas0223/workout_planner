@@ -526,18 +526,21 @@ describe('Program Hierarchy', () => {
       name: '4-Week Hypertrophy',
       goal: 'hypertrophy',
       difficulty: 'intermediate',
+      status: 'active',
       weeks: [
         {
+          id: 'pw-1',
+          programId: 'prog-1',
           weekNumber: 1,
           label: 'Adaptation',
           days: [
-            { dayNumber: 1, type: 'workout', workoutTemplateId: 'wt-1' },
-            { dayNumber: 2, type: 'rest' },
-            { dayNumber: 3, type: 'workout', workoutTemplateId: 'wt-2' },
-            { dayNumber: 4, type: 'recovery', notes: 'Light stretching' },
-            { dayNumber: 5, type: 'workout', workoutTemplateId: 'wt-3' },
-            { dayNumber: 6, type: 'mobility' },
-            { dayNumber: 7, type: 'rest' },
+            { id: 'pd-1', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 1, type: 'workout', workoutTemplateId: 'wt-1', status: 'planned' },
+            { id: 'pd-2', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 2, type: 'rest', status: 'planned' },
+            { id: 'pd-3', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 3, type: 'workout', workoutTemplateId: 'wt-2', status: 'planned' },
+            { id: 'pd-4', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 4, type: 'recovery', notes: 'Light stretching', status: 'planned' },
+            { id: 'pd-5', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 5, type: 'workout', workoutTemplateId: 'wt-3', status: 'planned' },
+            { id: 'pd-6', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 6, type: 'mobility', status: 'planned' },
+            { id: 'pd-7', programId: 'prog-1', programWeekId: 'pw-1', dayNumber: 7, type: 'rest', status: 'planned' },
           ],
         },
       ],
@@ -559,9 +562,13 @@ describe('Program Hierarchy', () => {
 
   it('program does not duplicate WorkoutTemplate — references by ID', () => {
     const day: ProgramDay = {
+      id: 'pd-test',
+      programId: 'prog-1',
+      programWeekId: 'pw-1',
       dayNumber: 1,
       type: 'workout',
       workoutTemplateId: 'wt-existing',
+      status: 'planned',
     };
     expect(day.workoutTemplateId).toBe('wt-existing');
     // Day itself does NOT contain exercises
@@ -578,18 +585,19 @@ describe('FitnessGoalTarget', () => {
     const goal: FitnessGoalTarget = {
       id: 'gt-1',
       type: 'weight',
+      direction: 'decrease',
       label: 'Reach 75kg body weight',
       targetValue: 75,
       unit: 'kg',
       startValue: 80,
       startDate: '2024-01-01',
       targetDate: '2024-06-01',
-      currentValue: 78,
       status: 'active',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-03-01T00:00:00Z',
     };
     expect(goal.type).toBe('weight');
+    expect(goal.direction).toBe('decrease');
     expect(goal.status).toBe('active');
   });
 
@@ -779,11 +787,11 @@ describe('Challenges & Streaks', () => {
       id: 'cp-1',
       challengeId: 'ch-1',
       userId: 'user-1',
-      currentValue: 15,
-      percentComplete: 50,
+      status: 'active',
+      joinedAt: '2024-04-01T00:00:00Z',
       updatedAt: '2024-04-15T00:00:00Z',
     };
-    expect(progress.percentComplete).toBe(50);
+    expect(progress.status).toBe('active');
   });
 
   it('creates valid streak', () => {

@@ -151,6 +151,24 @@ export type PersonalRecordType =
 
 export type ChallengeStatus = 'active' | 'completed' | 'abandoned';
 
+/** Goal direction for fitness targets. */
+export type GoalDirection = 'increase' | 'decrease' | 'maintain';
+
+/** Program lifecycle status. */
+export type ProgramStatus = 'draft' | 'active' | 'paused' | 'completed' | 'archived';
+
+/** Program day scheduling/adherence status. */
+export type ProgramDayStatus = 'planned' | 'completed' | 'skipped' | 'rescheduled';
+
+/** Challenge target metric types. */
+export type ChallengeMetricType =
+  | 'workout_count'
+  | 'set_count'
+  | 'volume'
+  | 'frequency'
+  | 'streak'
+  | 'personal_record';
+
 /** Program day types — what is scheduled for a given day. */
 export type ProgramDayType = 'workout' | 'rest' | 'recovery' | 'mobility';
 
@@ -566,7 +584,7 @@ export interface TrainingPreferences {
 
 /**
  * Training program — a multi-week structured plan.
- * Persistence: domain-only for now. Future: IndexedDB + Supabase.
+ * Persistence: IndexedDB (DB_VERSION 2) + Supabase Sync.
  */
 export interface Program {
   id: string;
@@ -576,23 +594,41 @@ export interface Program {
   goal?: FitnessGoal | string;
   difficulty?: ExperienceLevel;
   weeks: ProgramWeek[];
-  isActive?: boolean;
+  status: ProgramStatus;
+  startDate?: string;
+  completedAt?: string;
+  currentWeekNumber?: number;
+  currentDayNumber?: number;
+  isCustom?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ProgramWeek {
+  id: string;
+  programId: string;
   weekNumber: number;
   label?: string;
   days: ProgramDay[];
 }
 
 export interface ProgramDay {
-  dayNumber: number;
-  type: ProgramDayType;
+  id: string;
+  programId: string;
+  programWeekId: string;
+  dayNumber: number; // 1-7
+  type: ProgramDayType; // 'workout' | 'rest' | 'recovery' | 'mobility'
   label?: string;
-  /** Reference to a WorkoutTemplate ID. Only meaningful when type === 'workout'. */
+  /** Reference to an existing WorkoutTemplate ID. */
   workoutTemplateId?: string;
+  status: ProgramDayStatus;
+  /** Original planned date (YYYY-MM-DD) */
+  scheduledDate?: string;
+  /** Actual / rescheduled date (YYYY-MM-DD) */
+  effectiveDate?: string;
+  /** Primary successful session ID */
+  completedSessionId?: string;
+  completedAt?: string;
   notes?: string;
 }
 
@@ -602,19 +638,20 @@ export interface ProgramDay {
 
 /**
  * User-level fitness goal target (separate from workout-level FitnessGoal).
- * Persistence: domain-only for now.
+ * Persistence: IndexedDB (DB_VERSION 2) + Supabase Sync.
  */
 export interface FitnessGoalTarget {
   id: string;
   userId?: string;
   type: GoalTargetType;
+  direction: GoalDirection;
   label?: string;
   targetValue: number;
   unit: string;
   startValue?: number;
   startDate: string;
   targetDate?: string;
-  currentValue?: number;
+  exerciseId?: string; // for strength/personal_record goals
   status: GoalTargetStatus;
   createdAt: string;
   updatedAt: string;
@@ -720,13 +757,13 @@ export interface Reminder {
 }
 
 /**
- * Challenge definition. Persistence: domain-only for now.
+ * Challenge definition. Statically cataloged or custom.
  */
 export interface Challenge {
   id: string;
   name: string;
   description?: string;
-  type: 'workout_count' | 'streak' | 'volume' | 'custom';
+  type: ChallengeMetricType;
   targetValue: number;
   unit: string;
   startDate: string;
@@ -736,14 +773,16 @@ export interface Challenge {
 }
 
 /**
- * User's progress toward a Challenge. Persistence: domain-only for now.
+ * User's participation state in a Challenge.
+ * Persistence: IndexedDB (DB_VERSION 2) + Supabase Sync.
  */
 export interface ChallengeProgress {
   id: string;
   challengeId: string;
   userId?: string;
-  currentValue: number;
-  percentComplete: number;
+  status: 'active' | 'completed' | 'abandoned';
+  joinedAt: string;
+  completedAt?: string;
   updatedAt: string;
 }
 

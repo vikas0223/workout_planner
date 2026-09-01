@@ -11,6 +11,9 @@ export type ProgressInvalidationEventType =
   | 'set_changed'
   | 'session_changed'
   | 'feedback_changed'
+  | 'program_changed'
+  | 'goal_changed'
+  | 'challenge_changed'
   | 'sync_applied';
 
 export interface ProgressInvalidationEvent {
@@ -80,14 +83,20 @@ export class ProgressInvalidationBus {
 
   /**
    * Emits an invalidation event to local listeners and broadcasts to other open tabs.
-   * Does NOT contain metric data.
+   * Does NOT contain metric data. Accepts event object or type string.
    */
-  public emit(type: ProgressInvalidationEventType, entityId?: string): void {
-    const event: ProgressInvalidationEvent = {
-      type,
-      entityId,
-      timestamp: Date.now(),
-    };
+  public emit(
+    eventOrType: ProgressInvalidationEventType | ProgressInvalidationEvent,
+    entityId?: string
+  ): void {
+    const event: ProgressInvalidationEvent =
+      typeof eventOrType === 'string'
+        ? {
+            type: eventOrType,
+            entityId,
+            timestamp: Date.now(),
+          }
+        : eventOrType;
 
     // 1. Notify current tab
     this.notifyLocalListeners(event);

@@ -15,6 +15,9 @@ import {
   SupabaseWorkoutRepository,
   SupabaseCompletionRepository,
   SupabaseFavoritesRepository,
+  SupabaseProgramRepository,
+  SupabaseGoalRepository,
+  SupabaseChallengeRepository,
 } from '../repositories/supabase';
 import { getBrowserSupabaseClient } from '../supabase/browser-client';
 
@@ -35,6 +38,9 @@ export class SyncPushWorker {
   private workoutRepo: SupabaseWorkoutRepository;
   private completionRepo: SupabaseCompletionRepository;
   private favoritesRepo: SupabaseFavoritesRepository;
+  private programRepo: SupabaseProgramRepository;
+  private goalRepo: SupabaseGoalRepository;
+  private challengeRepo: SupabaseChallengeRepository;
 
   constructor(
     db?: IndexedDBEngine,
@@ -51,6 +57,9 @@ export class SyncPushWorker {
     this.workoutRepo = new SupabaseWorkoutRepository(this.supabaseClient);
     this.completionRepo = new SupabaseCompletionRepository(this.supabaseClient);
     this.favoritesRepo = new SupabaseFavoritesRepository(this.supabaseClient);
+    this.programRepo = new SupabaseProgramRepository(this.supabaseClient);
+    this.goalRepo = new SupabaseGoalRepository(this.supabaseClient);
+    this.challengeRepo = new SupabaseChallengeRepository(this.supabaseClient);
   }
 
   /**
@@ -60,15 +69,21 @@ export class SyncPushWorker {
     const dependencyTiers: Record<string, number> = {
       profiles: 1,
       local_profiles: 1,
-      workout_templates: 2,
-      generated_workouts: 3,
-      generated_workout_exercises: 4,
-      workout_sessions: 5,
-      session_exercises: 6,
-      logged_sets: 7,
-      sets: 7,
-      favorites: 8,
-      recommendation_events: 9,
+      programs: 2,
+      program_weeks: 3,
+      workout_templates: 4,
+      program_days: 5,
+      generated_workouts: 6,
+      generated_workout_exercises: 7,
+      workout_sessions: 8,
+      session_exercises: 9,
+      logged_sets: 10,
+      sets: 10,
+      fitness_goals: 11,
+      challenges: 12,
+      challenge_progress: 13,
+      favorites: 14,
+      recommendation_events: 15,
     };
 
     return [...items].sort((a, b) => {
@@ -235,6 +250,23 @@ export class SyncPushWorker {
       case 'workout_sessions':
         await this.completionRepo.saveSession(payload as any);
         break;
+      case 'programs':
+        if (operation === 'delete') {
+          await this.programRepo.deleteProgram(item.entityId);
+        } else {
+          await this.programRepo.saveProgram(payload as any);
+        }
+        break;
+      case 'fitness_goals':
+        if (operation === 'delete') {
+          await this.goalRepo.deleteGoal(item.entityId);
+        } else {
+          await this.goalRepo.saveGoal(payload as any);
+        }
+        break;
+      case 'challenge_progress':
+        await this.challengeRepo.saveChallengeProgress(payload as any);
+        break;
       case 'favorites':
         if (operation === 'delete') {
           await this.favoritesRepo.removeFavorite(item.entityId);
@@ -286,6 +318,12 @@ export class SyncPushWorker {
       session_exercises: STORES.SESSION_EXERCISES,
       logged_sets: STORES.SETS,
       sets: STORES.SETS,
+      programs: STORES.PROGRAMS,
+      program_weeks: STORES.PROGRAM_WEEKS,
+      program_days: STORES.PROGRAM_DAYS,
+      fitness_goals: STORES.FITNESS_GOALS,
+      challenges: STORES.CHALLENGES,
+      challenge_progress: STORES.CHALLENGE_PROGRESS,
       favorites: STORES.FAVORITES,
     };
 

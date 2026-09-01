@@ -43,6 +43,18 @@ export class SyncConflictResolver {
       case 'session_exercises':
         result = this.resolveSessionExerciseConflict(localPayload, remotePayload);
         break;
+      case 'programs':
+        result = this.resolveProgramConflict(localPayload, remotePayload);
+        break;
+      case 'program_days':
+        result = this.resolveProgramDayConflict(localPayload, remotePayload);
+        break;
+      case 'fitness_goals':
+        result = this.resolveGoalConflict(localPayload, remotePayload);
+        break;
+      case 'challenge_progress':
+        result = this.resolveChallengeProgressConflict(localPayload, remotePayload);
+        break;
       case 'logged_sets':
       case 'sets':
         result = this.resolveSetConflict(localPayload, remotePayload);
@@ -230,6 +242,148 @@ export class SyncConflictResolver {
       resolved: false,
       mergedPayload: local,
       strategy: 'manual_required',
+    };
+  }
+
+  private resolveProgramConflict(
+    local: Record<string, unknown>,
+    remote: Record<string, unknown>
+  ): ConflictResolutionResult {
+    const statusPrecedence: Record<string, number> = {
+      completed: 5,
+      active: 4,
+      paused: 3,
+      draft: 2,
+      archived: 1,
+    };
+
+    const localStatus = (local.status as string) || 'draft';
+    const remoteStatus = (remote.status as string) || 'draft';
+    const winningStatus =
+      (statusPrecedence[localStatus] || 0) >= (statusPrecedence[remoteStatus] || 0)
+        ? localStatus
+        : remoteStatus;
+
+    const localUpdatedAt = new Date((local.updatedAt as string) || 0).getTime();
+    const remoteUpdatedAt = new Date((remote.updatedAt as string) || 0).getTime();
+    const base = localUpdatedAt >= remoteUpdatedAt ? { ...remote, ...local } : { ...local, ...remote };
+
+    return {
+      resolved: true,
+      mergedPayload: {
+        ...base,
+        status: winningStatus,
+      },
+      strategy: 'merged',
+    };
+  }
+
+  private resolveProgramDayConflict(
+    local: Record<string, unknown>,
+    remote: Record<string, unknown>
+  ): ConflictResolutionResult {
+    const statusPrecedence: Record<string, number> = {
+      completed: 4,
+      rescheduled: 3,
+      skipped: 2,
+      planned: 1,
+    };
+
+    const localStatus = (local.status as string) || 'planned';
+    const remoteStatus = (remote.status as string) || 'planned';
+    const winningStatus =
+      (statusPrecedence[localStatus] || 0) >= (statusPrecedence[remoteStatus] || 0)
+        ? localStatus
+        : remoteStatus;
+
+    const completedSessionId =
+      local.completedSessionId || remote.completedSessionId || undefined;
+    const completedAt = local.completedAt || remote.completedAt || undefined;
+    const workoutTemplateId =
+      local.workoutTemplateId || remote.workoutTemplateId || undefined;
+
+    const localUpdatedAt = new Date((local.updatedAt as string) || 0).getTime();
+    const remoteUpdatedAt = new Date((remote.updatedAt as string) || 0).getTime();
+    const base = localUpdatedAt >= remoteUpdatedAt ? { ...remote, ...local } : { ...local, ...remote };
+
+    return {
+      resolved: true,
+      mergedPayload: {
+        ...base,
+        status: winningStatus,
+        completedSessionId,
+        completedAt,
+        workoutTemplateId,
+      },
+      strategy: 'merged',
+    };
+  }
+
+  private resolveGoalConflict(
+    local: Record<string, unknown>,
+    remote: Record<string, unknown>
+  ): ConflictResolutionResult {
+    const statusPrecedence: Record<string, number> = {
+      completed: 3,
+      active: 2,
+      abandoned: 1,
+    };
+
+    const localStatus = (local.status as string) || 'active';
+    const remoteStatus = (remote.status as string) || 'active';
+    const winningStatus =
+      (statusPrecedence[localStatus] || 0) >= (statusPrecedence[remoteStatus] || 0)
+        ? localStatus
+        : remoteStatus;
+
+    const localUpdatedAt = new Date((local.updatedAt as string) || 0).getTime();
+    const remoteUpdatedAt = new Date((remote.updatedAt as string) || 0).getTime();
+    const base = localUpdatedAt >= remoteUpdatedAt ? { ...remote, ...local } : { ...local, ...remote };
+
+    return {
+      resolved: true,
+      mergedPayload: {
+        ...base,
+        status: winningStatus,
+      },
+      strategy: 'merged',
+    };
+  }
+
+  private resolveChallengeProgressConflict(
+    local: Record<string, unknown>,
+    remote: Record<string, unknown>
+  ): ConflictResolutionResult {
+    const statusPrecedence: Record<string, number> = {
+      completed: 3,
+      active: 2,
+      abandoned: 1,
+    };
+
+    const localStatus = (local.status as string) || 'active';
+    const remoteStatus = (remote.status as string) || 'active';
+    const winningStatus =
+      (statusPrecedence[localStatus] || 0) >= (statusPrecedence[remoteStatus] || 0)
+        ? localStatus
+        : remoteStatus;
+
+    // Preserve earliest joinedAt
+    const localJoined = new Date((local.joinedAt as string) || Date.now()).getTime();
+    const remoteJoined = new Date((remote.joinedAt as string) || Date.now()).getTime();
+    const winningJoinedAt = localJoined <= remoteJoined ? local.joinedAt : remote.joinedAt;
+
+    const completedAt = local.completedAt || remote.completedAt || undefined;
+
+    return {
+      resolved: true,
+      mergedPayload: {
+        ...local,
+        ...remote,
+        status: winningStatus,
+        joinedAt: winningJoinedAt,
+        completedAt,
+      },
+      strategy: 'merged',
     };
   }
 

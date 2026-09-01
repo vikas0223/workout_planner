@@ -20,17 +20,35 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <Link
+              href="/programs"
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+            >
+              <span>Programs</span>
+            </Link>
+            <Link
+              href="/goals"
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+            >
+              <span>Goals</span>
+            </Link>
+            <Link
+              href="/challenges"
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+            >
+              <span>Challenges</span>
+            </Link>
             <Link
               href="/exercises"
-              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-3 py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Exercise Library & Anatomy</span>
+              <span className="hidden md:inline">Exercises</span>
             </Link>
             <Link
               href="/dashboard"
-              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-3 py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50/80 hover:bg-indigo-100/80 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
             >
               <BarChart2 className="w-3.5 h-3.5" />
               <span>Dashboard</span>

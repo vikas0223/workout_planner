@@ -198,7 +198,62 @@ export class IndexedDBEngine {
       store.createIndex('ownerId_entityId', ['ownerId', 'entityId'], { unique: true });
     }
 
-    // 5. Events & AI Cache
+    // 5. Phase 2J Programming & Progress Stores
+    if (!db.objectStoreNames.contains(STORES.PROGRAMS)) {
+      const store = db.createObjectStore(STORES.PROGRAMS, { keyPath: 'id' });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_updatedAt', ['ownerId', 'updatedAt'], { unique: false });
+      store.createIndex('ownerId_syncStatus', ['ownerId', 'syncStatus'], { unique: false });
+      store.createIndex('ownerId_deletedAt', ['ownerId', 'deletedAt'], { unique: false });
+      store.createIndex('status', 'program.status', { unique: false });
+    }
+
+    if (!db.objectStoreNames.contains(STORES.PROGRAM_WEEKS)) {
+      const store = db.createObjectStore(STORES.PROGRAM_WEEKS, { keyPath: 'id' });
+      store.createIndex('programId', 'programId', { unique: false });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_updatedAt', ['ownerId', 'updatedAt'], { unique: false });
+      store.createIndex('ownerId_deletedAt', ['ownerId', 'deletedAt'], { unique: false });
+    }
+
+    if (!db.objectStoreNames.contains(STORES.PROGRAM_DAYS)) {
+      const store = db.createObjectStore(STORES.PROGRAM_DAYS, { keyPath: 'id' });
+      store.createIndex('programId', 'programId', { unique: false });
+      store.createIndex('programWeekId', 'programWeekId', { unique: false });
+      store.createIndex('workoutTemplateId', 'workoutTemplateId', { unique: false });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_deletedAt', ['ownerId', 'deletedAt'], { unique: false });
+      store.createIndex('status', 'status', { unique: false });
+    }
+
+    if (!db.objectStoreNames.contains(STORES.FITNESS_GOALS)) {
+      const store = db.createObjectStore(STORES.FITNESS_GOALS, { keyPath: 'id' });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_updatedAt', ['ownerId', 'updatedAt'], { unique: false });
+      store.createIndex('ownerId_syncStatus', ['ownerId', 'syncStatus'], { unique: false });
+      store.createIndex('ownerId_deletedAt', ['ownerId', 'deletedAt'], { unique: false });
+      store.createIndex('type', 'goal.type', { unique: false });
+      store.createIndex('status', 'goal.status', { unique: false });
+    }
+
+    if (!db.objectStoreNames.contains(STORES.CHALLENGES)) {
+      const store = db.createObjectStore(STORES.CHALLENGES, { keyPath: 'id' });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_updatedAt', ['ownerId', 'updatedAt'], { unique: false });
+      store.createIndex('ownerId_deletedAt', ['ownerId', 'deletedAt'], { unique: false });
+      store.createIndex('type', 'challenge.type', { unique: false });
+      store.createIndex('status', 'challenge.status', { unique: false });
+    }
+
+    if (!db.objectStoreNames.contains(STORES.CHALLENGE_PROGRESS)) {
+      const store = db.createObjectStore(STORES.CHALLENGE_PROGRESS, { keyPath: 'id' });
+      store.createIndex('challengeId', 'challengeId', { unique: false });
+      store.createIndex('ownerId', 'ownerId', { unique: false });
+      store.createIndex('ownerId_updatedAt', ['ownerId', 'updatedAt'], { unique: false });
+      store.createIndex('status', 'progress.status', { unique: false });
+    }
+
+    // 6. Events & AI Cache
     if (!db.objectStoreNames.contains(STORES.RECOMMENDATION_EVENTS)) {
       const store = db.createObjectStore(STORES.RECOMMENDATION_EVENTS, { keyPath: 'id' });
       store.createIndex('ownerId', 'ownerId', { unique: false });

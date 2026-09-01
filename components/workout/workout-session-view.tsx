@@ -8,8 +8,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { WorkoutSession, SessionExercise, Exercise, PreviousPerformanceSummary } from '@/types/domain';
 import { useWorkoutSession } from '@/features/workout-session/use-workout-session';
+import { ProgramService } from '@/lib/domain/program-service';
 import { SetLogger } from './set-logger';
 import { RestTimer } from './rest-timer';
 import { ExercisePickerModal } from './exercise-picker-modal';
@@ -117,8 +119,20 @@ export function WorkoutSessionView({
     });
   };
 
+  const searchParams = useSearchParams();
+  const programId = searchParams.get('programId');
+  const programDayId = searchParams.get('programDayId');
+
   const handleFinishWorkout = async () => {
     const completed = await completeSession();
+    if (programId && programDayId) {
+      try {
+        const programService = new ProgramService();
+        await programService.linkCompletedSession(programId, programDayId, completed.id);
+      } catch (err) {
+        console.error('[WorkoutSessionView] Failed to link completed session to program day:', err);
+      }
+    }
     onSessionCompleted(completed);
   };
 

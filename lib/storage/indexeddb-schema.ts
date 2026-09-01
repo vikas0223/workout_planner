@@ -17,6 +17,13 @@ import {
   WorkoutSet,
   WorkoutFeedback,
   RecommendationEvent,
+  Program,
+  ProgramWeek,
+  ProgramDay,
+  ProgramDayStatus,
+  FitnessGoalTarget,
+  Challenge,
+  ChallengeProgress,
 } from '@/types/domain';
 
 export type OwnerKind = 'guest' | 'user';
@@ -77,6 +84,38 @@ export interface SetRecord extends LocalRecordMeta {
   workoutSessionId: string;
   sessionExerciseId: string;
   setNumber: number;
+}
+
+export interface LocalProgramRecord extends LocalRecordMeta {
+  program: Program;
+}
+
+export interface LocalProgramWeekRecord extends LocalRecordMeta {
+  programWeek: ProgramWeek;
+  programId: string;
+  weekNumber: number;
+}
+
+export interface LocalProgramDayRecord extends LocalRecordMeta {
+  programDay: ProgramDay;
+  programId: string;
+  programWeekId: string;
+  dayNumber: number;
+  workoutTemplateId?: string | null;
+  status: ProgramDayStatus;
+}
+
+export interface LocalFitnessGoalRecord extends LocalRecordMeta {
+  goal: FitnessGoalTarget;
+}
+
+export interface LocalChallengeRecord extends LocalRecordMeta {
+  challenge: Challenge;
+}
+
+export interface LocalChallengeProgressRecord extends LocalRecordMeta {
+  progress: ChallengeProgress;
+  challengeId: string;
 }
 
 export interface FavoriteRecord extends LocalRecordMeta {
@@ -140,7 +179,7 @@ export interface OutboxLockRecord {
 }
 
 export const DB_NAME = 'workout_planner';
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export const STORES = {
   META: 'meta',
@@ -160,6 +199,12 @@ export const STORES = {
   WORKOUT_SESSIONS: 'workout_sessions',
   SESSION_EXERCISES: 'session_exercises',
   SETS: 'sets',
+  PROGRAMS: 'programs',
+  PROGRAM_WEEKS: 'program_weeks',
+  PROGRAM_DAYS: 'program_days',
+  FITNESS_GOALS: 'fitness_goals',
+  CHALLENGES: 'challenges',
+  CHALLENGE_PROGRESS: 'challenge_progress',
   FAVORITES: 'favorites',
   RECOMMENDATION_EVENTS: 'recommendation_events',
   AI_COACH_CACHE: 'ai_coach_cache',
