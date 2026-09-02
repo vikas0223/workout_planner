@@ -146,7 +146,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
           <span>STEP {currentStep} OF {totalSteps}</span>
           <span className="text-indigo-600 font-semibold">{Math.round(progressPercentage)}% Completed</span>
         </div>
-        <Progress value={progressPercentage} className="h-2 bg-slate-100" />
+        <Progress value={progressPercentage} className="h-2 bg-slate-100" aria-label="Workout generation progress" />
       </div>
 
       {/* Step Content */}
@@ -155,10 +155,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 1 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Target className="w-6 h-6 text-indigo-600" />
                 What is your primary fitness goal?
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Your goal drives exercise selection, rep ranges, and rest intervals.
               </p>
@@ -194,10 +194,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 2 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Flame className="w-6 h-6 text-indigo-600" />
                 What is your training experience?
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Calibrates exercise complexity and volume to prevent overtraining.
               </p>
@@ -239,10 +239,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 3 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Dumbbell className="w-6 h-6 text-indigo-600" />
                 Where and with what will you train?
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Select your environment and all available equipment.
               </p>
@@ -312,10 +312,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 4 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Calendar className="w-6 h-6 text-indigo-600" />
                 How many days per week do you plan to train?
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Helps configure appropriate weekly split density.
               </p>
@@ -353,10 +353,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 5 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Clock className="w-6 h-6 text-indigo-600" />
                 Target workout duration
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Sets the overall exercise count and density of your session.
               </p>
@@ -393,10 +393,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         {currentStep === 6 && (
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <Layers className="w-6 h-6 text-indigo-600" />
                 Select muscle groups to target
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Choose Full Body or select specific focal splits for this session.
               </p>

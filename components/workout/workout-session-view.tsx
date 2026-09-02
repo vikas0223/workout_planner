@@ -15,6 +15,8 @@ import { ProgramService } from '@/lib/domain/program-service';
 import { SetLogger } from './set-logger';
 import { RestTimer } from './rest-timer';
 import { ExercisePickerModal } from './exercise-picker-modal';
+import { RecommendationCard } from '@/components/recommendations/recommendation-card';
+import { useRecommendations } from '@/hooks/use-recommendations';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -77,6 +79,18 @@ export function WorkoutSessionView({
 
     return () => clearInterval(interval);
   }, [session?.startedAt, session?.status]);
+
+  const {
+    recommendations,
+    dismissRecommendation,
+    acceptRecommendation,
+  } = useRecommendations({ limit: 10 });
+
+  const activeExerciseRec = recommendations.find(
+    (r) =>
+      r.targetEntityId === activeExercise?.exerciseId &&
+      (r.category === 'progress_load' || r.category === 'reduce_load' || r.category === 'swap_exercise')
+  );
 
   // Load previous performance whenever active exercise changes
   useEffect(() => {
@@ -353,6 +367,21 @@ export function WorkoutSessionView({
                     {recentSet.rpe && `(@ RPE ${recentSet.rpe})`}
                   </span>
                 </div>
+              )}
+
+              {/* Contextual Exercise Progression / Substitution Recommendation */}
+              {activeExerciseRec && (
+                <RecommendationCard
+                  recommendation={activeExerciseRec}
+                  onApply={async (rec) => {
+                    await acceptRecommendation(rec);
+                    if (rec.category === 'swap_exercise') {
+                      setIsSubstitutePickerOpen(true);
+                    }
+                  }}
+                  onDismiss={dismissRecommendation}
+                  compact
+                />
               )}
 
               {/* Set Logger Component */}

@@ -46,6 +46,10 @@ import {
   Check,
 } from 'lucide-react';
 import { generateId } from '@/lib/utils/id';
+import { useRecommendations } from '@/hooks/use-recommendations';
+import { RecommendationCard } from '@/components/recommendations/recommendation-card';
+import { useRouter } from 'next/navigation';
+import { DeterministicRecommendation } from '@/lib/domain/recommendations';
 
 export type WorkoutHubView =
   | 'wizard'
@@ -56,9 +60,16 @@ export type WorkoutHubView =
   | 'saved';
 
 export function WorkoutHub() {
+  const router = useRouter();
   const [sessionService] = useState(() => new SessionCommandService());
   const [workoutRepo] = useState(() => new LocalWorkoutRepository());
   const [completionRepo] = useState(() => new LocalCompletionRepository());
+
+  const {
+    primaryRecommendation,
+    dismissRecommendation,
+    acceptRecommendation,
+  } = useRecommendations({ limit: 1 });
 
   const [activeView, setActiveView] = useState<WorkoutHubView>('wizard');
   const [generatedWorkout, setGeneratedWorkout] = useState<GeneratedWorkout | null>(null);
@@ -71,6 +82,19 @@ export function WorkoutHub() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleApplyRecommendation = async (rec: DeterministicRecommendation) => {
+    await acceptRecommendation(rec);
+    if (rec.actionPayload.navigationTarget) {
+      router.push(rec.actionPayload.navigationTarget);
+    } else if (rec.actionPayload.type === 'start_program_day' && rec.actionPayload.programId) {
+      router.push(`/programs/${rec.actionPayload.programId}`);
+    } else if (rec.actionPayload.type === 'view_goal') {
+      router.push('/goals');
+    } else {
+      setActiveView('wizard');
+    }
   };
 
   // Reconstruct active session on mount if one is in progress
@@ -157,21 +181,9 @@ export function WorkoutHub() {
 
   // 6. Saved -> Start Workout from Template
   const handleStartFromTemplate = async (template: WorkoutTemplate) => {
-    try {
-      const session = await sessionService.startSession({
-        name: template.name,
-        workout: template,
-        templateId: template.id,
-        userId: 'guest_user',
-      });
-
-      setActiveSessionId(session.id);
-      setActiveView('session');
-      showToast(`Started "${template.name}"`);
-    } catch (err: any) {
-      console.error('Failed to start session from template:', err);
-      showToast(err?.message || 'Failed to start workout');
-    }
+    // Stage template in review view so user can inspect adaptive calibrations
+    setGeneratedWorkout(template as any);
+    setActiveView('review');
   };
 
   // 7. Saved -> Edit Template
@@ -267,6 +279,16 @@ export function WorkoutHub() {
           <Check className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
+      )}
+
+      {/* Contextual Recommendation Banner */}
+      {primaryRecommendation && activeView !== 'session' && activeView !== 'completed' && (
+        <RecommendationCard
+          recommendation={primaryRecommendation}
+          onApply={handleApplyRecommendation}
+          onDismiss={dismissRecommendation}
+          compact
+        />
       )}
 
       {/* Top Hub Navigation Bar */}

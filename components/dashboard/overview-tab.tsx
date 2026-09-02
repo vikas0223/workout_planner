@@ -16,6 +16,10 @@ import {
   TrendingUp,
   Activity,
 } from 'lucide-react';
+import { useRecommendations } from '@/hooks/use-recommendations';
+import { RecommendationCard } from '@/components/recommendations/recommendation-card';
+import { useRouter } from 'next/navigation';
+import { DeterministicRecommendation } from '@/lib/domain/recommendations';
 
 interface OverviewTabProps {
   metrics: AggregatedProgressMetrics;
@@ -30,10 +34,38 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   onNavigateToPRs,
   onStartWorkout,
 }) => {
+  const router = useRouter();
   const latestWorkout = metrics.recentWorkouts[0];
+  const {
+    primaryRecommendation,
+    dismissRecommendation,
+    acceptRecommendation,
+  } = useRecommendations({ limit: 1 });
+
+  const handleApplyRecommendation = async (rec: DeterministicRecommendation) => {
+    await acceptRecommendation(rec);
+    if (rec.actionPayload.navigationTarget) {
+      router.push(rec.actionPayload.navigationTarget);
+    } else if (rec.actionPayload.type === 'start_program_day' && rec.actionPayload.programId) {
+      router.push(`/programs/${rec.actionPayload.programId}`);
+    } else if (rec.actionPayload.type === 'view_goal') {
+      router.push('/goals');
+    } else {
+      onStartWorkout();
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {/* Contextual Recommendation Card */}
+      {primaryRecommendation && (
+        <RecommendationCard
+          recommendation={primaryRecommendation}
+          onApply={handleApplyRecommendation}
+          onDismiss={dismissRecommendation}
+        />
+      )}
+
       {/* 1. Top KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <MetricCard

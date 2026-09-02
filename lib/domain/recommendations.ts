@@ -34,7 +34,28 @@ function toLegacyUserProfile(user: DomainUserProfile): LegacyUserProfile {
   };
 }
 
+export * from './recommendations/index';
+
+import {
+  RecommendationContext,
+  DeterministicRecommendation,
+  DeterministicRecommendationEngine,
+} from './recommendations/index';
+
 export class RecommendationService {
+  /**
+   * Deterministic recommendation generation from canonical context (Phase 2K).
+   */
+  public static getDeterministicRecommendations(
+    context: RecommendationContext,
+    limit: number = 3
+  ): DeterministicRecommendation[] {
+    return DeterministicRecommendationEngine.generateRecommendations(context, { limit });
+  }
+
+  /**
+   * Legacy query-based recommendation interface.
+   */
   public static getRecommendations(query: RecommendationQuery): Recommendation[] {
     const limit = query.limit || 3;
     const legacyCurrentUser = toLegacyUserProfile(query.currentUser);
@@ -84,3 +105,4 @@ export class RecommendationService {
     }));
   }
 }
+
