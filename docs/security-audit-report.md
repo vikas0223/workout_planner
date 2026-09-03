@@ -26,7 +26,7 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 | ID | Title | Category | Severity | CVSS v3.1 | Status |
 |---|---|---|---|---|---|
 | **SEC-01** | Outdated Next.js package vulnerable to React Flight RCE | Dependency / CVE | **CRITICAL** | 9.8 | Action Required |
-| **SEC-02** | HTTP Security Headers Configuration (HSTS outstanding) | Web / Configuration | **LOW** | 3.7 | Partially Remediated (HSTS outstanding) |
+| **SEC-02** | HTTP Security Headers Configuration (CSP, HSTS, X-Frame, nosniff) | Web / Configuration | **LOW** | 3.7 | Remediated |
 | **SEC-03** | Server Role key referenced in shared client Supabase module | Architectural / Secrets | **LOW** | 3.1 | Remediated |
 | **SEC-04** | Plaintext IndexedDB storage for offline workout data | Data Protection | **LOW** | 2.5 | Acknowledged / By Design |
 
@@ -48,15 +48,16 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 ### SEC-02: HTTP Security Headers Configuration
 - **Severity:** **LOW** (CVSS: 3.7)
 - **Component:** `next.config.mjs`
+- **Status:** **REMEDIATED**
 - **Vulnerability Description:** `next.config.mjs` configures custom HTTP response headers across all paths (`/:path*`), enforcing:
   - `Content-Security-Policy` (CSP with strict script, connect, and frame rules)
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (HSTS)
   - `X-Frame-Options: DENY` (anti-clickjacking)
   - `X-Content-Type-Options: nosniff` (anti-MIME sniffing)
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
-  However, `Strict-Transport-Security` (HSTS) is currently not configured in `next.config.mjs`.
-- **Impact:** Core browser protections against clickjacking, MIME-type confusion, and sensitive device API access are active. Without HSTS, browsers do not automatically upgrade cleartext HTTP connections before TLS handshakes occur on first contact.
-- **Remediation / Status:** Core headers are fully implemented and active in production responses. Add `Strict-Transport-Security` (e.g. `max-age=63072000; includeSubDomains; preload`) once custom production domains with managed SSL/TLS certificates are active.
+- **Impact:** Complete defense-in-depth protection against clickjacking, MIME-type sniffing, unauthorized browser API access, and SSL stripping attacks.
+- **Remediation / Status:** Fully implemented and verified live on production server responses.
 
 ---
 
@@ -88,7 +89,7 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 | **A02: Cryptographic Failures** | HTTPS/WSS enforced for all Supabase calls. SW filters auth tokens from cache. | **PROTECTED** |
 | **A03: Injection** | Zero raw SQL string interpolation. All queries use PostgREST parameterized builders. | **PROTECTED** |
 | **A04: Insecure Design** | Deterministic domain architecture, local-first outbox, explicit conflict resolution. | **PROTECTED** |
-| **A05: Security Misconfiguration** | Core security headers (CSP, X-Frame, nosniff) configured in next.config.mjs; HSTS remains outstanding. | **HARDENED (HSTS Pending)** |
+| **A05: Security Misconfiguration** | Full security headers (CSP, HSTS, X-Frame, nosniff, Referrer, Permissions) configured and verified in `next.config.mjs`. | **PROTECTED** |
 | **A06: Vulnerable & Outdated Components** | Next.js 15.2.4 contains known CVE (GHSA-9qr9-h5gf-34mp) (SEC-01). | **NEEDS UPGRADE** |
 | **A07: Identification & Auth Failures** | Delegated to Supabase Auth with session refresh; no custom password hashing. | **PROTECTED** |
 | **A08: Software & Data Integrity Failures** | Offline fixture migrations handle corrupt JSON gracefully; SW cache is scoped. | **PROTECTED** |
@@ -100,6 +101,6 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 ## Recommended Action Plan
 
 1. **Immediate (P0):** Upgrade `next` dependency to patch GHSA-9qr9-h5gf-34mp.
-2. **Configuration (P1):** Core HTTP security headers configured in `next.config.mjs` (CSP, X-Frame, X-Content-Type, Referrer-Policy, Permissions-Policy); add `Strict-Transport-Security` (HSTS) when production custom domain TLS is provisioned.
+2. **Remediated (P1):** Configured full HTTP security headers in `next.config.mjs` including `Strict-Transport-Security` (HSTS), `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy`.
 3. **Remediated (P2):** Removed `getSupabaseServerClient` from `lib/supabase-client.ts`; server operations now strictly use `lib/supabase/server-client.ts`.
 4. **Validation (P3):** Rerun `pnpm audit`, `pnpm test`, and `pnpm build` to verify that all patches pass without regressions.

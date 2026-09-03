@@ -142,7 +142,7 @@ export class MockIDBTransaction {
   ) {
     setTimeout(() => {
       this.oncomplete?.();
-    }, 15);
+    }, 50);
   }
 
   public objectStore(name: string): MockIDBObjectStore {
