@@ -109,17 +109,31 @@ export class LocalRecommendationRepository {
     userId?: string,
     sinceTimestampMs?: number
   ): Promise<Set<string>> {
-    const events = await this.listEvents(userId, 100);
-    const dismissed = new Set<string>();
     const cutoff = sinceTimestampMs ?? Date.now() - 24 * 60 * 60 * 1000; // default 24h
+    const dismissed = new Set<string>();
 
-    for (const e of events) {
-      if (e.action === 'dismissed') {
-        const time = new Date(e.createdAt).getTime();
-        if (time >= cutoff) {
-          dismissed.add(e.entityId);
+    try {
+      let records: RecommendationEventRecord[];
+      if (userId) {
+        records = await this.engine.getByIndex<RecommendationEventRecord>(
+          STORES.RECOMMENDATION_EVENTS,
+          'ownerId',
+          userId
+        );
+      } else {
+        records = await this.engine.getAll<RecommendationEventRecord>(STORES.RECOMMENDATION_EVENTS);
+      }
+
+      for (const r of records) {
+        if (!r.deletedAt && r.event?.action === 'dismissed') {
+          const time = new Date(r.event.createdAt).getTime();
+          if (time >= cutoff) {
+            dismissed.add(r.event.entityId);
+          }
         }
       }
+    } catch (err) {
+      console.warn('[LocalRecommendationRepository] Failed to getDismissedFingerprints', err);
     }
 
     return dismissed;

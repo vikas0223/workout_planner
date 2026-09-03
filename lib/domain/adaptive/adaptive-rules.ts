@@ -154,6 +154,7 @@ export class AdaptiveRules {
     context: AdaptiveContext,
     history: ExercisePerformanceHistory
   ): ExerciseAdaptationProposal | null {
+    if (!exercise.equipment || exercise.equipment.length === 0) return null;
     const isBodyweight = exercise.equipment.every((eq) =>
       ['bodyweight', 'pull-up bar', 'pullup bar', 'dip station', 'mat'].includes(eq.toLowerCase())
     );
@@ -207,6 +208,7 @@ export class AdaptiveRules {
     context: AdaptiveContext,
     history: ExercisePerformanceHistory
   ): ExerciseAdaptationProposal | null {
+    if (!exercise.equipment || exercise.equipment.length === 0) return null;
     const isBodyweight = exercise.equipment.every((eq) =>
       ['bodyweight', 'pull-up bar', 'pullup bar', 'dip station', 'mat'].includes(eq.toLowerCase())
     );
@@ -271,7 +273,7 @@ export class AdaptiveRules {
       originalPrescription: prescription,
       adaptedPrescription: {
         ...prescription,
-        reps: Math.max(6, repBounds.primary - Math.round(asym.repDifference)),
+        reps: Math.min(repBounds.primary, Math.max(6, repBounds.primary - Math.round(asym.repDifference))),
         notes: `Anchored to ${asym.weakerSide} side capability to support bilateral balance`,
       },
       ruleId: 'rule_unilateral_balance',

@@ -68,15 +68,26 @@ describe('DeterministicRecommendationEngine (Phase 2K)', () => {
   });
 
   it('includes RECOMMENDATION_ENGINE_VERSION and stable fingerprint', () => {
-    const fingerprint = DeterministicRecommendationEngine.generateFingerprint(
+    const fingerprintA = DeterministicRecommendationEngine.generateFingerprint(
       RECOMMENDATION_ENGINE_VERSION,
       'progress_load',
       'rule_load_progression',
       'ex_bench_press',
-      JSON.stringify({ type: 'increase_weight', suggestedWeightDeltaKg: 2.5 })
+      JSON.stringify({ type: 'increase_weight' })
     );
 
-    expect(fingerprint).toMatch(/^rec_prog_[0-9a-f]{8}$/);
+    expect(fingerprintA).toMatch(/^rec_prog_[0-9a-f]{8}$/);
+
+    const fingerprintB = DeterministicRecommendationEngine.generateFingerprint(
+      '2.0.0',
+      'progress_load',
+      'rule_load_progression',
+      'ex_bench_press',
+      JSON.stringify({ type: 'increase_weight' })
+    );
+
+    expect(fingerprintB).toMatch(/^rec_prog_[0-9a-f]{8}$/);
+    expect(fingerprintA).not.toBe(fingerprintB);
   });
 
   it('strictly filters candidates violating hard constraints before scoring', () => {

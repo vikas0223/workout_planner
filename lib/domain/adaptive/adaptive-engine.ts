@@ -124,7 +124,8 @@ export class DeterministicAdaptiveEngine {
     const fingerprint = this.computeDeterministicFingerprint(
       context,
       normalizedSessions,
-      validProposals
+      validProposals,
+      overallDifficulty
     );
 
     // 7. Generate concise factual summary text
@@ -177,27 +178,34 @@ export class DeterministicAdaptiveEngine {
       return loadRed;
     }
 
-    // 3. If global fatigue is active, reject load increases
-    if (isFatigueActive) {
-      const nonLoadIncrease = candidates.filter((c) => c.action !== 'increase_load');
-      if (nonLoadIncrease.length > 0) return nonLoadIncrease[0];
+    // 3. Filter candidates: if global fatigue is active, reject load increases
+    const eligibleCandidates = isFatigueActive
+      ? candidates.filter((c) => c.action !== 'increase_load')
+      : candidates;
+
+    if (eligibleCandidates.length === 0) {
       return null;
     }
 
     // 4. Variation progression overrides standard rep progression
-    const varProg = candidates.find((c) => c.action === 'progress_variation');
+    const varProg = eligibleCandidates.find((c) => c.action === 'progress_variation');
     if (varProg) {
       return varProg;
     }
 
     // 5. Unilateral balance overrides standard progression
-    const unilateral = candidates.find((c) => c.action === 'anchor_weaker_side');
+    const unilateral = eligibleCandidates.find((c) => c.action === 'anchor_weaker_side');
     if (unilateral) {
       return unilateral;
     }
 
-    // 6. Default to first valid progression
-    return candidates[0];
+    // 6. Rep progression or remaining valid tier
+    const repProg = eligibleCandidates.find((c) => c.action === 'increase_reps');
+    if (repProg) {
+      return repProg;
+    }
+
+    return eligibleCandidates[0];
   }
 
   /**
@@ -270,15 +278,22 @@ export class DeterministicAdaptiveEngine {
   private static computeDeterministicFingerprint(
     context: AdaptiveContext,
     sortedSessions: AdaptiveContext['recentSessions'],
-    proposals: ExerciseAdaptationProposal[]
+    proposals: ExerciseAdaptationProposal[],
+    overallDifficultyAdjustment?: WorkoutAdaptationDecision['overallDifficultyAdjustment']
   ): string {
     const sessionIds = sortedSessions.slice(0, 5).map((s) => s.id).join(',');
     const proposalSignatures = proposals
       .map((p) => `${p.exerciseId}:${p.dimension}:${p.action}:${JSON.stringify(p.adaptedPrescription)}`)
       .sort()
       .join('|');
+    const exerciseSignatures = (context.workoutPlan.exercises || [])
+      .map((ex) => `${ex.exerciseId || ex.id}:${ex.sets || 0}:${ex.reps || 0}`)
+      .join(';');
+    const diffSignature = overallDifficultyAdjustment
+      ? `${overallDifficultyAdjustment.suggestedDifficulty}:${overallDifficultyAdjustment.reason}`
+      : 'none';
 
-    const raw = `${ADAPTIVE_ENGINE_VERSION}:${context.workoutSource}:${context.sourceEntityId || 'none'}:${sessionIds}:${proposalSignatures}`;
+    const raw = `${ADAPTIVE_ENGINE_VERSION}:${context.userId}:${context.workoutSource}:${context.sourceEntityId || 'none'}:${exerciseSignatures}:${diffSignature}:${sessionIds}:${proposalSignatures}`;
 
     // FNV-1a 32-bit hash
     let hash = 0x811c9dc5;

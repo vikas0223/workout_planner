@@ -89,7 +89,7 @@ export function WorkoutSessionView({
   const activeExerciseRec = recommendations.find(
     (r) =>
       r.targetEntityId === activeExercise?.exerciseId &&
-      (r.category === 'progress_load' || r.category === 'reduce_load' || r.category === 'swap_exercise')
+      r.category === 'swap_exercise'
   );
 
   // Load previous performance whenever active exercise changes

@@ -46,12 +46,38 @@ export class RecommendationRules {
       }
     }
 
+    // Pre-scan for any exercises that qualify for reduce_load in recent sessions
+    const reduceLoadExerciseIds = new Set<string>();
+    const latestSessions = context.recentSessions
+      ?.filter((s) => s.status === 'completed' || s.status === 'active')
+      .slice(0, 5) || [];
+    for (const session of latestSessions) {
+      for (const ex of session.exercises) {
+        const completedSets = ex.sets.filter((s) => !s.deletedAt && s.status === 'completed');
+        if (completedSets.length < 2) continue;
+        let failedSetCount = 0;
+        let highRpeCount = 0;
+        for (const s of completedSets) {
+          if (s.targetReps !== undefined && s.actualReps !== undefined && s.actualReps < s.targetReps) {
+            failedSetCount++;
+          }
+          if (s.rpe !== undefined && s.rpe >= 9.5) {
+            highRpeCount++;
+          }
+        }
+        if (failedSetCount >= 2 || highRpeCount >= 2) {
+          reduceLoadExerciseIds.add(ex.exerciseId);
+        }
+      }
+    }
+
     const isStrengthOrHypertrophy =
       !context.userProfile?.primaryGoal ||
       context.userProfile.primaryGoal === 'strength' ||
       context.userProfile.primaryGoal === 'hypertrophy';
 
     for (const [exerciseId, occurrences] of exerciseHistory.entries()) {
+      if (reduceLoadExerciseIds.has(exerciseId)) continue;
       if (occurrences.length < 2) continue;
 
       const lastTwo = occurrences.slice(0, 2);
@@ -61,9 +87,6 @@ export class RecommendationRules {
         lastTwo[0].exercise.equipment?.includes('bodyweight');
 
       let allClean = true;
-      let averageWeight = 0;
-      let lastReps = 0;
-
       for (const item of lastTwo) {
         const completedSets = item.exercise.sets.filter((s) => !s.deletedAt && s.status === 'completed');
         if (completedSets.length === 0) {
@@ -82,15 +105,15 @@ export class RecommendationRules {
           allClean = false;
           break;
         }
-
-        const validSets = completedSets.filter((s) => (s.actualWeight ?? 0) > 0);
-        if (validSets.length > 0) {
-          averageWeight = validSets[0].actualWeight ?? 0;
-        }
-        lastReps = completedSets[0].actualReps ?? 0;
       }
 
       if (!allClean) continue;
+
+      // Suggestions come from the most recent session (lastTwo[0])
+      const mostRecentSets = lastTwo[0].exercise.sets.filter((s) => !s.deletedAt && s.status === 'completed');
+      const validWeights = mostRecentSets.map((s) => s.actualWeight ?? 0).filter((w) => w > 0);
+      const topSetWeight = validWeights.length > 0 ? Math.max(...validWeights) : 0;
+      const lastReps = mostRecentSets.length > 0 ? (mostRecentSets[0].actualReps ?? 0) : 0;
 
       const exName = exMeta?.name || lastTwo[0].exercise.name || 'Exercise';
 
@@ -129,7 +152,7 @@ export class RecommendationRules {
             recency: 10,
           },
         });
-      } else if (averageWeight > 0) {
+      } else if (topSetWeight > 0) {
         // Loaded progression: conservative +2.5kg (or +1.25kg for small movements)
         const isDumbbell = exMeta?.equipment.includes('dumbbell');
         const incrementKg = isDumbbell ? 2.0 : 2.5;
@@ -144,7 +167,7 @@ export class RecommendationRules {
             explanation: `Completed all target reps in the last 2 sessions with solid execution.`,
             confidence: occurrences.length >= 3 ? 'high' : 'medium',
             evidence: {
-              summary: `Consistently completed target reps at ${averageWeight} kg across ${occurrences.length} sessions`,
+              summary: `Consistently completed target reps at ${topSetWeight} kg across ${occurrences.length} sessions`,
               sourceSessionsCount: occurrences.length,
               relevantExerciseId: exerciseId,
               relevantExerciseName: exName,
@@ -187,8 +210,12 @@ export class RecommendationRules {
       .filter((s) => s.status === 'completed' || s.status === 'active')
       .slice(0, 5);
 
+    const processedExercises = new Set<string>();
+
     for (const session of latestSessions) {
       for (const ex of session.exercises) {
+        if (processedExercises.has(ex.exerciseId)) continue;
+
         const completedSets = ex.sets.filter((s) => !s.deletedAt && s.status === 'completed');
         if (completedSets.length < 2) continue;
 
@@ -209,6 +236,7 @@ export class RecommendationRules {
         }
 
         if (failedSetCount >= 2 || highRpeCount >= 2) {
+          processedExercises.add(ex.exerciseId);
           const exMeta = ExerciseCatalog.getExerciseById(ex.exerciseId);
           const exName = exMeta?.name || ex.name || 'Exercise';
 
@@ -430,7 +458,7 @@ export class RecommendationRules {
           goalAlignment: 25,
           performance: 10,
           preference: 10,
-          consistency: 30,
+          consistency: 15,
           recency: 10,
         },
       });
@@ -453,10 +481,25 @@ export class RecommendationRules {
     // Check recent ratings / feedback
     const lowRatingCount = feedbackList.slice(0, 3).filter((f) => f.rating <= 2).length;
 
-    // Check if user trained heavily 3 consecutive days
-    const recentDates = recentSessions.slice(0, 3).map((s) => new Date(s.completedAt || s.startedAt).toDateString());
-    const uniqueDays = new Set(recentDates).size;
-    const hasThreeConsecutive = uniqueDays >= 3;
+    // Check if user trained heavily 3 consecutive calendar days (adjacent gaps strictly 1 day)
+    let hasThreeConsecutive = false;
+    if (recentSessions.length >= 3) {
+      const getMidnightMs = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+      };
+      const day0 = getMidnightMs(recentSessions[0].completedAt || recentSessions[0].startedAt);
+      const day1 = getMidnightMs(recentSessions[1].completedAt || recentSessions[1].startedAt);
+      const day2 = getMidnightMs(recentSessions[2].completedAt || recentSessions[2].startedAt);
+
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const gap01 = Math.round((day0 - day1) / oneDayMs);
+      const gap12 = Math.round((day1 - day2) / oneDayMs);
+
+      if (gap01 === 1 && gap12 === 1) {
+        hasThreeConsecutive = true;
+      }
+    }
 
     if (lowRatingCount >= 2 || hasThreeConsecutive) {
       results.push({
@@ -468,10 +511,10 @@ export class RecommendationRules {
           description: `Consider taking a light mobility day or active rest to allow your body to recharge and recover.`,
           explanation: lowRatingCount >= 2
             ? `Your recent session feedback indicated high difficulty/fatigue.`
-            : `You've logged ${uniqueDays} workouts in consecutive days.`,
+            : `You've logged workouts on 3 consecutive calendar days.`,
           confidence: 'high',
           evidence: {
-            summary: lowRatingCount >= 2 ? `Low ratings on recent workouts` : `${uniqueDays} consecutive workout days`,
+            summary: lowRatingCount >= 2 ? `Low ratings on recent workouts` : `3 consecutive workout days`,
           },
           actionPayload: {
             type: 'start_recovery_session',
@@ -482,7 +525,7 @@ export class RecommendationRules {
           goalAlignment: 20,
           performance: 15,
           preference: 15,
-          consistency: 20,
+          consistency: 15,
           recency: 10,
         },
       });
@@ -542,7 +585,7 @@ export class RecommendationRules {
           goalAlignment: 30,
           performance: 20,
           preference: 20,
-          consistency: 20,
+          consistency: 15,
           recency: 10,
         },
       });
@@ -589,7 +632,7 @@ export class RecommendationRules {
         goalAlignment: 30,
         performance: 15,
         preference: 15,
-        consistency: 20,
+        consistency: 15,
         recency: 10,
       },
     });

@@ -140,14 +140,15 @@ export class AdaptiveNormalization {
         }
 
         // Unilateral checks
+        const setWeight = set.actualWeight ?? set.loadValue;
         if (set.side === 'left') {
           hasLeftSets = true;
           leftReps.push(reps);
-          if (set.actualWeight) leftWeights.push(set.actualWeight);
+          if (setWeight !== undefined) leftWeights.push(setWeight);
         } else if (set.side === 'right') {
           hasRightSets = true;
           rightReps.push(reps);
-          if (set.actualWeight) rightWeights.push(set.actualWeight);
+          if (setWeight !== undefined) rightWeights.push(setWeight);
         }
       }
 
@@ -219,7 +220,9 @@ export class AdaptiveNormalization {
     if (str.includes('-')) {
       const parts = str.split('-').map((p) => parseInt(p.trim(), 10)).filter((n) => !isNaN(n));
       if (parts.length >= 2) {
-        return { min: parts[0], max: parts[1], primary: parts[1] };
+        const minVal = Math.min(parts[0], parts[1]);
+        const maxVal = Math.max(parts[0], parts[1]);
+        return { min: minVal, max: maxVal, primary: maxVal };
       }
     }
     const parsed = parseInt(str, 10);

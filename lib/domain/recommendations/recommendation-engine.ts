@@ -19,7 +19,7 @@ import {
   RECOMMENDATION_ENGINE_VERSION,
 } from './recommendation-types';
 import { RecommendationRules } from './recommendation-rules';
-import { TrainingConstraint } from '@/types/domain';
+import { TrainingConstraint, RecommendationEvent } from '@/types/domain';
 
 // Named Scoring Weights
 export const WEIGHT_GOAL_ALIGNMENT = 30;
@@ -69,12 +69,13 @@ export class DeterministicRecommendationEngine {
     const scoredCandidates: DeterministicRecommendation[] = constraintFiltered.map((r) => {
       const candidate = r.candidate!;
       const scoreBreakdown = this.calculateScoreBreakdown(candidate, r.scoreBreakdown, context);
+      const { suggestedWeightDeltaKg, suggestedRepsTarget, ...stablePayload } = (candidate.actionPayload || {}) as any;
       const fingerprint = this.generateFingerprint(
         engineVersion,
         candidate.category,
         candidate.ruleId,
         candidate.targetEntityId || 'global',
-        JSON.stringify(candidate.actionPayload)
+        JSON.stringify(stablePayload)
       );
 
       return {
@@ -102,12 +103,15 @@ export class DeterministicRecommendationEngine {
         return false;
       }
 
-      // Check recent shown events within cooldown window
-      const recentShown = activeEvents.find(
-        (e) =>
-          e.entityId === candidate.fingerprint &&
-          (e.action === 'shown' || e.action === 'dismissed')
-      );
+      // Select the newest matching shown or dismissed event for this candidate
+      let recentShown: RecommendationEvent | null = null;
+      for (const e of activeEvents) {
+        if (e.entityId === candidate.fingerprint && (e.action === 'shown' || e.action === 'dismissed')) {
+          if (!recentShown || new Date(e.createdAt).getTime() > new Date(recentShown.createdAt).getTime()) {
+            recentShown = e;
+          }
+        }
+      }
 
       if (recentShown) {
         const eventTime = new Date(recentShown.createdAt).getTime();

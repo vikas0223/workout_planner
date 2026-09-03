@@ -133,4 +133,93 @@ describe('Recommendation Events & Cooldown Suppression (Phase 2K)', () => {
     const recsAfterDismissal = DeterministicRecommendationEngine.generateRecommendations(contextWithDismissed);
     expect(recsAfterDismissal.find((r) => r.fingerprint === generatedFingerprint)).toBeUndefined();
   });
+
+  it('suppresses recommendation when shown within cooldown window and returns it once cooldown expires', async () => {
+    const baseContext: RecommendationContext = {
+      userId: 'user_1',
+      recentSessions: [
+        {
+          id: 's1',
+          userId: 'user_1',
+          name: 'Bench Workout A',
+          status: 'completed',
+          startedAt: '2026-09-01T10:00:00Z',
+          exercises: [
+            {
+              id: 'se1',
+              sessionId: 's1',
+              exerciseId: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              order: 1,
+              targetMuscles: ['Chest', 'Triceps'],
+              equipment: ['barbell'],
+              status: 'completed',
+              sets: [
+                { id: '1', sessionExerciseId: 'se1', setNumber: 1, type: 'normal', targetReps: 8, actualReps: 8, actualWeight: 80, status: 'completed' },
+                { id: '2', sessionExerciseId: 'se1', setNumber: 2, type: 'normal', targetReps: 8, actualReps: 8, actualWeight: 80, status: 'completed' },
+              ],
+            },
+          ],
+        },
+        {
+          id: 's2',
+          userId: 'user_1',
+          name: 'Bench Workout B',
+          status: 'completed',
+          startedAt: '2026-08-28T10:00:00Z',
+          exercises: [
+            {
+              id: 'se2',
+              sessionId: 's2',
+              exerciseId: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              order: 1,
+              targetMuscles: ['Chest', 'Triceps'],
+              equipment: ['barbell'],
+              status: 'completed',
+              sets: [
+                { id: '3', sessionExerciseId: 'se2', setNumber: 1, type: 'normal', targetReps: 8, actualReps: 8, actualWeight: 80, status: 'completed' },
+                { id: '4', sessionExerciseId: 'se2', setNumber: 2, type: 'normal', targetReps: 8, actualReps: 8, actualWeight: 80, status: 'completed' },
+              ],
+            },
+          ],
+        },
+      ],
+      currentTime: '2026-09-02T12:00:00Z',
+    };
+
+    const initialRecs = DeterministicRecommendationEngine.generateRecommendations(baseContext);
+    expect(initialRecs.length).toBeGreaterThan(0);
+    const targetFingerprint = initialRecs[0].fingerprint;
+
+    // 1. Recommendation has recent 'shown' event 30 minutes ago (cooldown is 2 hours for progress_load)
+    const shownEventTime = '2026-09-02T11:30:00Z';
+    const contextDuringCooldown: RecommendationContext = {
+      ...baseContext,
+      currentTime: '2026-09-02T12:00:00Z',
+      recentEvents: [
+        {
+          id: 'evt_shown_1',
+          userId: 'user_1',
+          recommendationType: initialRecs[0].category,
+          entityId: targetFingerprint,
+          action: 'shown',
+          score: initialRecs[0].score,
+          createdAt: shownEventTime,
+        },
+      ],
+    };
+
+    const recsDuringCooldown = DeterministicRecommendationEngine.generateRecommendations(contextDuringCooldown);
+    expect(recsDuringCooldown.find((r) => r.fingerprint === targetFingerprint)).toBeUndefined();
+
+    // 2. Advance time beyond cooldown window (e.g. 3 hours later, 2026-09-02T14:31:00Z)
+    const contextAfterCooldown: RecommendationContext = {
+      ...contextDuringCooldown,
+      currentTime: '2026-09-02T14:31:00Z',
+    };
+
+    const recsAfterCooldown = DeterministicRecommendationEngine.generateRecommendations(contextAfterCooldown);
+    expect(recsAfterCooldown.find((r) => r.fingerprint === targetFingerprint)).toBeDefined();
+  });
 });

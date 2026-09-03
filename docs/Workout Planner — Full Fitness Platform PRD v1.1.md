@@ -1,5 +1,5 @@
 # Workout Planner — Full Fitness Platform
-## Master Product Requirements Document (PRD) v2.0
+## Master Product Requirements Document (PRD) v1.1
 > **Status:** AUTHORITATIVE CURRENT MASTER PRD (Active — Phase 2H.5 Architecture Baseline)
 
 **Project:** Workout Planner  
@@ -346,7 +346,7 @@ Every multi-step onboarding/generator flow must show:
 Examples:
 
 > Step 4 of 9  
-> 3 steps remaining
+> 5 steps remaining
 
 Do not display fabricated precise time estimates.
 
@@ -1108,12 +1108,12 @@ The platform's capabilities map to seven product pillars:
 | Pillar | Description | Status |
 |--------|-------------|--------|
 | **DISCOVER** | Exercise library, muscle/joint maps, search & filters, exercise details | ✅ Implemented (Phase 2F–2G) |
-| **PLAN** | Workout generation, manual building, programs, scheduling | ✅ Partially implemented (Phase 2H) |
+| **PLAN** | Workout generation, manual building, programs, scheduling | ✅ Implemented (Phase 2H, 2J) |
 | **TRAIN** | Session execution, set logging, real-time tracking, guided mode | ✅ Implemented (Phase 2H) |
-| **TRACK** | Dashboard metrics, body metrics, workout history | ✅ Partially implemented (Phase 2H) |
-| **ADAPT** | Personal records, goals, recommendation engine, adaptive training | 🔲 Domain types defined (Phase 2H.5) |
-| **COACH** | AI coaching, form guidance, training insights | 🔲 Domain types defined (Phase 2H.5) |
-| **CONNECT** | Sharing, challenges, streaks, wearable integrations | 🔲 Domain types defined (Phase 2H.5) |
+| **TRACK** | Dashboard metrics, body metrics, workout history | ✅ Implemented (Phase 2H, 2I) |
+| **ADAPT** | Personal records, goals, recommendation engine, adaptive training | ✅ Implemented (Phase 2I–2L) |
+| **COACH** | AI coaching, form guidance, training insights | 🔲 V2.0 Scope |
+| **CONNECT** | Sharing, challenges, streaks, wearable integrations | ✅ Challenges implemented (Phase 2J); Social/Wearables V2.0 |
 
 ---
 

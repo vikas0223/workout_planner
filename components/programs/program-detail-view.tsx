@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Program } from '@/types/domain';
@@ -19,12 +19,15 @@ export function ProgramDetailView({ programId }: ProgramDetailViewProps) {
   const [adherence, setAdherence] = useState<ProgramAdherenceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const programRepo = new LocalProgramRepository();
-  const workoutRepo = new LocalWorkoutRepository();
-  const completionRepo = new LocalCompletionRepository();
-  const service = new ProgramService(programRepo, workoutRepo, completionRepo);
+  const programRepo = useMemo(() => new LocalProgramRepository(), []);
+  const workoutRepo = useMemo(() => new LocalWorkoutRepository(), []);
+  const completionRepo = useMemo(() => new LocalCompletionRepository(), []);
+  const service = useMemo(
+    () => new ProgramService(programRepo, workoutRepo, completionRepo),
+    [programRepo, workoutRepo, completionRepo]
+  );
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const p = await programRepo.getProgramById(programId);
       setProgram(p);
@@ -37,11 +40,11 @@ export function ProgramDetailView({ programId }: ProgramDetailViewProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [programId, programRepo, service]);
 
   useEffect(() => {
     loadData();
-  }, [programId]);
+  }, [loadData]);
 
   const handleRescheduleDay = async (dayId: string, newDate: string) => {
     await service.rescheduleDay(dayId, newDate);

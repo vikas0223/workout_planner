@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Program,
@@ -36,8 +36,8 @@ export function ProgramBuilder() {
   const [weeks, setWeeks] = useState<ProgramWeek[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const workoutRepo = new LocalWorkoutRepository();
-  const programRepo = new LocalProgramRepository();
+  const workoutRepo = useMemo(() => new LocalWorkoutRepository(), []);
+  const programRepo = useMemo(() => new LocalProgramRepository(), []);
 
   useEffect(() => {
     async function loadTemplates() {
@@ -63,7 +63,7 @@ export function ProgramBuilder() {
       ],
     }));
     setWeeks(initialWeeks);
-  }, []);
+  }, [workoutRepo]);
 
   const handleAddWeek = () => {
     const nextNum = weeks.length + 1;

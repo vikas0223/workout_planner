@@ -136,6 +136,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
     }
   };
 
+  const remainingSteps = totalSteps - currentStep;
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
@@ -143,10 +144,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
       {/* Header & Step Indicator */}
       <div className="mb-6">
         <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
-          <span>STEP {currentStep} OF {totalSteps}</span>
+          <span>STEP {currentStep} OF {totalSteps} • {remainingSteps} steps remaining</span>
           <span className="text-indigo-600 font-semibold">{Math.round(progressPercentage)}% Completed</span>
         </div>
-        <Progress value={progressPercentage} className="h-2 bg-slate-100" aria-label="Workout generation progress" />
+        <Progress value={progressPercentage} className="h-2 bg-slate-100" aria-label={`Workout setup progress (${remainingSteps} steps remaining)`} />
       </div>
 
       {/* Step Content */}

@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GeneratedWorkout } from '@/types/domain';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +48,12 @@ export function WorkoutReview({
   const [activeWorkout, setActiveWorkout] = useState<GeneratedWorkout>(workout);
   const [adaptationsAccepted, setAdaptationsAccepted] = useState<boolean>(false);
   const [adaptationsDeclined, setAdaptationsDeclined] = useState<boolean>(false);
+
+  useEffect(() => {
+    setActiveWorkout(workout);
+    setAdaptationsAccepted(false);
+    setAdaptationsDeclined(false);
+  }, [workout]);
 
   const { decision, applyAdaptations } = useAdaptiveTraining({
     workoutPlan: workout,

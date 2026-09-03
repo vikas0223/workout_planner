@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   WorkoutAdaptationDecision,
   AdaptiveContext,
@@ -43,14 +43,17 @@ export function useAdaptiveTraining({
 }: UseAdaptiveTrainingOptions) {
   const [decision, setDecision] = useState<WorkoutAdaptationDecision | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const evalTokenRef = useRef(0);
 
   const completionRepo = useMemo(() => new LocalCompletionRepository(), []);
   const goalRepo = useMemo(() => new LocalGoalRepository(), []);
   const userRepo = useMemo(() => new LocalUserRepository(), []);
 
   const evaluateAdaptations = useCallback(async () => {
+    const currentToken = ++evalTokenRef.current;
     if (!workoutPlan || !workoutPlan.exercises || workoutPlan.exercises.length === 0) {
       setDecision(null);
+      setIsLoading(false);
       return;
     }
 
@@ -61,6 +64,8 @@ export function useAdaptiveTraining({
         goalRepo.listGoals(userId),
         userRepo.getProfile(userId).then((p) => p || userRepo.getCurrentGuestProfile()),
       ]);
+
+      if (evalTokenRef.current !== currentToken) return;
 
       const nowIso = new Date().toISOString();
       const context: AdaptiveContext = {
@@ -82,12 +87,18 @@ export function useAdaptiveTraining({
       };
 
       const result = DeterministicAdaptiveEngine.evaluateWorkout(context);
-      setDecision(result);
+      if (evalTokenRef.current === currentToken) {
+        setDecision(result);
+      }
     } catch (err) {
-      console.warn('Adaptive evaluation encountered error:', err);
-      setDecision(null);
+      if (evalTokenRef.current === currentToken) {
+        console.warn('Adaptive evaluation encountered error:', err);
+        setDecision(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (evalTokenRef.current === currentToken) {
+        setIsLoading(false);
+      }
     }
   }, [workoutPlan, workoutSource, sourceEntityId, userId, programContext, completionRepo, goalRepo, userRepo]);
 

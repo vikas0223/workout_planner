@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   DeterministicRecommendation,
   RecommendationCategory,
@@ -37,15 +37,16 @@ export interface UseRecommendationsOptions {
   autoRecordShown?: boolean;
 }
 
-export function useRecommendations(options?: UseRecommendationsOptions) {
+export function useRecommendations({
+  userId = 'guest_user',
+  limit = 5,
+  categoryFilter,
+  autoRecordShown = true,
+}: UseRecommendationsOptions = {}) {
   const [recommendations, setRecommendations] = useState<DeterministicRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-
-  const userId = options?.userId || 'guest_user';
-  const limit = options?.limit ?? 3;
-  const categoryFilter = options?.categoryFilter;
-  const autoRecordShown = options?.autoRecordShown ?? true;
+  const recordedShownFingerprintsRef = useRef<Set<string>>(new Set());
 
   const userRepo = useMemo(() => new LocalUserRepository(), []);
   const completionRepo = useMemo(() => new LocalCompletionRepository(), []);
@@ -122,9 +123,13 @@ export function useRecommendations(options?: UseRecommendationsOptions) {
 
       setRecommendations(generated);
 
-      // Optionally record 'shown' events for telemetry
+      // Optionally record 'shown' events for telemetry (deduplicated by fingerprint)
       if (autoRecordShown && generated.length > 0) {
         for (const rec of generated) {
+          if (recordedShownFingerprintsRef.current.has(rec.fingerprint)) {
+            continue;
+          }
+          recordedShownFingerprintsRef.current.add(rec.fingerprint);
           const event: RecommendationEvent = {
             id: `recevt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             userId,

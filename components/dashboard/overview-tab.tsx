@@ -42,8 +42,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     acceptRecommendation,
   } = useRecommendations({ limit: 1 });
 
-  const handleApplyRecommendation = async (rec: DeterministicRecommendation) => {
-    await acceptRecommendation(rec);
+  const handleApplyRecommendation = (rec: DeterministicRecommendation) => {
+    acceptRecommendation(rec).catch((err) => {
+      console.error('[OverviewTab] Error recording recommendation acceptance:', err);
+    });
     if (rec.actionPayload.navigationTarget) {
       router.push(rec.actionPayload.navigationTarget);
     } else if (rec.actionPayload.type === 'start_program_day' && rec.actionPayload.programId) {

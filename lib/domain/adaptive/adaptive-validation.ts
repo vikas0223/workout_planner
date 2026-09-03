@@ -51,9 +51,25 @@ export class AdaptiveValidation {
 
     // 5. Constraints compliance
     if (context.preferences?.constraints && context.preferences.constraints.length > 0) {
+      const exerciseTargetName = (adapted.variationName || proposal.exerciseName || '').toLowerCase();
       for (const constraint of context.preferences.constraints) {
         if (constraint === 'bodyweight_only' && adapted.targetWeightKg && adapted.targetWeightKg > 0) {
           errors.push(`Constraint violation: user has active 'bodyweight_only' constraint.`);
+        }
+        if (
+          constraint === 'no_jump' &&
+          (exerciseTargetName.includes('jump') || exerciseTargetName.includes('plyo') || exerciseTargetName.includes('hop'))
+        ) {
+          errors.push(`Constraint violation: user has active 'no_jump' constraint.`);
+        }
+        if (
+          constraint === 'quiet' &&
+          (exerciseTargetName.includes('jump') || exerciseTargetName.includes('slam') || exerciseTargetName.includes('drop'))
+        ) {
+          errors.push(`Constraint violation: user has active 'quiet' constraint.`);
+        }
+        if (constraint === 'home_only' && adapted.targetWeightKg && adapted.targetWeightKg > 150) {
+          errors.push(`Constraint violation: user has active 'home_only' constraint (load exceeds home training threshold).`);
         }
       }
     }
