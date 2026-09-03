@@ -59,9 +59,7 @@ export function useDashboard(
   const [rawSessions, setRawSessions] = useState<WorkoutSession[]>([]);
   const [metrics, setMetrics] = useState<AggregatedProgressMetrics | null>(null);
   const [personalRecords, setPersonalRecords] = useState<Record<string, ExercisePersonalRecords>>({});
-  const [isOffline, setIsOffline] = useState<boolean>(
-    typeof navigator !== 'undefined' ? !navigator.onLine : false
-  );
+  const [isOffline, setIsOffline] = useState<boolean>(false);
 
   const completionRepoRef = useRef<LocalCompletionRepository | null>(null);
   if (!completionRepoRef.current) {
@@ -134,6 +132,10 @@ export function useDashboard(
   // 4. Online/Offline Network Status
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    if (typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean') {
+      setIsOffline(!navigator.onLine);
+    }
 
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);

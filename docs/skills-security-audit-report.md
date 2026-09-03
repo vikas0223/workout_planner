@@ -1,6 +1,6 @@
 # AI Skills & Bundles Security Audit Report
 
-**Audit Target:** Installed Skills Ecosystem (`C:\Users\Vikas\.gemini\config\skills`)  
+**Audit Target:** Installed Skills Ecosystem (`<GLOBAL_CONFIG_ROOT>/skills`)  
 **Audit Standard:** Universal Non-Intrusive Static Analysis (`/audit-skills`)  
 **Scope:** 1,400+ installed skills & bundles across Windows, macOS, Linux/Unix, and Mobile (Android/iOS)  
 **Date:** September 3, 2026  

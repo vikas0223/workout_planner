@@ -55,7 +55,7 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
   const [userId, setUserId] = useState<string | null>(null)
   const [isOfflineMode, setIsOfflineMode] = useState(false)
   const [tablesInitialized, setTablesInitialized] = useState(false)
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [isOnline, setIsOnline] = useState(true)
 
   // Try to get the Supabase client, which may return a fallback client if env vars are missing
   const supabase = getSupabaseBrowserClient()
@@ -488,8 +488,12 @@ export function WorkoutCompletionProvider({ children }: { children: React.ReactN
     }
   }, [userId, isOfflineMode, fetchCompletedExercises])
 
-  // Get user ID on mount
+  // Listen for online/offline events and synchronize on mount
   useEffect(() => {
+    if (typeof navigator !== "undefined" && typeof navigator.onLine === "boolean") {
+      setIsOnline(navigator.onLine)
+    }
+
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 

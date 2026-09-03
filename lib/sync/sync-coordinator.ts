@@ -135,7 +135,7 @@ export class SyncCoordinator {
    * Retrieves high-level human-readable sync state for UI components.
    */
   public async getStatus(): Promise<SyncStatusState> {
-    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    const isOnline = typeof navigator !== 'undefined' && typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
     const queue = await this.db.getAll<SyncQueueItem>(STORES.SYNC_QUEUE);
     const conflicts = await this.db.getAll<SyncConflictItem>(STORES.SYNC_CONFLICTS);
 

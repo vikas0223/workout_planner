@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getSyncCoordinator, SyncStatusState, SyncEventEmitter } from '@/lib/sync';
 
 const initialSyncState: SyncStatusState = {
-  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+  isOnline: true,
   isSyncing: false,
   statusText: 'Synced',
   pendingCount: 0,

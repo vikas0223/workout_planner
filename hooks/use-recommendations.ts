@@ -123,13 +123,14 @@ export function useRecommendations({
 
       setRecommendations(generated);
 
-      // Optionally record 'shown' events for telemetry (deduplicated by fingerprint)
+      // Optionally record 'shown' events for telemetry (deduplicated by composite userId:fingerprint)
       if (autoRecordShown && generated.length > 0) {
         for (const rec of generated) {
-          if (recordedShownFingerprintsRef.current.has(rec.fingerprint)) {
+          const dedupeKey = `${userId}:${rec.fingerprint}`;
+          if (recordedShownFingerprintsRef.current.has(dedupeKey)) {
             continue;
           }
-          recordedShownFingerprintsRef.current.add(rec.fingerprint);
+          recordedShownFingerprintsRef.current.add(dedupeKey);
           const event: RecommendationEvent = {
             id: `recevt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
             userId,

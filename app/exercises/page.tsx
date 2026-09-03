@@ -18,9 +18,26 @@ import { useExerciseFavorites } from '@/hooks/use-exercise-favorites';
 import { ExerciseCard } from '@/components/exercises/exercise-card';
 import { ExerciseFilters } from '@/components/exercises/exercise-filters';
 import { ExerciseFilterDrawer } from '@/components/exercises/exercise-filter-drawer';
-import { ExerciseDetailDialog } from '@/components/exercises/exercise-detail-dialog';
-import { AnatomyExplorer } from '@/components/anatomy/anatomy-explorer';
+import dynamic from 'next/dynamic';
 import { Exercise } from '@/types/domain';
+
+const AnatomyExplorer = dynamic(
+  () => import('@/components/anatomy/anatomy-explorer').then((mod) => mod.AnatomyExplorer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="py-20 text-center space-y-3">
+        <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-slate-500 font-medium">Loading Interactive Anatomy Explorer...</p>
+      </div>
+    ),
+  }
+);
+
+const ExerciseDetailDialog = dynamic(
+  () => import('@/components/exercises/exercise-detail-dialog').then((mod) => mod.ExerciseDetailDialog),
+  { ssr: false }
+);
 import {
   Search,
   SlidersHorizontal,

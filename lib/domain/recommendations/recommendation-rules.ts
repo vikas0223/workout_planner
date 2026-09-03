@@ -483,15 +483,22 @@ export class RecommendationRules {
 
     // Check if user trained heavily 3 consecutive calendar days (adjacent gaps strictly 1 day)
     let hasThreeConsecutive = false;
-    if (recentSessions.length >= 3) {
-      const getMidnightMs = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-      };
-      const day0 = getMidnightMs(recentSessions[0].completedAt || recentSessions[0].startedAt);
-      const day1 = getMidnightMs(recentSessions[1].completedAt || recentSessions[1].startedAt);
-      const day2 = getMidnightMs(recentSessions[2].completedAt || recentSessions[2].startedAt);
+    const getMidnightMs = (dateStr: string) => {
+      const d = new Date(dateStr);
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    };
 
+    // Normalize session timestamps, remove duplicate calendar days, and select newest three distinct days
+    const distinctDays = Array.from(
+      new Set(
+        recentSessions
+          .map((s) => getMidnightMs(s.completedAt || s.startedAt))
+          .filter((ms) => !isNaN(ms))
+      )
+    ).sort((a, b) => b - a);
+
+    if (distinctDays.length >= 3) {
+      const [day0, day1, day2] = distinctDays;
       const oneDayMs = 24 * 60 * 60 * 1000;
       const gap01 = Math.round((day0 - day1) / oneDayMs);
       const gap12 = Math.round((day1 - day2) / oneDayMs);

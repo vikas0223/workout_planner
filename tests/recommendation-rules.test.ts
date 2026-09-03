@@ -198,4 +198,30 @@ describe('RecommendationRules (Phase 2K)', () => {
     expect(results[0].candidate?.title).toContain('Pull A');
     expect(results[0].candidate?.actionPayload.programDayId).toBe('d2');
   });
+
+  it('evaluates active recovery when user worked out across 3 consecutive days even with multiple sessions on the same day', () => {
+    // Session 1: Day 3 morning (2026-09-03T09:00:00Z)
+    // Session 2: Day 3 afternoon (2026-09-03T15:00:00Z) - same calendar day
+    // Session 3: Day 2 (2026-09-02T10:00:00Z)
+    // Session 4: Day 1 (2026-09-01T10:00:00Z)
+    const sessions: WorkoutSession[] = [
+      { id: 's_d3_pm', userId: 'user_1', name: 'Legs', status: 'completed', startedAt: '2026-09-03T15:00:00Z', completedAt: '2026-09-03T16:00:00Z', exercises: [] },
+      { id: 's_d3_am', userId: 'user_1', name: 'Cardio', status: 'completed', startedAt: '2026-09-03T09:00:00Z', completedAt: '2026-09-03T09:45:00Z', exercises: [] },
+      { id: 's_d2', userId: 'user_1', name: 'Pull', status: 'completed', startedAt: '2026-09-02T10:00:00Z', completedAt: '2026-09-02T11:00:00Z', exercises: [] },
+      { id: 's_d1', userId: 'user_1', name: 'Push', status: 'completed', startedAt: '2026-09-01T10:00:00Z', completedAt: '2026-09-01T11:00:00Z', exercises: [] },
+    ];
+
+    const context: RecommendationContext = {
+      recentSessions: sessions,
+      recentFeedback: [],
+    };
+
+    const results = RecommendationRules.evaluateRecovery(context);
+    expect(results.length).toBeGreaterThan(0);
+    const recoveryRec = results.find((r: { candidate?: { category: string } }) => r.candidate?.category === 'recovery_day');
+    expect(recoveryRec).toBeDefined();
+    expect(recoveryRec?.eligible).toBe(true);
+    expect(recoveryRec?.candidate?.evidence.summary).toBe('3 consecutive workout days');
+  });
 });
+

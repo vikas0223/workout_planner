@@ -322,7 +322,7 @@ What equipment do you have?
 ...
 
 ████████████░░░░░
-3 steps remaining
+5 steps remaining
 ```
 
 Users must be able to:
@@ -1101,7 +1101,7 @@ The application supports:
 
 ---
 
-# 94. Product Pillars (Phase 2H.5)
+# 94. Product Pillars (V1.0 Final Snapshot — Phases 2A–2L)
 
 The platform's capabilities map to seven product pillars:
 
@@ -1113,7 +1113,7 @@ The platform's capabilities map to seven product pillars:
 | **TRACK** | Dashboard metrics, body metrics, workout history | ✅ Implemented (Phase 2H, 2I) |
 | **ADAPT** | Personal records, goals, recommendation engine, adaptive training | ✅ Implemented (Phase 2I–2L) |
 | **COACH** | AI coaching, form guidance, training insights | 🔲 V2.0 Scope |
-| **CONNECT** | Sharing, challenges, streaks, wearable integrations | ✅ Challenges implemented (Phase 2J); Social/Wearables V2.0 |
+| **CONNECT** | Sharing, challenges, streaks, wearable integrations | ✅ Streaks & Challenges implemented (Phase 2I, 2J); Social/Wearables V2.0 |
 
 ---
 

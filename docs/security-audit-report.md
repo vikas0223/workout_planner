@@ -17,7 +17,7 @@ A comprehensive, defense-in-depth security audit was performed across the Workou
 - **Service Worker Security:** `public/sw.js` explicitly blocks caching of Supabase tokens, authentication responses, and API calls via regular-expression boundary filters.
 - **Zero-LLM Deterministic Design:** The recommendation and adaptive engines are pure functional pipelines with no external prompt-injection or hallucination attack surfaces.
 
-The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnerable to GHSA-9qr9-h5gf-34mp), **one Medium configuration finding** (missing HTTP security headers in `next.config.mjs`), and **one architectural cleanup recommendation** (isolating server-role key references out of client modules).
+The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnerable to GHSA-9qr9-h5gf-34mp), **one Medium configuration finding** (missing HTTP security headers in `next.config.mjs`), **one architectural cleanup recommendation** (isolating server-role key references out of client modules), and **one acknowledged Low-severity finding** (plaintext IndexedDB storage standard for local-first PWAs).
 
 ---
 
@@ -26,8 +26,8 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 | ID | Title | Category | Severity | CVSS v3.1 | Status |
 |---|---|---|---|---|---|
 | **SEC-01** | Outdated Next.js package vulnerable to React Flight RCE | Dependency / CVE | **CRITICAL** | 9.8 | Action Required |
-| **SEC-02** | Missing HTTP Security Headers (CSP, HSTS, X-Frame-Options) | Web / Configuration | **MEDIUM** | 5.3 | Action Required |
-| **SEC-03** | Server Role key referenced in shared client Supabase module | Architectural / Secrets | **LOW** | 3.1 | Recommended |
+| **SEC-02** | HTTP Security Headers Configuration (HSTS outstanding) | Web / Configuration | **LOW** | 3.7 | Partially Remediated (HSTS outstanding) |
+| **SEC-03** | Server Role key referenced in shared client Supabase module | Architectural / Secrets | **LOW** | 3.1 | Remediated |
 | **SEC-04** | Plaintext IndexedDB storage for offline workout data | Data Protection | **LOW** | 2.5 | Acknowledged / By Design |
 
 ---
@@ -45,56 +45,28 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 
 ---
 
-### SEC-02: Missing HTTP Security Headers in Next.js
-- **Severity:** **MEDIUM** (CVSS: 5.3)
+### SEC-02: HTTP Security Headers Configuration
+- **Severity:** **LOW** (CVSS: 3.7)
 - **Component:** `next.config.mjs`
-- **Vulnerability Description:** The application configuration does not declare custom HTTP response headers. It is missing:
-  - `Content-Security-Policy` (CSP)
+- **Vulnerability Description:** `next.config.mjs` configures custom HTTP response headers across all paths (`/:path*`), enforcing:
+  - `Content-Security-Policy` (CSP with strict script, connect, and frame rules)
   - `X-Frame-Options: DENY` (anti-clickjacking)
   - `X-Content-Type-Options: nosniff` (anti-MIME sniffing)
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
-  - `Strict-Transport-Security` (HSTS)
-- **Impact:** Leaves the application susceptible to clickjacking within foreign iframes, MIME-type confusion attacks, and unconstrained browser API usage.
-- **Remediation:**
-  Add a `headers()` block in `next.config.mjs`:
-  ```javascript
-  /** @type {import('next').NextConfig} */
-  const nextConfig = {
-    async headers() {
-      return [
-        {
-          source: '/(.*)',
-          headers: [
-            { key: 'X-Frame-Options', value: 'DENY' },
-            { key: 'X-Content-Type-Options', value: 'nosniff' },
-            { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-            { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-            {
-              key: 'Content-Security-Policy',
-              value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;",
-            },
-          ],
-        },
-      ];
-    },
-    eslint: { ignoreDuringBuilds: false },
-    typescript: { ignoreBuildErrors: false },
-    images: { unoptimized: true },
-  };
-
-  export default nextConfig;
-  ```
+  However, `Strict-Transport-Security` (HSTS) is currently not configured in `next.config.mjs`.
+- **Impact:** Core browser protections against clickjacking, MIME-type confusion, and sensitive device API access are active. Without HSTS, browsers do not automatically upgrade cleartext HTTP connections before TLS handshakes occur on first contact.
+- **Remediation / Status:** Core headers are fully implemented and active in production responses. Add `Strict-Transport-Security` (e.g. `max-age=63072000; includeSubDomains; preload`) once custom production domains with managed SSL/TLS certificates are active.
 
 ---
 
 ### SEC-03: Shared Supabase Client File References Server-Role Keys
 - **Severity:** **LOW** (CVSS: 3.1)
 - **Component:** `lib/supabase-client.ts`
-- **Vulnerability Description:** `lib/supabase-client.ts` exports `getSupabaseServerClient()` which references `process.env.SUPABASE_SERVICE_ROLE_KEY`. Because this file also creates the browser-side client (`getBrowserSupabaseClient`), bundling server functions in a client file creates an architectural leakage risk if developer imports inadvertently cross environments.
-- **Impact:** Next.js does not expose server env vars to the client unless prefixed with `NEXT_PUBLIC_`, so the actual secret is not leaked in current bundles. However, the pattern violates defense-in-depth isolation.
-- **Remediation:**
-  Remove `getSupabaseServerClient()` from `lib/supabase-client.ts`. All server-side client operations should exclusively import from `lib/supabase/server-client.ts`.
+- **Status:** **REMEDIATED**
+- **Vulnerability Description:** `getSupabaseServerClient()` has been removed from `lib/supabase-client.ts`. All server-side client operations now exclusively import and instantiate the client from `lib/supabase/server-client.ts`.
+- **Impact:** The shared browser client module (`lib/supabase-client.ts`) references only public environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`), eliminating architectural leakage risks and preserving strict client/server boundary separation.
+- **Remediation:** Completed. Server-side Supabase clients are quarantined to server modules only.
 
 ---
 
@@ -116,7 +88,7 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 | **A02: Cryptographic Failures** | HTTPS/WSS enforced for all Supabase calls. SW filters auth tokens from cache. | **PROTECTED** |
 | **A03: Injection** | Zero raw SQL string interpolation. All queries use PostgREST parameterized builders. | **PROTECTED** |
 | **A04: Insecure Design** | Deterministic domain architecture, local-first outbox, explicit conflict resolution. | **PROTECTED** |
-| **A05: Security Misconfiguration** | Missing HTTP security headers in `next.config.mjs` (SEC-02). | **NEEDS HARDENING** |
+| **A05: Security Misconfiguration** | Core security headers (CSP, X-Frame, nosniff) configured in next.config.mjs; HSTS remains outstanding. | **HARDENED (HSTS Pending)** |
 | **A06: Vulnerable & Outdated Components** | Next.js 15.2.4 contains known CVE (GHSA-9qr9-h5gf-34mp) (SEC-01). | **NEEDS UPGRADE** |
 | **A07: Identification & Auth Failures** | Delegated to Supabase Auth with session refresh; no custom password hashing. | **PROTECTED** |
 | **A08: Software & Data Integrity Failures** | Offline fixture migrations handle corrupt JSON gracefully; SW cache is scoped. | **PROTECTED** |
@@ -128,6 +100,6 @@ The audit identified **one Critical dependency advisory** (`next@15.2.4` vulnera
 ## Recommended Action Plan
 
 1. **Immediate (P0):** Upgrade `next` dependency to patch GHSA-9qr9-h5gf-34mp.
-2. **Immediate (P1):** Configure HTTP security headers in `next.config.mjs` (CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy).
-3. **Short-Term (P2):** Remove `getSupabaseServerClient` from `lib/supabase-client.ts` to maintain strict client/server boundary separation.
+2. **Configuration (P1):** Core HTTP security headers configured in `next.config.mjs` (CSP, X-Frame, X-Content-Type, Referrer-Policy, Permissions-Policy); add `Strict-Transport-Security` (HSTS) when production custom domain TLS is provisioned.
+3. **Remediated (P2):** Removed `getSupabaseServerClient` from `lib/supabase-client.ts`; server operations now strictly use `lib/supabase/server-client.ts`.
 4. **Validation (P3):** Rerun `pnpm audit`, `pnpm test`, and `pnpm build` to verify that all patches pass without regressions.

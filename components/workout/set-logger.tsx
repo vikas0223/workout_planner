@@ -180,6 +180,7 @@ export function SetLogger({
             <Input
               type="number"
               step="0.5"
+              inputMode="decimal"
               placeholder="e.g. 60"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
@@ -195,6 +196,7 @@ export function SetLogger({
               type="number"
               min={1}
               max={100}
+              inputMode="numeric"
               placeholder="e.g. 10"
               value={reps}
               onChange={(e) => setReps(e.target.value)}

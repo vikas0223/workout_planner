@@ -187,7 +187,7 @@ export function WorkoutSessionView({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 min-h-[100dvh] pb-12 sm:pb-8">
       {/* Session Top Status Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
