@@ -9,9 +9,10 @@
 
 import React from 'react';
 import { Exercise } from '@/types/domain';
-import { Heart, Plus, Dumbbell, Sparkles } from 'lucide-react';
+import { Heart, Plus, Dumbbell } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ExerciseMedia } from './exercise-media';
 
 export interface ExerciseCardProps {
   exercise: Exercise;
@@ -80,16 +81,9 @@ export function ExerciseCard({
           </Button>
         </div>
 
-        {/* Thumbnail Illustration / Graphic Placeholder */}
-        <div className="relative mb-3 flex h-28 w-full items-center justify-center rounded-lg bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-slate-100 border border-slate-100 overflow-hidden group-hover:from-indigo-100/70 group-hover:to-purple-100/60 transition-colors">
-          <div className="flex flex-col items-center justify-center text-center p-2">
-            <div className="h-10 w-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-1 text-indigo-600 border border-indigo-100">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <span className="text-[11px] font-medium text-slate-500 line-clamp-1">
-              {exercise.movementPattern ? `${exercise.movementPattern.toUpperCase()} PATTERN` : 'DEMO'}
-            </span>
-          </div>
+        {/* Exercise Media Demonstration */}
+        <div className="mb-3">
+          <ExerciseMedia exercise={exercise} context="card" />
         </div>
 
         {/* Exercise Title */}

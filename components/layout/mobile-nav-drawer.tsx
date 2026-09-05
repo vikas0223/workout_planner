@@ -64,8 +64,9 @@ export function MobileNavDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[280px] sm:max-w-[320px] bg-white p-0 flex flex-col"
+        className="w-[280px] sm:max-w-[320px] bg-white p-0 flex flex-col [&>button]:hidden"
         aria-label="Navigation menu"
+        hideCloseButton
       >
         {/* Drawer Header */}
         <SheetHeader className="px-5 pt-5 pb-4 border-b border-slate-100">

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <g transform="translate(200, 160)" filter="url(#shadow)">
+    <circle cx="70" cy="-30" r="13" fill="#1E293B"/>
+    <path d="M52,-20 L50,45" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <ellipse cx="50" cy="46" rx="8" ry="4" fill="#0F172A"/>
+    <path d="M60,-24 L-20,-10 L-22,6 L56,-8 Z" fill="url(#accent-grad)"/>
+    <path d="M-20,-10 L-95,14 L-90,26 L-22,6 Z" fill="#334155"/>
+    <path d="M-95,16 L-105,44 L-94,46 L-86,22 Z" fill="#0F172A"/>
+    <line x1="-120" y1="48" x2="80" y2="48" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4,4"/>
+    <path d="M25,-32 L25,-8" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="25,-38 20,-30 30,-30" fill="#6366F1"/>
+  </g>
+
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">CHEST, ARMS &amp; CORE</text>
+  </g>
+</svg>

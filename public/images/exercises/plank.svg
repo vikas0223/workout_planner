@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Forearm Plank Illustration -->
+  <g transform="translate(200, 165)" filter="url(#shadow)">
+    <!-- Head -->
+    <circle cx="75" cy="-25" r="13" fill="#1E293B"/>
+
+    <!-- Forearm Support on Floor -->
+    <!-- Upper Arm (Humerus vertical from shoulder) -->
+    <path d="M58,-14 L56,36" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- Forearm flat on floor pointing forward -->
+    <path d="M56,36 L86,36" stroke="#1E293B" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Rigid Core / Spine Line (Highlighted Working Muscle: Rectus Abdominis / Core) -->
+    <path d="M64,-18 L-22,-4 L-24,12 L60,-2 Z" fill="url(#accent-grad)"/>
+
+    <!-- Hips, Glutes & Legs (Plank alignment to toes) -->
+    <path d="M-22,-4 L-95,18 L-90,30 L-24,12 Z" fill="#334155"/>
+    <!-- Toes anchored on floor -->
+    <path d="M-95,20 L-105,40 L-94,42 L-86,26 Z" fill="#0F172A"/>
+
+    <!-- Floor line -->
+    <line x1="-120" y1="42" x2="100" y2="42" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <!-- Isometric Stabilization indicator -->
+    <circle cx="15" cy="4" r="18" fill="none" stroke="#6366F1" stroke-width="2" stroke-dasharray="3,3"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">CORE &amp; STABILITY</text>
+  </g>
+</svg>

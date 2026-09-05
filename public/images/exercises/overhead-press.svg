@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Overhead Press Illustration -->
+  <g transform="translate(200, 140)" filter="url(#shadow)">
+    <!-- Barbell Locked Out Overhead -->
+    <rect x="-85" y="-102" width="170" height="6" rx="3" fill="#64748B"/>
+    <rect x="-80" y="-120" width="8" height="42" rx="2" fill="#334155"/>
+    <rect x="72" y="-120" width="8" height="42" rx="2" fill="#334155"/>
+
+    <!-- Arms Locked Out Vertically -->
+    <path d="M-22,-40 L-34,-98" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M22,-40 L34,-98" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-52" r="14" fill="#1E293B"/>
+
+    <!-- Shoulders / Deltoids (Highlighted Working Muscle) -->
+    <circle cx="-22" cy="-40" r="11" fill="url(#accent-grad)"/>
+    <circle cx="22" cy="-40" r="11" fill="url(#accent-grad)"/>
+
+    <!-- Torso -->
+    <path d="M-18,-35 L-12,20 L12,20 L18,-35 Z" fill="#1E293B"/>
+
+    <!-- Hips & Legs Standing Straight -->
+    <path d="M-14,20 L-14,90 L-4,90 L-4,20 Z" fill="#334155"/>
+    <path d="M14,20 L14,90 L4,90 L4,20 Z" fill="#334155"/>
+
+    <!-- Feet -->
+    <path d="M-18,90 L0,90 L2,98 L-20,98 Z" fill="#0F172A"/>
+    <path d="M18,90 L0,90 L-2,98 L20,98 Z" fill="#0F172A"/>
+
+    <!-- Kinetic Vertical Press Vectors -->
+    <path d="M-52,-60 L-52,-90" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="-52,-96 -57,-88 -47,-88" fill="#6366F1"/>
+
+    <path d="M52,-60 L52,-90" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="52,-96 47,-88 57,-88" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">DELTOIDS &amp; TRICEPS</text>
+  </g>
+</svg>

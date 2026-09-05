@@ -81,6 +81,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // 0. Development / Localhost bypass — never intercept or cache on localhost
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    return;
+  }
+
   // 1. Skip non-GET requests (mutations, POST, etc.)
   if (request.method !== 'GET') {
     return;
@@ -98,6 +103,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 4. Next.js static assets (/_next/static/) — cache-first (immutable, hash-versioned)
+  // Never cache hot-update or HMR chunks
+  if (url.pathname.includes('hot-update') || url.pathname.includes('webpack-hmr')) {
+    return;
+  }
+
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(handleStaticAsset(request));
     return;

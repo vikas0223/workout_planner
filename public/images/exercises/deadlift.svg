@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="255" rx="140" ry="14" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Deadlift Illustration -->
+  <g transform="translate(200, 155)" filter="url(#shadow)">
+    <!-- Athlete in Hip Hinge Position pulling barbell -->
+    <!-- Head -->
+    <circle cx="-16" cy="-68" r="14" fill="#1E293B"/>
+    <!-- Torso (Spine straight at 45 deg) -->
+    <path d="M-10,-55 L-42,-10 L-22,-4 L0,-45 Z" fill="#1E293B"/>
+    
+    <!-- Glutes and Hamstrings (Working Muscle Highlighted) -->
+    <ellipse cx="-34" cy="-4" rx="20" ry="14" fill="url(#accent-grad)"/>
+    <!-- Thigh / Femur extending down to knee -->
+    <path d="M-42,-4 L-12,30 L-2,24 L-26,-10 Z" fill="url(#accent-grad)"/>
+    
+    <!-- Shins / Lower leg (Vertical) -->
+    <path d="M-12,30 L-8,82 L4,82 L0,28 Z" fill="#334155"/>
+    <!-- Feet on floor -->
+    <path d="M-14,82 L18,82 L22,90 L-18,90 Z" fill="#0F172A"/>
+
+    <!-- Arms hanging straight down grasping barbell -->
+    <path d="M-4,-48 L14,32" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Barbell at mid shin -->
+    <rect x="-70" y="28" width="140" height="6" rx="3" fill="#64748B"/>
+    <!-- Bumper Plates -->
+    <circle cx="14" cy="31" r="28" fill="#1E293B" stroke="#475569" stroke-width="4"/>
+    <circle cx="14" cy="31" r="10" fill="#64748B"/>
+
+    <!-- Kinetic Extension Vectors -->
+    <path d="M-42,-22 Q-36,-44 -18,-54" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="-14,-56 -24,-55 -18,-46" fill="#6366F1"/>
+    <!-- Vertical pull arrow -->
+    <path d="M28,45 L28,0" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="28,-6 23,2 33,2" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">GLUTES &amp; HAMSTRINGS</text>
+  </g>
+</svg>

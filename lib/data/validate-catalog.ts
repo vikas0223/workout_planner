@@ -35,6 +35,7 @@ export function validateExerciseCatalog(exercises: Exercise[]): CatalogValidatio
   const issues: ValidationIssue[] = [];
   const seenIds = new Set<string>();
   const seenSlugs = new Set<string>();
+  const seenMediaIds = new Set<string>();
   const idMap = new Map<string, Exercise>();
 
   for (const ex of exercises) {
@@ -191,6 +192,99 @@ export function validateExerciseCatalog(exercises: Exercise[]): CatalogValidatio
           field: 'provenance',
           message: 'Provenance metadata missing license or attribution',
         });
+      }
+    }
+
+    // 12. Media validation (optional per exercise, but strict when present)
+    if (ex.media !== undefined) {
+      if (!Array.isArray(ex.media)) {
+        issues.push({
+          type: 'error',
+          exerciseId: ex.id,
+          exerciseName: ex.name,
+          field: 'media',
+          message: 'Exercise media must be an array',
+        });
+      } else {
+        const VALID_MEDIA_TYPES = new Set(['image', 'video', 'gif', 'svg', 'animation']);
+
+        for (const m of ex.media) {
+          if (!m || typeof m !== 'object') {
+            issues.push({
+              type: 'error',
+              exerciseId: ex.id,
+              exerciseName: ex.name,
+              field: 'media',
+              message: 'Malformed media record: expected object',
+            });
+            continue;
+          }
+
+          // ID uniqueness & presence
+          if (!m.id || typeof m.id !== 'string' || m.id.trim().length === 0) {
+            issues.push({
+              type: 'error',
+              exerciseId: ex.id,
+              exerciseName: ex.name,
+              field: 'media.id',
+              message: 'Media record missing required ID',
+            });
+          } else if (seenMediaIds.has(m.id)) {
+            issues.push({
+              type: 'error',
+              exerciseId: ex.id,
+              exerciseName: ex.name,
+              field: 'media.id',
+              message: `Duplicate media ID: "${m.id}"`,
+            });
+          } else {
+            seenMediaIds.add(m.id);
+          }
+
+          // Media Type
+          if (!m.type || !VALID_MEDIA_TYPES.has(m.type)) {
+            issues.push({
+              type: 'error',
+              exerciseId: ex.id,
+              exerciseName: ex.name,
+              field: 'media.type',
+              message: `Invalid media type: "${m.type}". Must be image, video, gif, svg, or animation.`,
+            });
+          }
+
+          // Media URL
+          if (!m.url || typeof m.url !== 'string' || m.url.trim().length === 0) {
+            issues.push({
+              type: 'error',
+              exerciseId: ex.id,
+              exerciseName: ex.name,
+              field: 'media.url',
+              message: 'Media record missing required URL',
+            });
+          }
+
+          // Media Provenance
+          if (m.provenance) {
+            if (!m.provenance.source || !m.provenance.license) {
+              issues.push({
+                type: 'error',
+                exerciseId: ex.id,
+                exerciseName: ex.name,
+                field: 'media.provenance',
+                message: 'Media provenance missing required source or license',
+              });
+            }
+            if (typeof m.provenance.commercialUseAllowed !== 'boolean') {
+              issues.push({
+                type: 'warning',
+                exerciseId: ex.id,
+                exerciseName: ex.name,
+                field: 'media.provenance.commercialUseAllowed',
+                message: 'Media provenance commercialUseAllowed should be a boolean',
+              });
+            }
+          }
+        }
       }
     }
   }

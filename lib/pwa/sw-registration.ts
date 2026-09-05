@@ -22,6 +22,28 @@ export async function registerServiceWorker(
     return null;
   }
 
+  // In development mode, unregister any active service worker and purge stale caches.
+  // This prevents stale Webpack runtime chunks from intercepting HMR or causing module graph mismatches.
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          if (key.startsWith('workout-planner-')) {
+            await caches.delete(key);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[PWA] Error unregistering service worker in dev:', error);
+    }
+    return null;
+  }
+
   try {
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',

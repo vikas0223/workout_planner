@@ -21,7 +21,6 @@ import {
   Heart,
   Plus,
   Dumbbell,
-  Sparkles,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
@@ -29,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ExerciseMedia } from './exercise-media';
 
 export interface ExerciseDetailDialogProps {
   exercise: Exercise | null;
@@ -139,24 +139,13 @@ export function ExerciseDetailDialog({
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {/* 1. Media Demonstration / Illustration */}
-          <div className="relative flex h-48 sm:h-56 w-full items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 border border-slate-200 overflow-hidden shadow-inner">
-            <div className="flex flex-col items-center justify-center text-center p-4">
-              <div className="h-14 w-14 rounded-full bg-white shadow-md flex items-center justify-center mb-2 text-indigo-600 border border-indigo-100">
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <span className="text-sm font-semibold text-slate-800">
-                {exercise.name} Demonstration
-              </span>
-              <span className="text-xs text-slate-500 mt-0.5">
-                Targeting {exercise.primaryMuscles.join(', ')} • {exercise.equipment.join(', ')}
-              </span>
-            </div>
-
-            {/* Offline Provenance Badge */}
-            <div className="absolute bottom-2 right-2 bg-white/90 backdrop-blur-xs px-2 py-1 rounded text-[10px] text-slate-600 border border-slate-200 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />
-              <span>{exercise.provenance?.license || 'CC-BY-4.0'}</span>
-            </div>
+          <div className="w-full rounded-xl overflow-hidden border border-slate-200 shadow-xs">
+            <ExerciseMedia
+              exercise={exercise}
+              context="detail"
+              className="w-full aspect-[4/3]"
+              showProvenance
+            />
           </div>
 
           {/* 2. Structured Metadata Badges */}

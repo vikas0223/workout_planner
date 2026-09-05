@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="275" rx="140" ry="10" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Pull-Up Illustration -->
+  <g transform="translate(200, 130)" filter="url(#shadow)">
+    <!-- Pull Up Bar & Frame -->
+    <rect x="-110" y="-95" width="220" height="8" rx="4" fill="#334155"/>
+    <rect x="-105" y="-115" width="8" height="20" fill="#64748B"/>
+    <rect x="97" y="-115" width="8" height="20" fill="#64748B"/>
+
+    <!-- Arms hanging onto bar -->
+    <!-- Left Hand & Forearm -->
+    <circle cx="-48" cy="-91" r="5" fill="#0F172A"/>
+    <path d="M-48,-91 L-36,-45" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- Right Hand & Forearm -->
+    <circle cx="48" cy="-91" r="5" fill="#0F172A"/>
+    <path d="M48,-91 L36,-45" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-55" r="14" fill="#1E293B"/>
+
+    <!-- Back / Lats (Highlighted Working Muscle) -->
+    <!-- V-Taper Torso -->
+    <path d="M-36,-45 L-14,25 L14,25 L36,-45 Z" fill="url(#accent-grad)"/>
+    <path d="M-28,-40 Q-34,-10 -12,20 Q0,0 0,-42 Z" fill="#4F46E5" opacity="0.7"/>
+    <path d="M28,-40 Q34,-10 12,20 Q0,0 0,-42 Z" fill="#4F46E5" opacity="0.7"/>
+
+    <!-- Hips -->
+    <path d="M-14,25 L-16,45 L16,45 L14,25 Z" fill="#1E293B"/>
+
+    <!-- Crossed Legs hanging -->
+    <path d="M-12,45 L-8,95 L0,95 L0,45 Z" fill="#334155"/>
+    <path d="M12,45 L6,95 L-4,95 L2,45 Z" fill="#334155"/>
+    <!-- Feet -->
+    <ellipse cx="-2" cy="98" rx="8" ry="5" fill="#0F172A"/>
+
+    <!-- Vertical Pull Kinetic Vector -->
+    <path d="M-65,-10 L-65,-60" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="-65,-66 -70,-58 -60,-58" fill="#6366F1"/>
+
+    <path d="M65,-10 L65,-60" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="65,-66 60,-58 70,-58" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="128" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="64" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">LATS &amp; UPPER BACK</text>
+  </g>
+</svg>

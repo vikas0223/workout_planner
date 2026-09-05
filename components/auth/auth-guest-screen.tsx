@@ -15,6 +15,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { UserCheck, LogIn, ArrowRight, Lock, Mail, X, Loader2, AlertCircle } from 'lucide-react';
 import { useAuthGuard } from '@/contexts/auth-guard-context';
@@ -165,6 +166,17 @@ export function AuthGuestScreen() {
           <br />
           You can create an account later.
         </p>
+
+        {/* Link to Marketing Landing Page */}
+        <div className="mt-6 pt-4 border-t border-slate-100">
+          <Link
+            href="/landing"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 rounded-md p-1"
+          >
+            <span>Explore features & how Replyf works</span>
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
       </div>
 
       {/* Sign In / Sign Up Modal */}

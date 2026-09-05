@@ -33,6 +33,40 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var isDevHost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                  if (isDevHost && 'serviceWorker' in navigator) {
+                    var hadController = !!navigator.serviceWorker.controller;
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      for (var i = 0; i < registrations.length; i++) {
+                        registrations[i].unregister();
+                      }
+                    });
+                    if ('caches' in window) {
+                      caches.keys().then(function(keys) {
+                        for (var i = 0; i < keys.length; i++) {
+                          if (keys[i].indexOf('workout-planner-') !== -1) {
+                            caches.delete(keys[i]);
+                          }
+                        }
+                        if (hadController && !sessionStorage.getItem('sw_purged')) {
+                          sessionStorage.setItem('sw_purged', '1');
+                          location.reload();
+                        }
+                      });
+                    }
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body>
         <PersistenceProvider>
           <PWAProvider>

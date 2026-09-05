@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- 45-Degree Leg Press Machine Illustration -->
+  <g transform="translate(200, 145)" filter="url(#shadow)">
+    <!-- 45 deg Sled Guide Rails -->
+    <line x1="-90" y1="80" x2="65" y2="-75" stroke="#64748B" stroke-width="8" stroke-linecap="round"/>
+    <!-- Machine Sled Footplate -->
+    <rect x="52" y="-90" width="40" height="12" rx="3" transform="rotate(45, 72, -84)" fill="#1E293B"/>
+
+    <!-- Seated Backrest & Seat at Base -->
+    <rect x="-85" y="0" width="14" height="70" rx="4" transform="rotate(-35, -78, 35)" fill="#1E293B"/>
+    <rect x="-65" y="45" width="45" height="12" rx="4" fill="#1E293B"/>
+
+    <!-- Athlete Body -->
+    <circle cx="-85" cy="5" r="13" fill="#1E293B"/> <!-- Head -->
+    <path d="M-72,20 L-42,48 L-30,48 L-60,20 Z" fill="#334155"/> <!-- Torso -->
+
+    <!-- Quads / Thighs (Working Muscle Highlighted) -->
+    <path d="M-36,46 L10,10 L18,22 L-28,58 Z" fill="url(#accent-grad)"/>
+
+    <!-- Lower Leg extending to Footplate -->
+    <path d="M10,10 L45,-30 L55,-22 L20,18 Z" fill="#334155"/>
+    <!-- Feet flat on plate -->
+    <rect x="42" y="-38" width="16" height="26" rx="3" transform="rotate(45, 50, -25)" fill="#0F172A"/>
+
+    <!-- Diagonal Press Vectors -->
+    <path d="M-5,-10 L30,-45" stroke="#6366F1" stroke-width="3" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="36,-51 26,-46 32,-40" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">QUADRICEPS &amp; GLUTES</text>
+  </g>
+</svg>

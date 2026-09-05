@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Standing Bicep Curl Illustration -->
+  <g transform="translate(200, 140)" filter="url(#shadow)">
+    <!-- Head -->
+    <circle cx="0" cy="-60" r="14" fill="#1E293B"/>
+    <!-- Upright Torso -->
+    <path d="M-18,-45 L-12,25 L12,25 L18,-45 Z" fill="#1E293B"/>
+
+    <!-- Upper Arms hanging by sides -->
+    <path d="M-18,-42 L-22,0" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M18,-42 L22,0" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Biceps (Working Muscle Highlighted) -->
+    <ellipse cx="-20" cy="-18" rx="8" ry="12" fill="url(#accent-grad)"/>
+    <ellipse cx="20" cy="-18" rx="8" ry="12" fill="url(#accent-grad)"/>
+
+    <!-- Forearms curled up holding dumbbells -->
+    <path d="M-22,0 L-14,-32" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <path d="M22,0 L14,-32" stroke="#334155" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+    <!-- Dumbbells -->
+    <rect x="-24" y="-36" width="20" height="6" rx="2" fill="#64748B"/>
+    <rect x="-26" y="-44" width="6" height="22" rx="2" fill="#0F172A"/>
+    <rect x="-10" y="-44" width="6" height="22" rx="2" fill="#0F172A"/>
+
+    <rect x="4" y="-36" width="20" height="6" rx="2" fill="#64748B"/>
+    <rect x="2" y="-44" width="6" height="22" rx="2" fill="#0F172A"/>
+    <rect x="18" y="-44" width="6" height="22" rx="2" fill="#0F172A"/>
+
+    <!-- Legs Standing Solid -->
+    <path d="M-14,25 L-14,95 L-4,95 L-4,25 Z" fill="#334155"/>
+    <path d="M14,25 L14,95 L4,95 L4,25 Z" fill="#334155"/>
+    <!-- Feet -->
+    <path d="M-18,95 L0,95 L2,102 L-20,102 Z" fill="#0F172A"/>
+    <path d="M18,95 L0,95 L-2,102 L20,102 Z" fill="#0F172A"/>
+
+    <!-- Curler Flexion Arc Vectors -->
+    <path d="M-36,6 Q-42,-18 -26,-28" stroke="#6366F1" stroke-width="2" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="-22,-30 -29,-22 -33,-30" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="138" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="69" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">BICEPS BRACHII</text>
+  </g>
+</svg>
