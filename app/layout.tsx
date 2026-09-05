@@ -2,15 +2,16 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { PersistenceProvider } from '@/components/providers/persistence-provider'
 import { PWAProvider } from '@/components/providers/pwa-provider'
+import { AuthGuardProvider } from '@/contexts/auth-guard-context'
 
 export const metadata: Metadata = {
-  title: 'Workout Planner',
-  description: 'Personalized Workout Planner & Fitness Platform',
+  title: 'replyf',
+  description: 'replyf — Personalized Workout Planner & Fitness Platform',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Workout Planner',
+    title: 'replyf',
   },
   icons: {
     icon: '/icons/icon-192x192.png',
@@ -34,7 +35,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <PersistenceProvider>
-          <PWAProvider>{children}</PWAProvider>
+          <PWAProvider>
+            <AuthGuardProvider>{children}</AuthGuardProvider>
+          </PWAProvider>
         </PersistenceProvider>
       </body>
     </html>

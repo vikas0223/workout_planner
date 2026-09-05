@@ -59,7 +59,12 @@ export type WorkoutHubView =
   | 'completed'
   | 'saved';
 
-export function WorkoutHub() {
+export interface WorkoutHubProps {
+  initialView?: WorkoutHubView;
+  initialWorkout?: GeneratedWorkout | null;
+}
+
+export function WorkoutHub({ initialView, initialWorkout = null }: WorkoutHubProps = {}) {
   const router = useRouter();
   const [sessionService] = useState(() => new SessionCommandService());
   const [workoutRepo] = useState(() => new LocalWorkoutRepository());
@@ -71,8 +76,10 @@ export function WorkoutHub() {
     acceptRecommendation,
   } = useRecommendations({ limit: 1 });
 
-  const [activeView, setActiveView] = useState<WorkoutHubView>('wizard');
-  const [generatedWorkout, setGeneratedWorkout] = useState<GeneratedWorkout | null>(null);
+  const [activeView, setActiveView] = useState<WorkoutHubView>(
+    initialView || (initialWorkout ? 'review' : 'saved')
+  );
+  const [generatedWorkout, setGeneratedWorkout] = useState<GeneratedWorkout | null>(initialWorkout);
   const [workoutDraft, setWorkoutDraft] = useState<WorkoutDraft | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [completedSession, setCompletedSession] = useState<WorkoutSession | null>(null);

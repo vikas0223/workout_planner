@@ -58,7 +58,7 @@ describe('Phase 2E: HTTP Asset & Route Verification', () => {
     const res = await fetchEndpoint('/manifest.webmanifest');
     expect(res.status).toBe(200);
     const manifest = JSON.parse(res.body);
-    expect(manifest.name).toBe('Workout Planner');
+    expect(manifest.name).toBe('replyf');
     expect(manifest.display).toBe('standalone');
     expect(manifest.icons.length).toBe(3);
   });

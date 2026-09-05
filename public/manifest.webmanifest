@@ -1,6 +1,6 @@
 {
-  "name": "Workout Planner",
-  "short_name": "Workout",
+  "name": "replyf",
+  "short_name": "replyf",
   "description": "Personalized workout planner with offline-first logging and cloud sync",
   "start_url": "/",
   "scope": "/",

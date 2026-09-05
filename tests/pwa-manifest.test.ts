@@ -22,8 +22,8 @@ describe('Phase 2E: Web App Manifest Validation', () => {
     const content = fs.readFileSync(manifestPath, 'utf-8');
     const manifest = JSON.parse(content);
 
-    expect(manifest.name).toBe('Workout Planner');
-    expect(manifest.short_name).toBe('Workout');
+    expect(manifest.name).toBe('replyf');
+    expect(manifest.short_name).toBe('replyf');
     expect(manifest.start_url).toBe('/');
     expect(manifest.scope).toBe('/');
     expect(manifest.display).toBe('standalone');

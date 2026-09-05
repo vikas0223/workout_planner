@@ -1,8 +1,18 @@
 /**
- * Workout Generation Questionnaire Wizard Component
+ * Workout Generation Questionnaire Wizard Component (Part C & D)
  * 
  * Sequential one-question-at-a-time onboarding interface for deterministic workout generation.
- * Minimal required inputs, canonical taxonomy, and clean progress navigation.
+ * Follows systematic spacing scale:
+ * - Wizard top padding: 40px
+ * - Progress -> heading: 28px
+ * - Heading -> description: 8px
+ * - Description -> options: 28px
+ * - Option grid gap: 16px
+ * - Options -> divider: 28px
+ * - Divider -> footer buttons: 24px
+ * 
+ * Two-column desktop (1fr 1fr), single column mobile.
+ * Option cards: min-h 116px, padding 20px, consistent layout, >=44px touch targets.
  */
 
 'use client';
@@ -12,7 +22,6 @@ import { FitnessGoal, ExperienceLevel, GeneratedWorkout } from '@/types/domain';
 import { WorkoutEngine, WorkoutEngineInput } from '@/features/workout-engine';
 import { CANONICAL_GOALS, EXPERIENCE_LEVELS } from '@/lib/domain/workout-draft';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   ArrowLeft,
@@ -28,6 +37,7 @@ import {
   Building,
   Home as HomeIcon,
 } from 'lucide-react';
+import { useAuthGuard } from '@/contexts/auth-guard-context';
 
 export interface WorkoutWizardProps {
   onWorkoutGenerated: (workout: GeneratedWorkout) => void;
@@ -58,6 +68,7 @@ const MUSCLE_FOCUS_OPTIONS = [
 const DURATION_PRESETS = [15, 30, 45, 60, 90];
 
 export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardProps) {
+  const { completeOnboarding } = useAuthGuard();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const totalSteps = 6;
 
@@ -112,7 +123,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
     }
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true);
 
     try {
@@ -128,6 +139,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
       };
 
       const plan = WorkoutEngine.generateWorkoutPlan(input);
+      await completeOnboarding();
       setIsGenerating(false);
       onWorkoutGenerated(plan);
     } catch (err) {
@@ -140,32 +152,36 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-md overflow-hidden p-6 sm:p-8">
-      {/* Header & Step Indicator */}
-      <div className="mb-6">
+    <div className="w-full md:max-w-[860px] mx-auto pt-6 md:pt-10 pb-8 px-4 sm:px-8 bg-white/95 backdrop-blur-md rounded-2xl md:rounded-3xl border border-slate-200/80 shadow-md">
+      {/* Step Progress Bar */}
+      <div>
         <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
-          <span>STEP {currentStep} OF {totalSteps} • {remainingSteps} steps remaining</span>
-          <span className="text-indigo-600 font-semibold">{Math.round(progressPercentage)}% Completed</span>
+          <span>Step {currentStep} of {totalSteps}</span>
+          <span>{remainingSteps === 0 ? 'Final Step' : `${remainingSteps} steps remaining`}</span>
         </div>
-        <Progress value={progressPercentage} className="h-2 bg-slate-100" aria-label={`Workout setup progress (${remainingSteps} steps remaining)`} />
+        <Progress
+          value={progressPercentage}
+          className="h-2 bg-slate-100"
+          aria-label={`Workout setup progress (${remainingSteps} steps remaining)`}
+        />
       </div>
 
-      {/* Step Content */}
-      <div className="min-h-[340px] flex flex-col justify-between">
+      {/* Step Content Container */}
+      <div className="min-h-[360px] flex flex-col justify-between">
         {/* Step 1: Goal */}
         {currentStep === 1 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Target className="w-6 h-6 text-indigo-600" />
-                What is your primary fitness goal?
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Target className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>What is your primary fitness goal?</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Your goal drives exercise selection, rep ranges, and rest intervals.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {CANONICAL_GOALS.map((g) => {
                 const isSelected = goal === g.value;
                 return (
@@ -173,17 +189,27 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                     key={g.value}
                     type="button"
                     onClick={() => setGoal(g.value)}
-                    className={`p-4 rounded-2xl text-left border transition-all ${
+                    className={`min-h-[116px] p-5 rounded-2xl text-left border transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 shadow-xs ring-1 ring-indigo-500'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-sm text-slate-900">{g.label}</span>
-                      {isSelected && <Check className="w-4 h-4 text-indigo-600" />}
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-600 text-white'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                      </div>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{g.description}</p>
+                    <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
+                      {g.description}
+                    </p>
                   </button>
                 );
               })}
@@ -193,42 +219,53 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
         {/* Step 2: Experience */}
         {currentStep === 2 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Flame className="w-6 h-6 text-indigo-600" />
-                What is your training experience?
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Flame className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>What is your training experience?</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Calibrates exercise complexity and volume to prevent overtraining.
               </p>
             </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {EXPERIENCE_LEVELS.map((lvl) => {
                 const isSelected = experience === lvl.value;
+                const desc =
+                  lvl.value === 'beginner'
+                    ? 'Fundamental movement patterns, motor learning, and foundation building.'
+                    : lvl.value === 'intermediate'
+                    ? 'Progressive overload, varied compound lifts, and periodization.'
+                    : 'High-intensity volume, advanced variations, and specialization.';
+
                 return (
                   <button
                     key={lvl.value}
                     type="button"
                     onClick={() => setExperience(lvl.value)}
-                    className={`w-full p-4 rounded-2xl text-left border flex items-center justify-between transition-all ${
+                    className={`min-h-[116px] p-5 rounded-2xl text-left border transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 shadow-xs ring-1 ring-indigo-500'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
                     }`}
                   >
-                    <div>
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-sm text-slate-900">{lvl.label}</span>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {lvl.value === 'beginner'
-                          ? 'Fundamental movement patterns, motor learning, and foundation building.'
-                          : lvl.value === 'intermediate'
-                          ? 'Progressive overload, varied compound lifts, and periodization.'
-                          : 'High-intensity volume, advanced variations, and specialization.'}
-                      </p>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-600 text-white'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                      </div>
                     </div>
-                    {isSelected && <Check className="w-5 h-5 text-indigo-600 shrink-0 ml-3" />}
+                    <p className="text-xs text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
+                      {desc}
+                    </p>
                   </button>
                 );
               })}
@@ -238,55 +275,90 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
         {/* Step 3: Location & Equipment */}
         {currentStep === 3 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Dumbbell className="w-6 h-6 text-indigo-600" />
-                Where and with what will you train?
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Dumbbell className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>Where and with what will you train?</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Select your environment and all available equipment.
               </p>
             </div>
 
-            {/* Location Toggle */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
+            {/* Location Cards */}
+            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 type="button"
                 onClick={() => {
                   setLocation('gym');
                   setSelectedEquipment(['Dumbbells', 'Barbell', 'Cables', 'Machines', 'Bench', 'Bodyweight']);
                 }}
-                className={`p-3 rounded-2xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
+                className={`min-h-[80px] p-5 rounded-2xl border flex items-center justify-between gap-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                   location === 'gym'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
                 }`}
               >
-                <Building className="w-4 h-4" />
-                Commercial Gym
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <Building className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-slate-900 block">Commercial Gym</span>
+                    <span className="text-xs text-slate-500">Full machines & free weights</span>
+                  </div>
+                </div>
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                    location === 'gym'
+                      ? 'border-indigo-600 bg-indigo-600 text-white'
+                      : 'border-slate-300 bg-white'
+                  }`}
+                >
+                  {location === 'gym' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                </div>
               </button>
+
               <button
                 type="button"
                 onClick={() => {
                   setLocation('home');
                   setSelectedEquipment(['Dumbbells', 'Bodyweight', 'Resistance Bands']);
                 }}
-                className={`p-3 rounded-2xl border flex items-center justify-center gap-2 text-xs font-bold transition-all ${
+                className={`min-h-[80px] p-5 rounded-2xl border flex items-center justify-between gap-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                   location === 'home'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
                 }`}
               >
-                <HomeIcon className="w-4 h-4" />
-                Home / Limited
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                    <HomeIcon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-slate-900 block">Home / Limited</span>
+                    <span className="text-xs text-slate-500">Bodyweight & portable items</span>
+                  </div>
+                </div>
+                <div
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                    location === 'home'
+                      ? 'border-indigo-600 bg-indigo-600 text-white'
+                      : 'border-slate-300 bg-white'
+                  }`}
+                >
+                  {location === 'home' && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                </div>
               </button>
             </div>
 
             {/* Equipment Chips */}
-            <div className="pt-2">
-              <span className="text-xs font-semibold text-slate-700 mb-2 block">Available Equipment:</span>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-5">
+              <span className="text-xs font-bold text-slate-700 mb-2.5 block uppercase tracking-wide">
+                Available Equipment
+              </span>
+              <div className="flex flex-wrap gap-2.5">
                 {EQUIPMENT_LIST.map((eq) => {
                   const isSelected = selectedEquipment.includes(eq);
                   return (
@@ -294,13 +366,14 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                       key={eq}
                       type="button"
                       onClick={() => toggleEquipment(eq)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                      className={`min-h-[44px] px-4 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                         isSelected
                           ? 'border-indigo-600 bg-indigo-600 text-white shadow-xs'
                           : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      {eq}
+                      {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                      <span>{eq}</span>
                     </button>
                   );
                 })}
@@ -311,18 +384,18 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
         {/* Step 4: Days per Week */}
         {currentStep === 4 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-indigo-600" />
-                How many days per week do you plan to train?
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Calendar className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>How many days per week do you plan to train?</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Helps configure appropriate weekly split density.
               </p>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 pt-4">
+            <div className="mt-7 grid grid-cols-7 gap-2 sm:gap-3">
               {[1, 2, 3, 4, 5, 6, 7].map((num) => {
                 const isSelected = daysPerWeek === num;
                 return (
@@ -330,10 +403,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                     key={num}
                     type="button"
                     onClick={() => setDaysPerWeek(num)}
-                    className={`py-4 rounded-2xl border text-center transition-all ${
+                    className={`min-h-[72px] py-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-600 text-white font-black shadow-sm'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-800 font-bold hover:bg-slate-50'
+                        ? 'border-indigo-600 bg-indigo-600 text-white font-black shadow-md shadow-indigo-200'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-800 font-bold hover:bg-slate-50/80 bg-white'
                     }`}
                   >
                     <span className="text-lg block">{num}</span>
@@ -344,26 +417,27 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                 );
               })}
             </div>
-            <p className="text-center text-xs text-slate-500 pt-2">
-              Recommended for your goal: <strong className="text-slate-800">3 to 4 days</strong> per week.
+
+            <p className="text-center text-xs text-slate-500 mt-4">
+              Recommended for your goal: <strong className="text-slate-800 font-bold">3 to 4 days</strong> per week.
             </p>
           </div>
         )}
 
         {/* Step 5: Duration */}
         {currentStep === 5 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Clock className="w-6 h-6 text-indigo-600" />
-                Target workout duration
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Clock className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>Target workout duration</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Sets the overall exercise count and density of your session.
               </p>
             </div>
 
-            <div className="grid grid-cols-5 gap-2 pt-3">
+            <div className="mt-7 grid grid-cols-5 gap-2 sm:gap-3">
               {DURATION_PRESETS.map((mins) => {
                 const isSelected = duration === mins;
                 return (
@@ -371,10 +445,10 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                     key={mins}
                     type="button"
                     onClick={() => setDuration(mins)}
-                    className={`py-3 px-2 rounded-2xl border text-center transition-all ${
+                    className={`min-h-[72px] py-3 px-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-sm'
-                        : 'border-slate-200 text-slate-800 font-semibold hover:bg-slate-50'
+                        ? 'border-indigo-600 bg-indigo-600 text-white font-bold shadow-md shadow-indigo-200'
+                        : 'border-slate-200 text-slate-800 font-semibold hover:bg-slate-50/80 bg-white'
                     }`}
                   >
                     <span className="text-base block">{mins}</span>
@@ -384,26 +458,26 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
               })}
             </div>
 
-            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-center text-xs text-slate-600 mt-4">
-              Estimated structure: <strong className="text-slate-900">{Math.round(duration / 9)} compound/isolation exercises</strong> with warm-up and cool-down intervals.
+            <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-center text-xs text-slate-600 mt-5">
+              Estimated structure: <strong className="text-slate-900 font-bold">{Math.round(duration / 9)} compound/isolation exercises</strong> with warm-up and cool-down intervals.
             </div>
           </div>
         )}
 
         {/* Step 6: Target Muscle Focus */}
         {currentStep === 6 && (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                <Layers className="w-6 h-6 text-indigo-600" />
-                Select muscle groups to target
+          <div>
+            <div className="mt-7">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Layers className="w-6 h-6 text-indigo-600 shrink-0" />
+                <span>Select muscle groups to target</span>
               </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 Choose Full Body or select specific focal splits for this session.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+            <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {MUSCLE_FOCUS_OPTIONS.map((opt) => {
                 const isSelected = selectedMuscles.includes(opt.id);
                 return (
@@ -411,17 +485,27 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                     key={opt.id}
                     type="button"
                     onClick={() => toggleMuscle(opt.id)}
-                    className={`p-3.5 rounded-2xl text-left border transition-all ${
+                    className={`min-h-[116px] p-5 rounded-2xl text-left border transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/70 shadow-xs ring-1 ring-indigo-500'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900">{opt.label}</span>
-                      {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600" />}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-sm text-slate-900">{opt.label}</span>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
+                          isSelected
+                            ? 'border-indigo-600 bg-indigo-600 text-white'
+                            : 'border-slate-300 bg-white'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{opt.description}</p>
+                    <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                      {opt.description}
+                    </p>
                   </button>
                 );
               })}
@@ -429,33 +513,33 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
           </div>
         )}
 
-        {/* Footer Navigation Controls */}
-        <div className="flex items-center justify-between pt-6 border-t border-slate-100 mt-6">
+        {/* Options -> Divider (28px: mt-7) -> Divider -> Footer buttons (24px: pt-6) */}
+        <div className="mt-7 border-t border-slate-200/80 pt-6 flex items-center justify-between">
           <Button
             type="button"
             variant="outline"
             onClick={handleBack}
-            className="border-slate-200 text-xs text-slate-700"
+            className="min-h-[44px] px-5 rounded-xl border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
-            <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-            {currentStep === 1 ? 'Cancel' : 'Back'}
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            <span>{currentStep === 1 ? 'Cancel' : 'Back'}</span>
           </Button>
 
           <Button
             type="button"
             onClick={handleNext}
             disabled={isGenerating}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-200 px-5"
+            className="min-h-[44px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs sm:text-sm font-bold shadow-md shadow-indigo-200 flex items-center gap-1.5"
           >
             {currentStep === totalSteps ? (
               <>
-                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                {isGenerating ? 'Generating Plan...' : 'Generate Workout'}
+                <Sparkles className="w-4 h-4" />
+                <span>{isGenerating ? 'Generating Plan...' : 'Generate Workout'}</span>
               </>
             ) : (
               <>
-                Continue
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                <span>Continue</span>
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </Button>

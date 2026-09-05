@@ -1,15 +1,18 @@
 import { Metadata } from 'next';
 import { ProgramsView } from '@/components/programs/programs-view';
+import { RouteGuardShell } from '@/components/layout/route-guard-shell';
 
 export const metadata: Metadata = {
-  title: 'Training Programs — Workout Planner',
-  description: 'Structured multi-week periodization cycles, progressive overload, and daily adherence tracking.',
+  title: 'Training Programs — Replyf',
+  description: 'Structured, multi-week training programs with automated progression',
 };
 
 export default function ProgramsPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <ProgramsView />
+    <div className="py-8 min-h-screen">
+      <RouteGuardShell>
+        <ProgramsView />
+      </RouteGuardShell>
     </div>
   );
 }

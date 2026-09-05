@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { FitnessGoalTarget, GoalTargetType, GoalDirection } from '@/types/domain';
-import { X, Target, Plus } from 'lucide-react';
+import { X, Target } from 'lucide-react';
 
 interface CreateGoalModalProps {
   isOpen: boolean;
@@ -86,33 +86,43 @@ export function CreateGoalModal({ isOpen, onClose, onSave }: CreateGoalModalProp
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-goal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Target className="h-4 w-4" />
+      <div
+        style={{ width: 'min(calc(100vw - 32px), 560px)' }}
+        className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-8 shadow-2xl space-y-6 text-slate-800 animate-in zoom-in-95 duration-200"
+      >
+        {/* Header: display flex, align-items center, justify-content space-between */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+              <Target className="h-5 w-5" />
             </span>
-            <h2 id="create-goal-title" className="text-lg font-bold text-foreground">Set New Fitness Goal</h2>
+            <h2 id="create-goal-title" className="text-lg sm:text-xl font-bold text-slate-900">
+              Set New Fitness Goal
+            </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Goal Type</label>
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          {/* Goal Type */}
+          <div className="flex flex-col gap-1.5 text-left">
+            <label htmlFor="goal-type-select" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Goal Type
+            </label>
             <select
+              id="goal-type-select"
               value={type}
               onChange={(e) => handleTypeChange(e.target.value as GoalTargetType)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
             >
               <option value="workouts_completed">Workouts Completed Total</option>
               <option value="frequency">Weekly Training Frequency</option>
@@ -122,13 +132,17 @@ export function CreateGoalModal({ isOpen, onClose, onSave }: CreateGoalModalProp
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Direction</label>
+          {/* TWO-COLUMN ROW 1: Direction / Unit (grid-template-columns: repeat(2, minmax(0, 1fr)), gap: 16px) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label htmlFor="goal-direction-select" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Direction
+              </label>
               <select
+                id="goal-direction-select"
                 value={direction}
                 onChange={(e) => setDirection(e.target.value as GoalDirection)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               >
                 <option value="increase">Increase / Build</option>
                 <option value="decrease">Decrease / Cut</option>
@@ -136,75 +150,94 @@ export function CreateGoalModal({ isOpen, onClose, onSave }: CreateGoalModalProp
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Unit</label>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label htmlFor="goal-unit-input" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Unit
+              </label>
               <input
+                id="goal-unit-input"
                 type="text"
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Start Value</label>
+          {/* TWO-COLUMN ROW 2: Start Value / Target Value (grid-template-columns: repeat(2, minmax(0, 1fr)), gap: 16px) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label htmlFor="goal-start-value-input" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Start Value
+              </label>
               <input
+                id="goal-start-value-input"
                 type="number"
                 step="any"
                 value={startValue}
                 onChange={(e) => setStartValue(Number(e.target.value))}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground">Target Value *</label>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label htmlFor="goal-target-value-input" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                Target Value *
+              </label>
               <input
+                id="goal-target-value-input"
                 type="number"
                 step="any"
                 required
                 value={targetValue}
                 onChange={(e) => setTargetValue(Number(e.target.value))}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Custom Goal Label</label>
+          {/* Custom Goal Label */}
+          <div className="flex flex-col gap-1.5 text-left">
+            <label htmlFor="goal-custom-label-input" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Custom Goal Label
+            </label>
             <input
+              id="goal-custom-label-input"
               type="text"
               placeholder="e.g. Hit 100kg Bench Press or 20 Workouts in March"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Target Deadline (Optional)</label>
+          {/* Target Deadline */}
+          <div className="flex flex-col gap-1.5 text-left">
+            <label htmlFor="goal-deadline-input" className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+              Target Deadline (Optional)
+            </label>
             <input
+              id="goal-deadline-input"
               type="date"
               value={targetDate}
               onChange={(e) => setTargetDate(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-base sm:text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          {/* Footer: Cancel and Create Goal share same vertical alignment, primary action stronger visual hierarchy */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-accent"
+              className="min-h-[44px] px-5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+              className="min-h-[44px] px-6 rounded-xl bg-slate-900 hover:bg-black active:bg-slate-950 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
             >
               {saving ? 'Saving...' : 'Create Goal'}
             </button>

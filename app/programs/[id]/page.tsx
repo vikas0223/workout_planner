@@ -8,7 +8,7 @@ interface ProgramPageProps {
 export async function generateMetadata({ params }: ProgramPageProps): Promise<Metadata> {
   const { id } = await params;
   return {
-    title: `Program Details — Workout Planner`,
+    title: `Program Details — replyf`,
     description: 'Detailed multi-week schedule and training progression.',
   };
 }

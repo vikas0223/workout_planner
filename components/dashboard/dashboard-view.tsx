@@ -52,7 +52,7 @@ export const DashboardView: React.FC = () => {
   const hasAnySessions = rawSessions.length > 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 space-y-6">
+    <div className="w-full py-6 sm:py-8 space-y-6">
       {/* 1. Header Bar with Back and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80 dark:border-slate-800">
         <div className="flex items-center gap-3">

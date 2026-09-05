@@ -18,6 +18,8 @@ import { useExerciseFavorites } from '@/hooks/use-exercise-favorites';
 import { ExerciseCard } from '@/components/exercises/exercise-card';
 import { ExerciseFilters } from '@/components/exercises/exercise-filters';
 import { ExerciseFilterDrawer } from '@/components/exercises/exercise-filter-drawer';
+import Image from 'next/image';
+import { RouteGuardShell } from '@/components/layout/route-guard-shell';
 import dynamic from 'next/dynamic';
 import { Exercise } from '@/types/domain';
 
@@ -110,70 +112,77 @@ export default function ExerciseLibraryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30 text-slate-900 pb-20">
-      {/* Toast Notification */}
-      {addedToast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg animate-in slide-in-from-bottom-3 duration-300 motion-reduce:animate-none"
-        >
-          <Check className="w-4 h-4 text-emerald-400" />
-          <span>{addedToast}</span>
-        </div>
-      )}
+    <RouteGuardShell>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30 text-slate-900 pb-20">
+        {/* Toast Notification */}
+        {addedToast && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg animate-in slide-in-from-bottom-3 duration-300 motion-reduce:animate-none"
+          >
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span>{addedToast}</span>
+          </div>
+        )}
 
-      {/* Top Navigation Header */}
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/')}
-              className="text-slate-600 hover:text-slate-900 -ml-2"
-              aria-label="Back to Home"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1.5" />
-              <span className="hidden sm:inline">Home</span>
-            </Button>
-            <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-200">
-                <Dumbbell className="w-4 h-4" />
+        {/* Top Navigation Header */}
+        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
+          <div className="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push('/')}
+                className="text-slate-600 hover:text-slate-900 -ml-2"
+                aria-label="Back to Home"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1.5" />
+                <span className="hidden sm:inline">Home</span>
+              </Button>
+              <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <div className="relative h-8 w-8 overflow-hidden rounded-lg shadow-sm shadow-indigo-200">
+                  <Image
+                    src="/icons/icon-192x192.png"
+                    alt="Replyf logo"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">
+                  Exercise Hub
+                </h1>
               </div>
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">
-                Exercise Hub
-              </h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/dashboard')}
+                className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs hidden sm:flex"
+              >
+                Dashboard
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => router.push('/')}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1" />
+                Generate Plan
+              </Button>
             </div>
           </div>
+        </header>
 
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/dashboard')}
-              className="border-slate-200 text-slate-700 hover:bg-slate-50 text-xs hidden sm:flex"
-            >
-              Dashboard
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => router.push('/')}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs shadow-sm"
-            >
-              <Sparkles className="w-3.5 h-3.5 mr-1" />
-              Generate Plan
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+        {/* Main Container */}
+        <div className="max-w-[1320px] mx-auto px-4 sm:px-6 pt-6 pb-4">
         {/* Navigation Tabs Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-200/80">
           <div>
@@ -532,5 +541,6 @@ export default function ExerciseLibraryPage() {
         onAddToWorkout={handleAddToWorkout}
       />
     </div>
+    </RouteGuardShell>
   );
 }
