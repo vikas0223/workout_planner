@@ -274,6 +274,15 @@ export function validateExerciseCatalog(exercises: Exercise[]): CatalogValidatio
                 message: 'Media provenance missing required source or license',
               });
             }
+            if (m.provenance.source !== 'in_house' && !m.provenance.attribution) {
+              issues.push({
+                type: 'error',
+                exerciseId: ex.id,
+                exerciseName: ex.name,
+                field: 'media.provenance.attribution',
+                message: 'External media provenance requires attribution',
+              });
+            }
             if (typeof m.provenance.commercialUseAllowed !== 'boolean') {
               issues.push({
                 type: 'warning',
@@ -282,6 +291,17 @@ export function validateExerciseCatalog(exercises: Exercise[]): CatalogValidatio
                 field: 'media.provenance.commercialUseAllowed',
                 message: 'Media provenance commercialUseAllowed should be a boolean',
               });
+            }
+            if (m.provenance.sourceExerciseId !== undefined) {
+              if (typeof m.provenance.sourceExerciseId !== 'string' || m.provenance.sourceExerciseId.trim().length === 0) {
+                issues.push({
+                  type: 'error',
+                  exerciseId: ex.id,
+                  exerciseName: ex.name,
+                  field: 'media.provenance.sourceExerciseId',
+                  message: 'sourceExerciseId must be a non-empty string when provided',
+                });
+              }
             }
           }
         }

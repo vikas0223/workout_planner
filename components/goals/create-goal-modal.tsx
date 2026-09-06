@@ -90,7 +90,7 @@ export function CreateGoalModal({ isOpen, onClose, onSave }: CreateGoalModalProp
     >
       <div
         style={{ width: 'min(calc(100vw - 32px), 560px)' }}
-        className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-8 shadow-2xl space-y-6 text-slate-800 animate-in zoom-in-95 duration-200"
+        className="max-h-[min(calc(100vh-32px),760px)] overflow-y-auto rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-8 shadow-2xl space-y-6 text-slate-800 animate-in zoom-in-95 duration-200"
       >
         {/* Header: display flex, align-items center, justify-content space-between */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">

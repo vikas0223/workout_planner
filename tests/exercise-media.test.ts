@@ -41,8 +41,24 @@ import { CANONICAL_EXERCISES } from '@/lib/data/canonical-exercises';
 import {
   auditExerciseMediaCoverage,
   getMediaAuditSummary,
-  MINIMUM_VERIFIED_EXERCISES,
+  HIGH_PRIORITY_EXERCISES,
 } from '@/lib/data/exercise-media-audit';
+import {
+  normalizeExerciseName,
+  matchExerciseDeterministically,
+  getExerciseMapping,
+  CANONICAL_TO_EXTERNAL_DATASET_MAP,
+  ExternalExerciseRecord,
+} from '@/lib/data/exercise-dataset-mapping';
+import {
+  REPLYF_TO_MUSCLE_MAP,
+  MUSCLE_MAP_TO_REPLYF,
+  mapReplyfToMuscleMap,
+  mapMuscleMapToReplyf,
+  getMuscleMapHighlightForExercise,
+  getHeatmapFillColor,
+  MUSCLE_MAP_PROVENANCE,
+} from '@/lib/anatomy/muscle-map-integration';
 
 function createMockExercise(overrides: Partial<Exercise> = {}): Exercise {
   return {
@@ -429,7 +445,6 @@ describe('Catalog Media Validation Rules (Requirement 14)', () => {
           url: '/images/test.svg',
           provenance: {
             source: 'in_house',
-            // @ts-expect-error Testing missing license
             license: '',
             attribution: 'Replyf',
             commercialUseAllowed: true,
@@ -455,6 +470,9 @@ describe('Catalog Media Validation Rules (Requirement 14)', () => {
 
   it('validates entire 166 canonical exercises catalog with zero media errors', () => {
     const report = validateExerciseCatalog(CANONICAL_EXERCISES);
+    if (!report.isValid) {
+      console.log('VALIDATION ERRORS:', JSON.stringify(report.issues.filter(i => i.type === 'error'), null, 2));
+    }
     expect(report.isValid).toBe(true);
     expect(report.errorCount).toBe(0);
     expect(report.totalExercises).toBe(166);
@@ -477,9 +495,9 @@ describe('Media Coverage Audit & Minimum Core Movements (Requirement 11)', () =>
     }
   });
 
-  it('explicitly verifies media coverage for all 12 minimum required core movements', () => {
+  it('explicitly verifies media coverage for all 16 Section W high-priority core movements', () => {
     const summary = getMediaAuditSummary(CANONICAL_EXERCISES);
-    expect(summary.verifiedCoreExercises.length).toBe(12);
+    expect(summary.verifiedCoreExercises.length).toBe(16);
 
     for (const req of summary.verifiedCoreExercises) {
       expect(req.verified, `Expected media coverage for: ${req.name}`).toBe(true);
@@ -487,13 +505,13 @@ describe('Media Coverage Audit & Minimum Core Movements (Requirement 11)', () =>
     }
   });
 
-  it('matches exact specification list for verified movements', () => {
-    expect(MINIMUM_VERIFIED_EXERCISES).toEqual([
+  it('matches exact specification list for Section W high-priority movements', () => {
+    expect(HIGH_PRIORITY_EXERCISES).toEqual([
       'Abductor Machine',
       'Adductor Machine',
       'Ankle Rotations',
       'Barbell Back Squat',
-      'Bench Press',
+      'Barbell Bench Press',
       'Deadlift',
       'Pull-Up',
       'Overhead Press',
@@ -501,6 +519,10 @@ describe('Media Coverage Audit & Minimum Core Movements (Requirement 11)', () =>
       'Dips',
       'Lunges',
       'Push-Ups',
+      'Lat Pulldown',
+      'Dumbbell Press',
+      'Biceps Curl',
+      'Triceps Extension',
     ]);
   });
 });
@@ -572,8 +594,140 @@ describe('Component Architecture & Design Contracts (Sections 4, 6, 7, 8, 9)', (
 
       expect(cardCandidates.length).toBeGreaterThan(0);
       expect(detailCandidates.length).toBeGreaterThan(0);
-      // Canonical asset URL parity between card and detail
-      expect(cardCandidates[0].url).toBe(detailCandidates[0].url);
+      // Same set of source URLs regardless of context-specific ordering
+      const cardUrls = new Set(cardCandidates.map((c) => c.url));
+      const detailUrls = new Set(detailCandidates.map((c) => c.url));
+      expect(cardUrls).toEqual(detailUrls);
     }
+  });
+});
+
+describe('Section Y: Exercise Mapping, External Dataset & MuscleMap Integration (Tests 17-21)', () => {
+  // Test 17: Exercise Mapping
+  it('17. performs deterministic exercise mapping via normalized names and movement patterns', () => {
+    expect(normalizeExerciseName('Barbell Bench Press - Medium Grip')).toBe('benchpresmediumgrip');
+    expect(normalizeExerciseName('Pull-Ups')).toBe('pullup');
+    expect(normalizeExerciseName('Dips - Chest Version')).toBe('dipchestversion');
+    expect(normalizeExerciseName('Barbell Back Squat')).toBe('backsquat');
+
+    const sampleExternal: ExternalExerciseRecord[] = [
+      {
+        id: 'ext-bench',
+        name: 'Barbell Bench Press - Medium Grip',
+        level: 'intermediate',
+        equipment: 'Barbell',
+        primaryMuscles: ['Chest'],
+        secondaryMuscles: ['Triceps'],
+        instructions: ['Lower and press'],
+        category: 'strength',
+      },
+    ];
+
+    const mockEx = createMockExercise({
+      id: 'canon-bench',
+      name: 'Bench Press',
+      equipment: ['Barbell'],
+      primaryMuscles: ['Chest'],
+    });
+
+    const match = matchExerciseDeterministically(mockEx, sampleExternal);
+    expect(match).not.toBeNull();
+    expect(match!.record.id).toBe('ext-bench');
+    expect(match!.matchKey).toBe('equipment_target_family');
+  });
+
+  // Test 18: External Source Mapping & License Separation
+  it('18. maintains external dataset mapping with strict provenance & Gym visual copyright separation', () => {
+    const mappings = Object.values(CANONICAL_TO_EXTERNAL_DATASET_MAP);
+    expect(mappings.length).toBeGreaterThanOrEqual(15);
+
+    for (const mapping of mappings) {
+      expect(mapping.canonicalExerciseId).toBeDefined();
+      expect(mapping.externalSource).toBe('exercises-dataset');
+      expect(mapping.externalSourceId).toMatch(/^ex-dataset-/);
+      expect(mapping.metadataLicense).toBe('MIT');
+      expect(mapping.mediaRightsOwner).toBe('Gym visual');
+      // CRITICAL: Gym visual media is NOT licensed to Replyf for public bundling
+      expect(mapping.mediaLicensedToReplyf).toBe(false);
+      expect(mapping.mediaAttributionRequired).toContain('Gym visual via hasaneyldrm/exercises-dataset');
+    }
+
+    // Verify lookup helper
+    const benchMapping = getExerciseMapping('00000000-0000-4000-8000-000012b3e666');
+    expect(benchMapping).not.toBeNull();
+    expect(benchMapping!.canonicalExerciseName).toBe('Bench Press');
+    expect(benchMapping!.externalSourceId).toBe('ex-dataset-0025');
+  });
+
+  // Test 19: MuscleMap Muscle Mapping
+  it('19. provides bidirectional mapping between Replyf canonical muscles and MuscleMap geometry', () => {
+    // Replyf -> MuscleMap
+    expect(mapReplyfToMuscleMap('chest')).toEqual(['pectorals']);
+    expect(mapReplyfToMuscleMap('quads')).toEqual(['quadriceps']);
+    expect(mapReplyfToMuscleMap('biceps')).toEqual(['biceps']);
+    expect(mapReplyfToMuscleMap('triceps')).toEqual(['triceps']);
+    expect(mapReplyfToMuscleMap('front_deltoids')).toEqual(['deltoids-anterior', 'deltoids-lateral']);
+    expect(mapReplyfToMuscleMap('rear_deltoids')).toEqual(['deltoids-posterior']);
+    expect(mapReplyfToMuscleMap('abs')).toEqual(['rectus-abdominis']);
+    expect(mapReplyfToMuscleMap('lats')).toEqual(['latissimus-dorsi']);
+    expect(mapReplyfToMuscleMap('glutes')).toEqual(['gluteus-maximus', 'gluteus-medius']);
+    expect(mapReplyfToMuscleMap('hamstrings')).toEqual(['hamstrings']);
+
+    // MuscleMap -> Replyf
+    expect(mapMuscleMapToReplyf('pectorals')).toBe('chest');
+    expect(mapMuscleMapToReplyf('quadriceps')).toBe('quads');
+    expect(mapMuscleMapToReplyf('biceps')).toBe('biceps');
+    expect(mapMuscleMapToReplyf('triceps')).toBe('triceps');
+    expect(mapMuscleMapToReplyf('latissimus-dorsi')).toBe('lats');
+
+    // Exercise -> MuscleMap highlights (primary = 1.0, secondary = 0.5)
+    const mockBench = createMockExercise({
+      primaryMuscles: ['Chest'],
+      secondaryMuscles: ['Triceps', 'Shoulders'],
+    });
+
+    const highlights = getMuscleMapHighlightForExercise(mockBench);
+    expect(highlights['pectorals']).toBe(1.0);
+    expect(highlights['chest']).toBe(1.0);
+    expect(highlights['triceps']).toBe(0.5);
+
+    // Heatmap fill color progression
+    expect(getHeatmapFillColor(undefined)).toBe('#cbd5e1'); // neutral base
+    expect(getHeatmapFillColor(0.2)).toBe('#c7d2fe'); // low
+    expect(getHeatmapFillColor(0.5)).toBe('#818cf8'); // medium
+    expect(getHeatmapFillColor(0.9)).toBe('#4f46e5'); // high
+
+    // Provenance verification: MuscleMap is MIT licensed
+    expect(MUSCLE_MAP_PROVENANCE.license).toBe('MIT');
+    expect(MUSCLE_MAP_PROVENANCE.source).toBe('MuscleMap');
+    expect(MUSCLE_MAP_PROVENANCE.author).toBe('Melih Colpan');
+  });
+
+  // Test 20: ExerciseCard Integration
+  it('20. verifies ExerciseCard integrates ExerciseMedia in fixed 4:3 container without pattern text', () => {
+    const cardPath = path.resolve(__dirname, '../components/exercises/exercise-card.tsx');
+    const cardContent = fs.readFileSync(cardPath, 'utf-8');
+
+    expect(cardContent).toContain('<ExerciseMedia');
+    expect(cardContent).toContain('context="card"');
+    expect(cardContent).not.toContain('SQUAT PATTERN');
+    expect(cardContent).not.toContain('PULL PATTERN');
+    expect(cardContent).not.toContain('PUSH PATTERN');
+    expect(cardContent).not.toContain('ISOLATION PATTERN');
+  });
+
+  // Test 21: ExerciseDetailDialog Integration
+  it('21. verifies ExerciseDetailDialog integrates ExerciseMedia in detail context with full metadata hierarchy', () => {
+    const detailPath = path.resolve(__dirname, '../components/exercises/exercise-detail-dialog.tsx');
+    const detailContent = fs.readFileSync(detailPath, 'utf-8');
+
+    expect(detailContent).toContain('<ExerciseMedia');
+    expect(detailContent).toContain('context="detail"');
+    expect(detailContent).toContain('aspect-[4/3]');
+    expect(detailContent).toContain('showProvenance');
+    expect(detailContent).toContain('Step-by-Step Instructions');
+    expect(detailContent).toContain('Key Form Cues');
+    expect(detailContent).toContain('Common Mistakes');
+    expect(detailContent).toContain('Exercise Alternatives');
   });
 });

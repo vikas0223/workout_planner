@@ -77,7 +77,7 @@ describe('Replyf Pre-Login Landing Page — Technical Specification Verification
 
     it('progress section contains the exact required headline and labeled snapshot notice', () => {
       expect(progressShowcaseFile).toContain('Your training history becomes useful.');
-      expect(progressShowcaseFile).toContain("See the work you've done, the progress you've made, and where your next improvement can come from.");
+      expect(progressShowcaseFile).toContain("See the work you&apos;ve done, the progress you&apos;ve made, and where your next improvement can come from.");
       expect(progressShowcaseFile).toContain('Example training snapshot');
       expect(progressShowcaseFile).toContain('12');
       expect(progressShowcaseFile).toContain('+18%');

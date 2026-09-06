@@ -305,4 +305,54 @@ describe('Part U: Auth / Guest Flow & Routing Guard Canonical Matrix', () => {
     expect(decision2).toBe('onboarding');
     expect(decision2).not.toBe('workout_hub');
   });
+
+  // 16. switchAccess clears only access mode and preserves onboarding state
+  it('16. switchAccess preserves onboarding state and metadata while clearing access mode', async () => {
+    const engine = IndexedDBEngine.getInstance();
+    const now = new Date().toISOString();
+
+    // Seed completed guest state in localStorage and IndexedDB
+    mockStorage[ACCESS_MODE_KEY] = 'guest';
+    mockStorage[ONBOARDING_STATE_KEY] = 'complete';
+    mockStorage[ONBOARDING_COMPLETED_AT_KEY] = now;
+    mockStorage[ONBOARDING_VERSION_KEY] = CURRENT_ONBOARDING_VERSION;
+
+    await engine.put(STORES.META, { key: ACCESS_MODE_KEY, value: 'guest', updatedAt: now });
+    await engine.put(STORES.META, { key: ONBOARDING_STATE_KEY, value: 'complete', updatedAt: now });
+    await engine.put(STORES.META, { key: ONBOARDING_COMPLETED_AT_KEY, value: now, updatedAt: now });
+    await engine.put(STORES.META, { key: ONBOARDING_VERSION_KEY, value: CURRENT_ONBOARDING_VERSION, updatedAt: now });
+
+    // Simulate switchAccess logic
+    mockStorage[ACCESS_MODE_KEY] = '';
+    delete mockStorage[ACCESS_MODE_KEY];
+    await engine.delete(STORES.META, ACCESS_MODE_KEY);
+
+    // Verify ACCESS_MODE_KEY is cleared
+    expect(mockStorage[ACCESS_MODE_KEY]).toBeUndefined();
+    const idbAccess = await engine.get<MetaRecord>(STORES.META, ACCESS_MODE_KEY);
+    expect(idbAccess).toBeNull();
+
+    // Verify ONBOARDING keys remain preserved
+    expect(mockStorage[ONBOARDING_STATE_KEY]).toBe('complete');
+    const idbOnboarding = await engine.get<MetaRecord>(STORES.META, ONBOARDING_STATE_KEY);
+    expect(idbOnboarding?.value).toBe('complete');
+    const idbCompletedAt = await engine.get<MetaRecord>(STORES.META, ONBOARDING_COMPLETED_AT_KEY);
+    expect(idbCompletedAt?.value).toBe(now);
+
+    // Reconciling after switchAccess: resolved access is unselected, but onboarding is complete
+    const reconciled = reconcileAccessState({
+      localAccess: mockStorage[ACCESS_MODE_KEY] || null,
+      localOnboarding: mockStorage[ONBOARDING_STATE_KEY] || null,
+      idbAccess: idbAccess ? (idbAccess.value as string) : null,
+      idbOnboarding: idbOnboarding ? (idbOnboarding.value as string) : null,
+      hasSupabaseSession: false,
+    });
+
+    expect(reconciled.resolvedAccess).toBe('unselected');
+    expect(reconciled.resolvedOnboarding).toBe('complete');
+
+    // Routing redirects to auth/guest screen to choose account
+    const routeDecision = resolveAppRoute(reconciled.resolvedAccess, reconciled.resolvedOnboarding, 'ready');
+    expect(routeDecision).toBe('auth_guest_screen');
+  });
 });

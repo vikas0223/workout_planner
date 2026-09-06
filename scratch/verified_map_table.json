@@ -1,0 +1,362 @@
+{
+  "00000000-0000-4000-8000-000000e08b53": {
+    "name": "Barbell Squat",
+    "slug": "barbell-squat",
+    "freeId": "Barbell_Squat",
+    "freeName": "Barbell Squat",
+    "freeImages": [
+      "Barbell_Squat/0.jpg",
+      "Barbell_Squat/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000012b3e666": {
+    "name": "Bench Press",
+    "slug": "bench-press",
+    "freeId": "Barbell_Bench_Press_-_Medium_Grip",
+    "freeName": "Barbell Bench Press - Medium Grip",
+    "freeImages": [
+      "Barbell_Bench_Press_-_Medium_Grip/0.jpg",
+      "Barbell_Bench_Press_-_Medium_Grip/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00001e04d96f": {
+    "name": "Deadlift",
+    "slug": "deadlift",
+    "freeId": "Barbell_Deadlift",
+    "freeName": "Barbell Deadlift",
+    "freeImages": [
+      "Barbell_Deadlift/0.jpg",
+      "Barbell_Deadlift/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00005e103db0": {
+    "name": "Pull-ups",
+    "slug": "pull-ups",
+    "freeId": "Pullups",
+    "freeName": "Pullups",
+    "freeImages": [
+      "Pullups/0.jpg",
+      "Pullups/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00004cbde1ea": {
+    "name": "Overhead Press",
+    "slug": "overhead-press",
+    "freeId": "Standing_Military_Press",
+    "freeName": "Standing Military Press",
+    "freeImages": [
+      "Standing_Military_Press/0.jpg",
+      "Standing_Military_Press/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000002f0d48": {
+    "name": "Dips",
+    "slug": "dips",
+    "freeId": "Dips_-_Chest_Version",
+    "freeName": "Dips - Chest Version",
+    "freeImages": [
+      "Dips_-_Chest_Version/0.jpg",
+      "Dips_-_Chest_Version/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000041104ed0": {
+    "name": "Lunges",
+    "slug": "lunges",
+    "freeId": "Barbell_Lunge",
+    "freeName": "Barbell Lunge",
+    "freeImages": [
+      "Barbell_Lunge/0.jpg",
+      "Barbell_Lunge/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000098d19f7": {
+    "name": "Resistance Band Push-ups",
+    "slug": "resistance-band-push-ups",
+    "freeId": "Pushups",
+    "freeName": "Pushups",
+    "freeImages": [
+      "Pushups/0.jpg",
+      "Pushups/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000036ee932b": {
+    "name": "Lat Pulldown",
+    "slug": "lat-pulldown",
+    "freeId": "Wide-Grip_Lat_Pulldown",
+    "freeName": "Wide-Grip Lat Pulldown",
+    "freeImages": [
+      "Wide-Grip_Lat_Pulldown/0.jpg",
+      "Wide-Grip_Lat_Pulldown/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000001e92846": {
+    "name": "Incline Dumbbell Press",
+    "slug": "incline-dumbbell-press",
+    "freeId": "Incline_Dumbbell_Press",
+    "freeName": "Incline Dumbbell Press",
+    "freeImages": [
+      "Incline_Dumbbell_Press/0.jpg",
+      "Incline_Dumbbell_Press/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000004d88adf": {
+    "name": "Bicep Curls",
+    "slug": "bicep-curls",
+    "freeId": "Dumbbell_Bicep_Curl",
+    "freeName": "Dumbbell Bicep Curl",
+    "freeImages": [
+      "Dumbbell_Bicep_Curl/0.jpg",
+      "Dumbbell_Bicep_Curl/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000107d5e50": {
+    "name": "Barbell Rows",
+    "slug": "barbell-rows",
+    "freeId": "Bent_Over_Barbell_Row",
+    "freeName": "Bent Over Barbell Row",
+    "freeImages": [
+      "Bent_Over_Barbell_Row/0.jpg",
+      "Bent_Over_Barbell_Row/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000020a82f50": {
+    "name": "Resistance Band Pull-Apart",
+    "slug": "resistance-band-pull-apart",
+    "freeId": "Band_Pull_Apart",
+    "freeName": "Band Pull Apart",
+    "freeImages": [
+      "Band_Pull_Apart/0.jpg",
+      "Band_Pull_Apart/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00000ba244dd": {
+    "name": "Resistance Band Pull-Aparts",
+    "slug": "resistance-band-pull-aparts",
+    "freeId": "Band_Pull_Apart",
+    "freeName": "Band Pull Apart",
+    "freeImages": [
+      "Band_Pull_Apart/0.jpg",
+      "Band_Pull_Apart/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000016fbfbae": {
+    "name": "Bent Over Rows",
+    "slug": "bent-over-rows",
+    "freeId": "Bent_Over_Barbell_Row",
+    "freeName": "Bent Over Barbell Row",
+    "freeImages": [
+      "Bent_Over_Barbell_Row/0.jpg",
+      "Bent_Over_Barbell_Row/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000248117c4": {
+    "name": "Leg Press",
+    "slug": "leg-press",
+    "freeId": "Leg_Press",
+    "freeName": "Leg Press",
+    "freeImages": [
+      "Leg_Press/0.jpg",
+      "Leg_Press/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00003a39fa7d": {
+    "name": "Romanian Deadlift",
+    "slug": "romanian-deadlift",
+    "freeId": "Romanian_Deadlift",
+    "freeName": "Romanian Deadlift",
+    "freeImages": [
+      "Romanian_Deadlift/0.jpg",
+      "Romanian_Deadlift/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00003c160133": {
+    "name": "Leg Extensions",
+    "slug": "leg-extensions",
+    "freeId": "Leg_Extensions",
+    "freeName": "Leg Extensions",
+    "freeImages": [
+      "Leg_Extensions/0.jpg",
+      "Leg_Extensions/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000178bc5f4": {
+    "name": "Glute-Ham Raises",
+    "slug": "glute-ham-raises",
+    "freeId": "Glute_Ham_Raise",
+    "freeName": "Glute Ham Raise",
+    "freeImages": [
+      "Glute_Ham_Raise/0.jpg",
+      "Glute_Ham_Raise/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000069907a58": {
+    "name": "Medicine Ball Chest Pass",
+    "slug": "medicine-ball-chest-pass",
+    "freeId": "Medicine_Ball_Chest_Pass",
+    "freeName": "Medicine Ball Chest Pass",
+    "freeImages": [
+      "Medicine_Ball_Chest_Pass/0.jpg",
+      "Medicine_Ball_Chest_Pass/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000073f37e00": {
+    "name": "Hammer Curls",
+    "slug": "hammer-curls",
+    "freeId": "Hammer_Curls",
+    "freeName": "Hammer Curls",
+    "freeImages": [
+      "Hammer_Curls/0.jpg",
+      "Hammer_Curls/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00006d36be2f": {
+    "name": "Mountain Climbers",
+    "slug": "mountain-climbers",
+    "freeId": "Mountain_Climbers",
+    "freeName": "Mountain Climbers",
+    "freeImages": [
+      "Mountain_Climbers/0.jpg",
+      "Mountain_Climbers/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000061a64f1": {
+    "name": "Sled Push",
+    "slug": "sled-push",
+    "freeId": "Sled_Push",
+    "freeName": "Sled Push",
+    "freeImages": [
+      "Sled_Push/0.jpg",
+      "Sled_Push/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00005e067560": {
+    "name": "Plyo Push-ups",
+    "slug": "plyo-push-ups",
+    "freeId": "Plyo_Push-up",
+    "freeName": "Plyo Push-up",
+    "freeImages": [
+      "Plyo_Push-up/0.jpg",
+      "Plyo_Push-up/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000068daabd8": {
+    "name": "Shoulder Stretch",
+    "slug": "shoulder-stretch",
+    "freeId": "Shoulder_Stretch",
+    "freeName": "Shoulder Stretch",
+    "freeImages": [
+      "Shoulder_Stretch/0.jpg",
+      "Shoulder_Stretch/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000230c3884": {
+    "name": "Child's Pose",
+    "slug": "child-s-pose",
+    "freeId": "Childs_Pose",
+    "freeName": "Child's Pose",
+    "freeImages": [
+      "Childs_Pose/0.jpg",
+      "Childs_Pose/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00001f71faba": {
+    "name": "World's Greatest Stretch",
+    "slug": "world-s-greatest-stretch",
+    "freeId": "Worlds_Greatest_Stretch",
+    "freeName": "World's Greatest Stretch",
+    "freeImages": [
+      "Worlds_Greatest_Stretch/0.jpg",
+      "Worlds_Greatest_Stretch/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00005ac5d43a": {
+    "name": "Dumbbell Shoulder Press",
+    "slug": "dumbbell-shoulder-press",
+    "freeId": "Dumbbell_Shoulder_Press",
+    "freeName": "Dumbbell Shoulder Press",
+    "freeImages": [
+      "Dumbbell_Shoulder_Press/0.jpg",
+      "Dumbbell_Shoulder_Press/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000051798d72": {
+    "name": "Seated Cable Rows",
+    "slug": "seated-cable-rows",
+    "freeId": "Seated_Cable_Rows",
+    "freeName": "Seated Cable Rows",
+    "freeImages": [
+      "Seated_Cable_Rows/0.jpg",
+      "Seated_Cable_Rows/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00001eb9f4a2": {
+    "name": "Face Pulls",
+    "slug": "face-pulls",
+    "freeId": "Face_Pull",
+    "freeName": "Face Pull",
+    "freeImages": [
+      "Face_Pull/0.jpg",
+      "Face_Pull/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000065cda62": {
+    "name": "Plank",
+    "slug": "plank",
+    "freeId": "Plank",
+    "freeName": "Plank",
+    "freeImages": [
+      "Plank/0.jpg",
+      "Plank/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00000af286ad": {
+    "name": "Tricep Pushdowns",
+    "slug": "tricep-pushdowns",
+    "freeId": "Triceps_Pushdown",
+    "freeName": "Triceps Pushdown",
+    "freeImages": [
+      "Triceps_Pushdown/0.jpg",
+      "Triceps_Pushdown/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-0000538e9fda": {
+    "name": "Resistance Band Tricep Extensions",
+    "slug": "resistance-band-tricep-extensions",
+    "freeId": "Band_Skull_Crusher",
+    "freeName": "Band Skull Crusher",
+    "freeImages": [
+      "Band_Skull_Crusher/0.jpg",
+      "Band_Skull_Crusher/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000022f35cb1": {
+    "name": "Resistance Band Tricep Pushdowns",
+    "slug": "resistance-band-tricep-pushdowns",
+    "freeId": "Triceps_Pushdown",
+    "freeName": "Triceps Pushdown",
+    "freeImages": [
+      "Triceps_Pushdown/0.jpg",
+      "Triceps_Pushdown/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-00002964f31c": {
+    "name": "Calf Raises",
+    "slug": "calf-raises",
+    "freeId": "Smith_Machine_Calf_Raise",
+    "freeName": "Smith Machine Calf Raise",
+    "freeImages": [
+      "Smith_Machine_Calf_Raise/0.jpg",
+      "Smith_Machine_Calf_Raise/1.jpg"
+    ]
+  },
+  "00000000-0000-4000-8000-000023cb7348": {
+    "name": "Leg Curls",
+    "slug": "leg-curls",
+    "freeId": "Lying_Leg_Curls",
+    "freeName": "Lying Leg Curls",
+    "freeImages": [
+      "Lying_Leg_Curls/0.jpg",
+      "Lying_Leg_Curls/1.jpg"
+    ]
+  }
+}

@@ -258,15 +258,33 @@ export interface Equipment {
   isCommonHomeEquipment: boolean;
 }
 
+export interface MediaVerificationStatus {
+  identity: 'verified' | 'unverified';
+  rights: 'verified' | 'unverified' | 'restricted';
+  asset: 'verified' | 'broken';
+}
+
 export interface ProvenanceMetadata {
-  source: 'in_house' | 'public_domain' | 'creative_commons' | 'licensed_dataset';
-  license: 'MIT' | 'CC-BY-4.0' | 'CC0' | 'Proprietary';
+  source: 'in_house' | 'public_domain' | 'creative_commons' | 'licensed_dataset' | 'exercises-dataset' | 'free-exercise-db' | 'azilRababe' | 'ExerciseDB' | 'MuscleMap' | (string & {});
+  sourceExerciseId?: string;
+  sourceCommit?: string;
+  sourcePath?: string;
+  assetHash?: string;
+  importedAt?: string;
+  license: 'MIT' | 'CC-BY-4.0' | 'CC0' | 'Unlicense' | 'Proprietary' | (string & {});
   attribution: string;
   commercialUseAllowed: boolean;
+  redistributionAllowed?: boolean;
+  localBundleAllowed?: boolean;
+  referenceOnly?: boolean;
+  verification?: MediaVerificationStatus;
+  matchMethod?: 'exact_source_id' | 'exact_normalized_name' | 'verified_name_equipment' | 'verified_name_muscles' | 'manual_verified' | (string & {});
+  matchConfidence?: number;
 }
 
 export interface ExerciseMedia {
   id: string;
+  replyfExerciseId?: string;
   type: 'image' | 'video' | 'gif' | 'svg' | 'animation';
   url: string;
   posterUrl?: string;

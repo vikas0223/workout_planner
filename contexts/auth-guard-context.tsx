@@ -135,6 +135,7 @@ export interface AuthGuardContextType {
   authenticateUser: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
+  switchAccess: () => Promise<void>;
   resetFlow: () => Promise<void>;
 }
 
@@ -312,6 +313,18 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const switchAccess = useCallback(async () => {
+    setAccessModeState('unselected');
+    setUserEmail(null);
+    try {
+      localStorage.removeItem(ACCESS_MODE_KEY);
+      const engine = IndexedDBEngine.getInstance();
+      await engine.delete(STORES.META, ACCESS_MODE_KEY);
+    } catch (e) {
+      console.warn('[AuthGuard] Failed to switch access:', e);
+    }
+  }, []);
+
   const resetFlow = useCallback(async () => {
     setAccessModeState('unselected');
     setOnboardingStateState('incomplete');
@@ -345,6 +358,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         authenticateUser,
         signOut,
         completeOnboarding,
+        switchAccess,
         resetFlow,
       },
     },

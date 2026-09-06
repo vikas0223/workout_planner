@@ -24,7 +24,7 @@ import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer';
 import { GeneratedWorkout } from '@/types/domain';
 
 export default function Home() {
-  const { accessMode, onboardingState, status, isInitializing, userEmail, signOut, resetFlow } = useAuthGuard();
+  const { accessMode, onboardingState, status, isInitializing, userEmail, signOut, switchAccess, resetFlow } = useAuthGuard();
   const [stagedPlan, setStagedPlan] = useState<GeneratedWorkout | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -163,7 +163,7 @@ export default function Home() {
               ) : (
                 <button
                   type="button"
-                  onClick={resetFlow}
+                  onClick={switchAccess}
                   className="min-h-[36px] px-2.5 py-1 rounded-xl text-[11px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
                   title="Running in local Guest Mode. Click to sign in or switch account."
                   aria-label="Guest Mode. Click to sign in or switch account"
@@ -185,6 +185,7 @@ export default function Home() {
           userEmail={userEmail}
           onSignOut={signOut}
           onResetFlow={resetFlow}
+          onSwitchAccess={switchAccess}
         />
 
         {/* ======================================================

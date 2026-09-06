@@ -15,6 +15,8 @@ import { BodySex, BodyView, AnatomyMode, AnatomyRegionDefinition } from '@/types
 import { JointNode } from './joint-node';
 import { getRegionsByViewAndMode } from '@/lib/anatomy/anatomy-definitions';
 
+import { getHeatmapFillColor, mapReplyfToMuscleMap } from '@/lib/anatomy/muscle-map-integration';
+
 export interface BodySilhouetteProps {
   sex: BodySex;
   view: BodyView;
@@ -22,6 +24,7 @@ export interface BodySilhouetteProps {
   selectedRegion: AnatomyRegionDefinition | null;
   hoveredRegion: AnatomyRegionDefinition | null;
   relatedRegionIds?: string[];
+  heatmap?: Record<string, number>;
   onSelectRegion: (region: AnatomyRegionDefinition) => void;
   onHoverRegion: (region: AnatomyRegionDefinition | null) => void;
 }
@@ -33,6 +36,7 @@ export function BodySilhouette({
   selectedRegion,
   hoveredRegion,
   relatedRegionIds = [],
+  heatmap,
   onSelectRegion,
   onHoverRegion,
 }: BodySilhouetteProps) {
@@ -43,6 +47,16 @@ export function BodySilhouette({
     const isHovered = hoveredRegion?.id === regionId;
     const isRelated = relatedRegionIds.includes(regionId);
     return { isSelected, isHovered, isRelated };
+  };
+
+  const getMuscleHeatmapIntensity = (regionId: string): number | undefined => {
+    if (!heatmap) return undefined;
+    if (heatmap[regionId] !== undefined) return heatmap[regionId];
+    const geometryIds = mapReplyfToMuscleMap(regionId);
+    for (const gid of geometryIds) {
+      if (heatmap[gid] !== undefined) return heatmap[gid];
+    }
+    return undefined;
   };
 
   const getMusclePathClass = (regionId: string) => {
@@ -56,6 +70,10 @@ export function BodySilhouette({
     if (isRelated) {
       return 'fill-indigo-200 stroke-indigo-300 stroke-1 cursor-pointer transition-all duration-200';
     }
+    const intensity = getMuscleHeatmapIntensity(regionId);
+    if (intensity !== undefined && intensity > 0) {
+      return 'stroke-white stroke-1 hover:brightness-110 cursor-pointer transition-all duration-200';
+    }
     return 'fill-slate-300 stroke-white stroke-1 hover:fill-indigo-300 cursor-pointer transition-all duration-200';
   };
 
@@ -66,12 +84,18 @@ export function BodySilhouette({
   ) => {
     const reg = regions.find((r) => r.id === id);
     if (!reg) return null;
-    const { isSelected } = getRegionState(id);
+    const { isSelected, isHovered, isRelated } = getRegionState(id);
+    const intensity = getMuscleHeatmapIntensity(id);
+    const customFill =
+      !isSelected && !isHovered && !isRelated && intensity !== undefined && intensity > 0
+        ? getHeatmapFillColor(intensity)
+        : undefined;
 
     return (
       <path
         key={id}
         d={d}
+        fill={customFill}
         data-region-id={id}
         data-region-type="muscle"
         role="button"

@@ -26,8 +26,15 @@ export function FeatureCopy({ features, activeId, onFeatureSelect }: FeatureCopy
           <article
             key={feature.id}
             data-feature={feature.id}
+            tabIndex={0}
             onClick={() => onFeatureSelect(feature.id)}
-            className={`feature-article-card transition-all duration-300 cursor-pointer rounded-3xl p-6 sm:p-8 border ${
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onFeatureSelect(feature.id);
+              }
+            }}
+            className={`feature-article-card transition-all duration-300 cursor-pointer rounded-3xl p-6 sm:p-8 border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 ${
               isActive
                 ? 'bg-white border-indigo-200/90 shadow-md ring-1 ring-indigo-500/10'
                 : 'bg-white/40 border-slate-200/60 hover:bg-white/70 hover:border-slate-300'

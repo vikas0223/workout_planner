@@ -52,7 +52,8 @@ export function InstallReplyfButton({
       <button
         type="button"
         onClick={triggerInstall}
-        className={`inline-flex items-center justify-center gap-2 border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-[0.98] ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        disabled={isInstalled}
+        className={`inline-flex items-center justify-center gap-2 border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         aria-label={isInstalled ? 'Replyf Installed on this device' : label}
       >
         {showIcon && (

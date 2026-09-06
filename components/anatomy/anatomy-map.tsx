@@ -21,6 +21,7 @@ export interface AnatomyMapProps {
   selectedRegion: AnatomyRegionDefinition | null;
   hoveredRegion: AnatomyRegionDefinition | null;
   relatedRegionIds?: string[];
+  heatmap?: Record<string, number>;
   onModeChange: (mode: AnatomyMode) => void;
   onSexChange: (sex: BodySex) => void;
   onViewChange: (view: BodyView) => void;
@@ -36,6 +37,7 @@ export function AnatomyMap({
   selectedRegion,
   hoveredRegion,
   relatedRegionIds,
+  heatmap,
   onModeChange,
   onSexChange,
   onViewChange,
@@ -75,6 +77,7 @@ export function AnatomyMap({
             selectedRegion={selectedRegion}
             hoveredRegion={hoveredRegion}
             relatedRegionIds={relatedRegionIds}
+            heatmap={heatmap}
             onSelectRegion={onSelectRegion}
             onHoverRegion={onHoverRegion}
           />

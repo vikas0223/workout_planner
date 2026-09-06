@@ -119,7 +119,7 @@ export function OfflinePwaSection() {
 
               {/* Local Storage Indicator */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-medium">
-                <span>Syncs on reconnect</span>
+                <span>Syncs on reconnect (signed-in)</span>
                 <span className="font-bold text-indigo-600">100% available</span>
               </div>
             </div>

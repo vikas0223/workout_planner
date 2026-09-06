@@ -99,7 +99,7 @@ export function useInstallPrompt() {
   }, [deferredPrompt]);
 
   return {
-    isInstallable: isInstallable || !isInstalled,
+    isInstallable,
     isInstalled,
     platform,
     showGuidanceModal,

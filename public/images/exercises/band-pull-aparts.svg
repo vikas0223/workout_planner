@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Resistance Band Pull-Aparts Illustration -->
+  <g transform="translate(200, 135)" filter="url(#shadow)">
+    <!-- Standing Athlete (Rear / Diagonal View to highlight Rear Delts & Rhomboids) -->
+    <!-- Head -->
+    <circle cx="0" cy="-65" r="13" fill="#1E293B"/>
+
+    <!-- Upper Back & Trapezius / Rhomboids (Highlighted Target Muscles) -->
+    <path d="M-22,-45 L22,-45 L15,15 L-15,15 Z" fill="url(#accent-grad)"/>
+
+    <!-- Lower Body / Legs Standing Tall -->
+    <path d="M-14,15 L-16,90 L-8,90 L-4,15 Z" fill="#334155"/>
+    <path d="M14,15 L16,90 L8,90 L4,15 Z" fill="#334155"/>
+    <rect x="-20" y="90" width="14" height="6" rx="2" fill="#0F172A"/>
+    <rect x="6" y="90" width="14" height="6" rx="2" fill="#0F172A"/>
+
+    <!-- Arms Spread Out Horizontally Holding Band (Contracted Rear Delts) -->
+    <!-- Left Arm -->
+    <path d="M-20,-42 L-65,-38 L-78,-38" stroke="#334155" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <circle cx="-80" cy="-38" r="5" fill="#1E293B"/> <!-- Left Fist -->
+
+    <!-- Right Arm -->
+    <path d="M20,-42 L65,-38 L78,-38" stroke="#334155" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <circle cx="80" cy="-38" r="5" fill="#1E293B"/> <!-- Right Fist -->
+
+    <!-- Stretched Elastic Resistance Band Across Chest/Hands -->
+    <path d="M-82,-38 L82,-38" stroke="#E11D48" stroke-width="4" stroke-linecap="round"/>
+
+    <!-- Lateral Pull-Apart Force Arrows -->
+    <path d="M-55,-54 L-80,-54" stroke="#6366F1" stroke-width="3" fill="none"/>
+    <polygon points="-86,-54 -76,-58 -76,-50" fill="#6366F1"/>
+
+    <path d="M55,-54 L80,-54" stroke="#6366F1" stroke-width="3" fill="none"/>
+    <polygon points="86,-54 76,-58 76,-50" fill="#6366F1"/>
+  </g>
+</svg>

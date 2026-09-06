@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#EDF2F7"/>
+    </linearGradient>
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="400" height="300" rx="16" fill="url(#bg-grad)"/>
+  <circle cx="200" cy="140" r="110" fill="#EEF2FF" opacity="0.6"/>
+  <ellipse cx="200" cy="265" rx="140" ry="12" fill="#CBD5E1" opacity="0.4"/>
+
+  <!-- Tricep Extensions Illustration -->
+  <g transform="translate(200, 150)" filter="url(#shadow)">
+    <!-- Athlete Standing / Seated (Side/Profile Angle) -->
+    <!-- Head -->
+    <circle cx="-10" cy="-25" r="14" fill="#1E293B"/>
+    <!-- Neck -->
+    <path d="M-8,-12 L-4,-4 L-12,-4 Z" fill="#1E293B"/>
+    <!-- Upright Torso -->
+    <path d="M-18,-4 L8,-4 L12,65 L-15,65 Z" fill="#334155"/>
+    <!-- Hips & Legs -->
+    <path d="M-16,65 L12,65 L10,120 L-14,120 Z" fill="#1E293B"/>
+
+    <!-- Upper Arm pointing straight UP (Vertical Humerus) -->
+    <path d="M-4,-2 L-4,-55" stroke="#334155" stroke-width="12" stroke-linecap="round" fill="none"/>
+    <!-- Forearm bending backwards/overhead behind neck (flexed at elbow) -->
+    <path d="M-4,-55 L-30,-25" stroke="#334155" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+    <!-- Highlighted Triceps Brachii (Working Muscle along back of upper arm) -->
+    <path d="M-10,-10 L-10,-50" stroke="url(#accent-grad)" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <circle cx="-4" cy="-55" r="5" fill="#4F46E5"/> <!-- Elbow Joint -->
+
+    <!-- Dumbbell held in hands behind head/neck -->
+    <g transform="translate(-32, -22) rotate(-30)">
+      <rect x="-10" y="-3" width="20" height="6" rx="2" fill="#94A3B8"/>
+      <rect x="-14" y="-10" width="6" height="20" rx="2" fill="#1E293B"/>
+      <rect x="8" y="-10" width="6" height="20" rx="2" fill="#1E293B"/>
+    </g>
+
+    <!-- Extension Arc Motion Arrow (From behind head upward to lockout) -->
+    <path d="M-30,-30 C-25,-65 -15,-78 -4,-72" stroke="#6366F1" stroke-width="3.5" stroke-dasharray="3,3" fill="none"/>
+    <polygon points="-3,-78 -9,-68 1,-70" fill="#6366F1"/>
+  </g>
+
+  <!-- Anatomical Focus Badge -->
+  <g transform="translate(20, 24)">
+    <rect width="136" height="24" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1"/>
+    <text x="68" y="16" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="600" fill="#4F46E5" text-anchor="middle">TRICEPS ISOLATION</text>
+  </g>
+</svg>

@@ -54,12 +54,6 @@ export function AuthGuestScreen() {
           password,
         });
         if (error) {
-          // If offline or placeholder supabase url, allow simulated auth for local testing
-          if (error.message.includes('FetchError') || error.message.includes('placeholder')) {
-            await authenticateUser(email);
-            setShowAuthModal(false);
-            return;
-          }
           throw error;
         }
         if (data.user) {
@@ -74,12 +68,6 @@ export function AuthGuestScreen() {
           password,
         });
         if (error) {
-          // If offline or placeholder supabase url, allow simulated auth for local testing
-          if (error.message.includes('FetchError') || error.message.includes('placeholder')) {
-            await authenticateUser(email);
-            setShowAuthModal(false);
-            return;
-          }
           throw error;
         }
         if (data.user) {

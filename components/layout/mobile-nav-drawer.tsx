@@ -40,7 +40,8 @@ export interface MobileNavDrawerProps {
   accessMode: 'unselected' | 'guest' | 'authenticated';
   userEmail: string | null;
   onSignOut: () => void;
-  onResetFlow: () => void;
+  onResetFlow?: () => void;
+  onSwitchAccess?: () => void;
 }
 
 const NAV_ITEMS = [
@@ -59,6 +60,7 @@ export function MobileNavDrawer({
   userEmail,
   onSignOut,
   onResetFlow,
+  onSwitchAccess,
 }: MobileNavDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -158,7 +160,11 @@ export function MobileNavDrawer({
               <button
                 type="button"
                 onClick={() => {
-                  onResetFlow();
+                  if (onSwitchAccess) {
+                    onSwitchAccess();
+                  } else {
+                    onResetFlow?.();
+                  }
                   onOpenChange(false);
                 }}
                 className="min-h-[44px] w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
