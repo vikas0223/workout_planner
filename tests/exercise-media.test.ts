@@ -470,9 +470,6 @@ describe('Catalog Media Validation Rules (Requirement 14)', () => {
 
   it('validates entire 166 canonical exercises catalog with zero media errors', () => {
     const report = validateExerciseCatalog(CANONICAL_EXERCISES);
-    if (!report.isValid) {
-      console.log('VALIDATION ERRORS:', JSON.stringify(report.issues.filter(i => i.type === 'error'), null, 2));
-    }
     expect(report.isValid).toBe(true);
     expect(report.errorCount).toBe(0);
     expect(report.totalExercises).toBe(166);
@@ -497,7 +494,7 @@ describe('Media Coverage Audit & Minimum Core Movements (Requirement 11)', () =>
 
   it('explicitly verifies media coverage for all 16 Section W high-priority core movements', () => {
     const summary = getMediaAuditSummary(CANONICAL_EXERCISES);
-    expect(summary.verifiedCoreExercises.length).toBe(16);
+    expect(summary.verifiedCoreExercises.length).toBe(18);
 
     for (const req of summary.verifiedCoreExercises) {
       expect(req.verified, `Expected media coverage for: ${req.name}`).toBe(true);
@@ -505,17 +502,19 @@ describe('Media Coverage Audit & Minimum Core Movements (Requirement 11)', () =>
     }
   });
 
-  it('matches exact specification list for Section W high-priority movements', () => {
+  it('matches exact specification list for Section 36 high-priority movements', () => {
     expect(HIGH_PRIORITY_EXERCISES).toEqual([
       'Abductor Machine',
       'Adductor Machine',
       'Ankle Rotations',
+      'Assault Bike',
+      'Band Pull-Aparts',
+      'Barbell Rows',
       'Barbell Back Squat',
-      'Barbell Bench Press',
+      'Bench Press',
       'Deadlift',
-      'Pull-Up',
+      'Pull-Ups',
       'Overhead Press',
-      'Barbell Row',
       'Dips',
       'Lunges',
       'Push-Ups',
@@ -633,30 +632,162 @@ describe('Section Y: Exercise Mapping, External Dataset & MuscleMap Integration 
     const match = matchExerciseDeterministically(mockEx, sampleExternal);
     expect(match).not.toBeNull();
     expect(match!.record.id).toBe('ext-bench');
-    expect(match!.matchKey).toBe('equipment_target_family');
+    expect(match!.matchKey).toBe('verified_name_equipment');
   });
 
-  // Test 18: External Source Mapping & License Separation
-  it('18. maintains external dataset mapping with strict provenance & Gym visual copyright separation', () => {
+  // Test 18: External Source Mapping & License Separation (Sections 3, 8, 44, 45)
+  it('18. maintains external dataset mapping with strict provenance & free-exercise-db Unlicense verification', () => {
     const mappings = Object.values(CANONICAL_TO_EXTERNAL_DATASET_MAP);
     expect(mappings.length).toBeGreaterThanOrEqual(15);
 
     for (const mapping of mappings) {
       expect(mapping.canonicalExerciseId).toBeDefined();
-      expect(mapping.externalSource).toBe('exercises-dataset');
-      expect(mapping.externalSourceId).toMatch(/^ex-dataset-/);
-      expect(mapping.metadataLicense).toBe('MIT');
-      expect(mapping.mediaRightsOwner).toBe('Gym visual');
-      // CRITICAL: Gym visual media is NOT licensed to Replyf for public bundling
-      expect(mapping.mediaLicensedToReplyf).toBe(false);
-      expect(mapping.mediaAttributionRequired).toContain('Gym visual via hasaneyldrm/exercises-dataset');
+      expect(mapping.externalSource).toBe('free-exercise-db');
+      expect(mapping.metadataLicense).toBe('Unlicense');
+      expect(mapping.mediaRightsOwner).toContain('free-exercise-db');
+      expect(mapping.mediaLicensedToReplyf).toBe(true);
+      expect(mapping.localBundleAllowed).toBe(true);
+      expect(mapping.sourceCommit).toBe('a859101d633a01c4a1a920d6a8ce41dabba0705f');
+      expect(mapping.verification?.identity).toBe('verified');
+      expect(mapping.verification?.rights).toBe('verified');
+      expect(mapping.verification?.asset).toBe('verified');
     }
 
-    // Verify lookup helper
+    // Verify lookup helper with Section 8 fields
     const benchMapping = getExerciseMapping('00000000-0000-4000-8000-000012b3e666');
     expect(benchMapping).not.toBeNull();
     expect(benchMapping!.canonicalExerciseName).toBe('Bench Press');
-    expect(benchMapping!.externalSourceId).toBe('ex-dataset-0025');
+    expect(benchMapping!.externalSourceId).toBe('Barbell_Bench_Press_-_Medium_Grip');
+    expect(benchMapping!.replyfExerciseId).toBe('00000000-0000-4000-8000-000012b3e666');
+    expect(benchMapping!.externalExerciseId).toBe('Barbell_Bench_Press_-_Medium_Grip');
+    expect(benchMapping!.identityVerified).toBe(true);
+  });
+
+  // Section 43 & 44: Rights & Verification Filtering Tests
+  it('strictly excludes unverified media, referenceOnly media, and restricted rights (Section 43 & 44)', () => {
+    const exWithUnverified = createMockExercise({
+      media: [
+        {
+          id: 'm-unverified-id',
+          type: 'image',
+          url: '/exercises/test/0.jpg',
+          provenance: {
+            source: 'free-exercise-db',
+            license: 'Unlicense',
+            attribution: 'free-exercise-db',
+            commercialUseAllowed: true,
+            verification: { identity: 'unverified', rights: 'verified', asset: 'verified' },
+          },
+        },
+        {
+          id: 'm-ref-only',
+          type: 'gif',
+          url: 'https://external.domain/gif.gif',
+          provenance: {
+            source: 'azilRababe',
+            referenceOnly: true,
+            license: 'MIT',
+            attribution: 'azilRababe',
+            commercialUseAllowed: false,
+            verification: { identity: 'verified', rights: 'unverified', asset: 'verified' },
+          },
+        },
+        {
+          id: 'm-restricted',
+          type: 'video',
+          url: 'https://exercisedb.dev/video.mp4',
+          provenance: {
+            source: 'ExerciseDB',
+            license: 'Proprietary',
+            attribution: 'ExerciseDB',
+            commercialUseAllowed: false,
+            verification: { identity: 'verified', rights: 'restricted', asset: 'verified' },
+          },
+        },
+        {
+          id: 'm-approved',
+          type: 'image',
+          url: '/exercises/approved/0.jpg',
+          provenance: {
+            source: 'free-exercise-db',
+            license: 'Unlicense',
+            attribution: 'free-exercise-db',
+            commercialUseAllowed: true,
+            verification: { identity: 'verified', rights: 'verified', asset: 'verified' },
+          },
+        },
+      ],
+    });
+
+    const candidates = resolveMediaCandidates(exWithUnverified, 'detail');
+    // Only m-approved should be resolved; all 3 others must be excluded
+    expect(candidates.length).toBe(1);
+    expect(candidates[0].id).toBe('m-approved');
+    expect(candidates[0].url).toBe('/exercises/approved/0.jpg');
+  });
+
+  // Section 43: Identity Safety Tests
+  it('strictly blocks wrong exercise matches via safety signature (Section 43)', () => {
+    const squatExternal: ExternalExerciseRecord[] = [
+      {
+        id: 'Barbell_Squat',
+        name: 'Barbell Back Squat',
+        equipment: 'Barbell',
+        primaryMuscles: ['Quads'],
+        category: 'strength',
+      },
+      {
+        id: 'Incline_Bench_Press',
+        name: 'Incline Barbell Bench Press',
+        equipment: 'Barbell',
+        primaryMuscles: ['Chest'],
+        category: 'strength',
+      },
+      {
+        id: 'Adductor_Machine',
+        name: 'Adductor Machine',
+        equipment: 'Machine',
+        primaryMuscles: ['Adductors'],
+        category: 'strength',
+      },
+    ];
+
+    // Squat MUST NOT match Ankle Rotations
+    const ankleEx = createMockExercise({ name: 'Ankle Rotations', primaryMuscles: ['Calves'], equipment: ['Bodyweight'] });
+    expect(matchExerciseDeterministically(ankleEx, squatExternal)).toBeNull();
+
+    // Squat MUST NOT match Abductor Machine
+    const abductorEx = createMockExercise({ name: 'Abductor Machine', primaryMuscles: ['Glutes'], equipment: ['Machine'] });
+    expect(matchExerciseDeterministically(abductorEx, squatExternal)).toBeNull();
+
+    // Abductor Machine MUST NOT match Adductor Machine
+    expect(matchExerciseDeterministically(abductorEx, [squatExternal[2]])).toBeNull();
+
+    // Bench Press MUST NOT match Incline Bench Press
+    const benchEx = createMockExercise({ name: 'Bench Press', primaryMuscles: ['Chest'], equipment: ['Barbell'] });
+    expect(matchExerciseDeterministically(benchEx, [squatExternal[1]])).toBeNull();
+  });
+
+  // Section 45: Provenance Preservation Tests
+  it('verifies all imported production media records preserve required provenance fields (Section 45)', () => {
+    let checkedCount = 0;
+    for (const ex of CANONICAL_EXERCISES) {
+      if (!ex.media) continue;
+      for (const m of ex.media) {
+        if (m.provenance?.source === 'free-exercise-db') {
+          checkedCount++;
+          expect(m.provenance.source).toBe('free-exercise-db');
+          expect(m.provenance.license).toBe('Unlicense');
+          expect(m.provenance.sourceCommit).toBe('a859101d633a01c4a1a920d6a8ce41dabba0705f');
+          expect(m.provenance.sourcePath).toBeDefined();
+          expect(m.provenance.assetHash).toBeDefined();
+          expect(m.provenance.assetHash?.length).toBe(64); // SHA-256
+          expect(m.provenance.verification?.identity).toBe('verified');
+          expect(m.provenance.verification?.rights).toBe('verified');
+        }
+      }
+    }
+    expect(checkedCount).toBeGreaterThanOrEqual(25);
   });
 
   // Test 19: MuscleMap Muscle Mapping

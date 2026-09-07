@@ -23,12 +23,15 @@ import {
   Dumbbell,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   ArrowRight,
   ShieldCheck,
+  Video,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseMedia } from './exercise-media';
+import { resolveApprovedMediaCandidates } from '@/lib/exercises/media-resolver';
 
 export interface ExerciseDetailDialogProps {
   exercise: Exercise | null;
@@ -49,7 +52,7 @@ export function ExerciseDetailDialog({
   onSelectAlternative,
   onAddToWorkout,
 }: ExerciseDetailDialogProps) {
-  // Close on ESC
+  // Lock body scroll and handle Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -64,10 +67,40 @@ export function ExerciseDetailDialog({
     };
   }, [isOpen, onClose]);
 
+  const mediaCandidates = useMemo(() => {
+    if (!exercise) return [];
+    return resolveApprovedMediaCandidates(exercise, 'detail');
+  }, [exercise]);
+
+  const hasMedia = mediaCandidates.length > 0;
+
   const alternatives = useMemo(() => {
     if (!exercise) return [];
-    return ExerciseCatalog.findAlternatives(exercise.id);
-  }, [exercise]);
+    if (!hasMedia) {
+      const mediaAlts = ExerciseCatalog.findAlternativesWithMedia(exercise.id);
+      if (mediaAlts.length > 0) return mediaAlts;
+      return ExerciseCatalog.findAlternatives(exercise.id);
+    }
+    const directAlts = ExerciseCatalog.findAlternatives(exercise.id);
+    if (directAlts.length > 0) return directAlts;
+    return ExerciseCatalog.findAlternativesWithMedia(exercise.id);
+  }, [exercise, hasMedia]);
+
+  const alternativesWithCandidates = useMemo(() => {
+    return alternatives.map((alt) => {
+      const candidates = resolveApprovedMediaCandidates(alt, 'card');
+      return {
+        alt,
+        candidates,
+        hasApprovedMedia: candidates.length > 0,
+        primaryCandidate: candidates.length > 0 ? candidates[0] : null,
+      };
+    });
+  }, [alternatives]);
+
+  const hasAlternativesWithDemonstration = useMemo(() => {
+    return alternativesWithCandidates.some((item) => item.hasApprovedMedia);
+  }, [alternativesWithCandidates]);
 
   const relatedExercises = useMemo(() => {
     if (!exercise) return [];
@@ -148,6 +181,22 @@ export function ExerciseDetailDialog({
             />
           </div>
 
+          {!hasMedia && (
+            <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-left">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-semibold text-amber-900">
+                  Demonstration unavailable for this exercise
+                </h4>
+                <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                  {hasAlternativesWithDemonstration
+                    ? 'A photo or video demonstration is not available for this exact variation. You can explore the alternative exercises below which have verified video and image demonstrations.'
+                    : 'A photo or video demonstration is not available for this exact variation.'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* 2. Structured Metadata Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs">
             <div>
@@ -225,30 +274,56 @@ export function ExerciseDetailDialog({
           </div>
 
           {/* 5. Alternatives */}
-          {alternatives.length > 0 && (
+          {alternativesWithCandidates.length > 0 && (
             <div className="space-y-3 pt-2">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
-                Exercise Alternatives
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
+                  {!hasMedia && hasAlternativesWithDemonstration
+                    ? 'Recommended Alternatives (with demonstration)'
+                    : 'Exercise Alternatives'}
+                </h3>
+                <span className="text-[11px] text-slate-500">
+                  {alternativesWithCandidates.length} available
+                </span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {alternatives.map((alt) => (
-                  <button
-                    key={alt.id}
-                    type="button"
-                    onClick={() => onSelectAlternative(alt)}
-                    className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 text-left transition-all group"
-                  >
-                    <div>
-                      <div className="text-xs font-semibold text-slate-900 group-hover:text-indigo-600">
-                        {alt.name}
+                {alternativesWithCandidates.map(({ alt, primaryCandidate, hasApprovedMedia }) => {
+                  return (
+                    <button
+                      key={alt.id}
+                      type="button"
+                      onClick={() => onSelectAlternative(alt)}
+                      className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 text-left transition-all group gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {primaryCandidate?.url && (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={primaryCandidate.url}
+                            alt={alt.name}
+                            className="w-12 h-12 rounded-md object-cover bg-slate-100 shrink-0 border border-slate-200"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-xs font-semibold text-slate-900 group-hover:text-indigo-600 truncate">
+                            {alt.name}
+                          </div>
+                          <div className="text-[11px] text-slate-500 truncate mt-0.5">
+                            {alt.equipment.join(', ')} • {alt.primaryMuscles.join(', ')}
+                          </div>
+                          {hasApprovedMedia && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded mt-1 border border-emerald-200">
+                              <Video className="w-2.5 h-2.5" />
+                              <span>Demo available</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-[11px] text-slate-500">
-                        {alt.equipment.join(', ')} • {alt.primaryMuscles.join(', ')}
-                      </div>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                ))}
+                      <ArrowRight className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

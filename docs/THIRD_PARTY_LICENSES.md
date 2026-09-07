@@ -1,20 +1,79 @@
 # Third-Party Notices and Licensing Information
 
-This document details third-party code, data, and asset attributions incorporated into or referenced by Replyf.
+This document details third-party code, data, and asset attributions incorporated into or referenced by Replyf. Each external source is documented separately with explicit boundaries between repository code, metadata, API terms, and asset-level rights.
 
 ---
 
-## 1. MuscleMap
+## 1. free-exercise-db
+
+- **Repository**: [https://github.com/yuhonas/free-exercise-db.git](https://github.com/yuhonas/free-exercise-db.git)
+- **Pinned Commit**: `a859101d633a01c4a1a920d6a8ce41dabba0705f`
+- **License**: The Unlicense (Public Domain Dedication)
+- **Stated Terms**: The repository explicitly describes itself as an open public-domain dataset under The Unlicense and explicitly documents local use of its JSON records and exercise image files (`0.jpg`, `1.jpg`).
+- **Usage in Replyf**:
+  - Structured exercise metadata reference for deterministic matching.
+  - Approved imported static exercise demonstration images stored locally in `public/exercises/{slug}/`.
+  - Provenance tracked on every imported file (`source: 'free-exercise-db'`, `sourceCommit`, `sourcePath`, `assetHash`, `license: 'Unlicense'`).
+- **Provenance Retention**:
+  - Source attribution and provenance are permanently retained in `lib/data/exercise-dataset-mapping.ts` and `public/exercises/manifest.json`.
+
+---
+
+## 2. azilRababe/Exercises_Dataset
+
+- **Repository**: [https://github.com/azilRababe/Exercises_Dataset.git](https://github.com/azilRababe/Exercises_Dataset.git)
+- **Pinned Commit**: `29145279a39a2675f5e4ade584a50718f71cfa58`
+- **Repository License**: MIT License
+- **Media Provenance & Rights Separation**:
+  - **CRITICAL NOTICE**: Repository MIT ≠ Every GIF automatically MIT.
+  - The repository's own README explicitly states that contributed exercise media must comply with applicable copyright and licensing requirements. Many GIFs within the dataset originate from third-party fitness websites (such as `fitnessprogramer.com`).
+  - Therefore, individual GIFs are treated as unverified third-party assets.
+- **Replyf Policy**:
+  - Unverified animated assets from this repository remain marked `referenceOnly: true` with `verification.rights = 'unverified'`.
+  - **Unverified GIFs are NEVER bundled into Replyf production assets (`public/exercises/`).**
+  - Used strictly for GIF coverage discovery and candidate comparison.
+
+---
+
+## 3. ExerciseDB API & Dataset
+
+- **Repository / Hosted API**:
+  - [https://github.com/ExerciseDB/exercisedb-api.git](https://github.com/ExerciseDB/exercisedb-api.git) (Pinned Commit: `401ef93437a160f86927fee43b8e692532d04469`)
+  - [https://oss.exercisedb.dev/](https://oss.exercisedb.dev/)
+- **License & Rights Separation**:
+  - **Repository Code**: AGPL-3.0 License
+  - **Hosted Free API**: Subject to ExerciseDB / AscendAPI terms (rate-limited, non-commercial use tiers).
+  - **Media Demonstrations**: Third-party animation demonstrations.
+- **Replyf Policy**:
+  - The Replyf `/exercises` catalog does NOT depend on the hosted API at runtime. Exercise metadata remains 100% offline-first and self-contained.
+  - ExerciseDB media is NOT bundled into production unless applicable commercial redistribution rights are explicitly secured.
+  - Candidate records remain `referenceOnly: true`.
+
+---
+
+## 4. ExerciseDB Muscle Visualizer API
+
+- **Repository**: [https://github.com/ExerciseDB/muscle-visualizer-api.git](https://github.com/ExerciseDB/muscle-visualizer-api.git)
+- **Pinned Commit**: `3177d1ce2c9ab382fd875901fa4c6c86b64462c0`
+- **Purpose**: Dynamic anatomical visualization, muscle highlighting, and workout heatmap presentation.
+- **Usage Boundary**:
+  - Used strictly for anatomy/muscle visualization concepts.
+  - **NOT used as an exercise movement GIF/demonstration source.**
+  - Replyf's canonical anatomy taxonomy (`lib/anatomy/anatomy-definitions.ts`) remains the authoritative domain model.
+
+---
+
+## 5. MuscleMap
 
 - **Repository**: [https://github.com/melihcolpan/MuscleMap.git](https://github.com/melihcolpan/MuscleMap.git)
 - **Author**: Melih Colpan
 - **License**: MIT License
 - **Usage in Replyf**:
-  - Anatomy presentation geometry and body silhouette vector coordinate mapping
-  - Interactive muscle highlighting (anterior/posterior, bilateral selection)
-  - Muscle volume heatmap visualization
-- **Domain Authority**:
-  - Replyf's canonical anatomy definitions (`lib/anatomy/anatomy-definitions.ts`) remain the canonical application authority. MuscleMap is utilized strictly for presentation geometry and display ID translation.
+  - Male and female body silhouette SVG vector coordinate geometry (`components/anatomy/muscle-map-model.tsx`).
+  - Interactive anterior/posterior muscle group highlighting.
+- **Domain Boundary**:
+  - Replyf canonical muscle IDs and exercise-to-muscle relationships remain authoritative. MuscleMap provides visual presentation geometry only.
+  - MuscleMap is NOT used for exercise movement demonstrations.
 
 ### MIT License Text (MuscleMap)
 
@@ -44,38 +103,10 @@ SOFTWARE.
 
 ---
 
-## 2. exercises-dataset
+## 6. Replyf In-House Artwork & Demonstrations
 
-- **Repository**: [https://github.com/hasaneyldrm/exercises-dataset.git](https://github.com/hasaneyldrm/exercises-dataset.git)
-- **Author**: Hasan Yıldırım
-- **Total Records**: 1,324 exercise definitions
-- **Usage in Replyf**: Reference taxonomy mapping for exercise identification, naming conventions, primary/secondary muscle targets, equipment categories, and movement instructions.
-
-### IMPORTANT: Strict License Separation
-
-The `exercises-dataset` repository contains two distinct categories of content subject to different legal terms:
-
-### A. Dataset Metadata & Code
-- **License**: MIT License
-- **Scope**: Exercise names, equipment categories, muscle target metadata, instructions, and schemas.
-- **Permitted Use in Replyf**: Used as a source reference and deterministic mapping dictionary (`lib/data/exercise-dataset-mapping.ts`).
-
-### B. Exercise Demonstration Media (Images & GIFs)
-- **Copyright**: © Gym visual
-- **Terms**: Distributed within `hasaneyldrm/exercises-dataset` under specific permission.
-- **CRITICAL NOTICE**:
-  - **The exercise images and GIFs are NOT licensed under MIT.**
-  - Replyf does NOT claim Gym visual media as MIT-licensed.
-  - Replyf does NOT bundle or redistribute Gym visual GIFs in `public/` assets without independent verification of redistributable commercial licensing.
-  - Replyf does NOT perform derivative transformations (tracing, recoloring, frame extraction) as a license bypass.
-  - Where third-party media is referenced externally, provenance retains `source: 'Gym visual via hasaneyldrm/exercises-dataset'` with `commercialUseAllowed: false`.
-
----
-
-## 3. Replyf In-House Artwork & Demonstrations
-
-- **Author**: Replyf Design & Engineering Team
+- **Author**: Replyf Platform Design System
 - **Location**: `public/images/exercises/*.svg`
-- **License**: Project-Owned / Creative Commons Attribution 4.0 International (CC-BY-4.0)
-- **Scope**: Original, high-fidelity SVG vector demonstrations with anatomical muscle highlighting, motion vectors, and equipment geometry for core movements (Abductor Machine, Adductor Machine, Ankle Rotations, Barbell Back Squat, Bench Press, Deadlift, Pull-Ups, Overhead Press, Barbell Rows, Dips, Lunges, Push-Ups, Lat Pulldown, Incline Dumbbell Press, Dumbbell Press, Bicep Curls, Tricep Extensions, etc.).
-- **Commercial Use**: Permitted (`commercialUseAllowed: true`).
+- **License**: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+- **Scope**: Original, high-fidelity SVG vector demonstrations with anatomical muscle highlighting, motion vectors, and equipment geometry for priority movements (Abductor Machine, Adductor Machine, Ankle Rotations, Assault Bike, Band Pull-Aparts, Dumbbell Press, Triceps Extension, etc.).
+- **Commercial Use**: Permitted (`commercialUseAllowed: true`, `localBundleAllowed: true`).

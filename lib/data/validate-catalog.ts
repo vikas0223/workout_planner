@@ -303,6 +303,58 @@ export function validateExerciseCatalog(exercises: Exercise[]): CatalogValidatio
                 });
               }
             }
+
+            // Section 38 & 39: Detect unverified production assets & reference-only bundling
+            if (m.provenance.referenceOnly && !m.url.startsWith('http')) {
+              issues.push({
+                type: 'error',
+                exerciseId: ex.id,
+                exerciseName: ex.name,
+                field: 'media.provenance.referenceOnly',
+                message: 'referenceOnly assets must not be bundled into local production paths',
+              });
+            }
+
+            // Validate explicit verification state (identity, rights, asset) when present
+            if (m.provenance.verification) {
+              const { identity, rights, asset } = m.provenance.verification;
+              if (identity !== 'verified' && identity !== 'unverified') {
+                issues.push({
+                  type: 'error',
+                  exerciseId: ex.id,
+                  exerciseName: ex.name,
+                  field: 'media.provenance.verification.identity',
+                  message: `Invalid identity verification: "${identity}"`,
+                });
+              }
+              if (rights !== 'verified' && rights !== 'unverified' && rights !== 'restricted') {
+                issues.push({
+                  type: 'error',
+                  exerciseId: ex.id,
+                  exerciseName: ex.name,
+                  field: 'media.provenance.verification.rights',
+                  message: `Invalid rights verification: "${rights}"`,
+                });
+              }
+              if (asset !== 'verified' && asset !== 'broken') {
+                issues.push({
+                  type: 'error',
+                  exerciseId: ex.id,
+                  exerciseName: ex.name,
+                  field: 'media.provenance.verification.asset',
+                  message: `Invalid asset verification: "${asset}"`,
+                });
+              }
+              if (rights === 'restricted' && !m.provenance.referenceOnly) {
+                issues.push({
+                  type: 'error',
+                  exerciseId: ex.id,
+                  exerciseName: ex.name,
+                  field: 'media.provenance.verification.rights',
+                  message: 'Restricted media rights must be marked referenceOnly',
+                });
+              }
+            }
           }
         }
       }

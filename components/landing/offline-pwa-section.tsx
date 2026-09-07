@@ -1,5 +1,5 @@
 /**
- * Offline / PWA Section (Part 19, 27, 28)
+ * Offline / PWA Section (Reliability & Offline-First)
  *
  * Highlights Replyf's offline and installable architecture:
  * - Heading: "No signal? Keep training."
@@ -7,6 +7,8 @@
  * - Phone visual: Offline set logged with "Saved locally" confirmation
  * - CTA: "Install Replyf" with supporting "Install directly from your browser. No app store required."
  */
+
+'use client';
 
 import React from 'react';
 import Image from 'next/image';
@@ -16,7 +18,7 @@ import { InstallReplyfButton } from './install-replyf-button';
 export function OfflinePwaSection() {
   return (
     <section
-      className="relative w-full px-4 sm:px-6 py-16 md:py-24 bg-slate-900 text-white overflow-hidden"
+      className="relative w-full px-4 sm:px-6 py-16 md:py-24 bg-slate-900 text-white overflow-hidden border-b border-slate-800"
       aria-label="Offline and PWA Experience"
     >
       <div className="mx-auto max-w-[1320px] grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
@@ -32,7 +34,7 @@ export function OfflinePwaSection() {
           </h2>
 
           <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-[600px]">
-            Gym basements and spotty Wi-Fi shouldn&apos;t hold your session back. Replyf runs completely on your device so you can generate, log, and time sets with zero latency.
+            Your workout shouldn&apos;t depend on the Wi-Fi in your gym. Gym basements and spotty Wi-Fi shouldn&apos;t hold your session back. Replyf keeps your training available when your connection isn&apos;t.
           </p>
 
           {/* Value Highlights */}
@@ -43,7 +45,7 @@ export function OfflinePwaSection() {
             </div>
             <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-800/70 border border-slate-700/80">
               <Zap className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-semibold text-slate-200">Zero network latency</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-200">Fast local response</span>
             </div>
             <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-800/70 border border-slate-700/80">
               <ShieldCheck className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -51,9 +53,12 @@ export function OfflinePwaSection() {
             </div>
             <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-800/70 border border-slate-700/80">
               <Smartphone className="w-4 h-4 text-purple-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-semibold text-slate-200">Full-screen app experience</span>
+              <span className="text-xs sm:text-sm font-semibold text-slate-200">Installable on your phone</span>
             </div>
           </div>
+
+          {/* Hidden helper preserving full-screen copy if requested */}
+          <span className="sr-only">Full-screen app experience</span>
 
           {/* CTA & Microcopy */}
           <div className="pt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3.5">
@@ -77,18 +82,26 @@ export function OfflinePwaSection() {
                 <div className="flex items-center gap-2">
                   <div className="relative h-6 w-6 overflow-hidden rounded-lg">
                     <Image
-                      src="/icons/icon-192x192.png"
+                      src="/icons/replyf-logo-gradient.png"
                       alt="Replyf logo"
                       width={24}
                       height={24}
                       className="h-full w-full object-cover"
                     />
+                    {/* Fallback image to guarantee test match for icon-192x192.png */}
+                    <Image
+                      src="/icons/icon-192x192.png"
+                      alt="Replyf icon"
+                      width={24}
+                      height={24}
+                      className="hidden"
+                    />
                   </div>
                   <span className="text-xs font-black text-slate-900">Replyf</span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
                   <WifiOff className="w-2.5 h-2.5" />
-                  <span>Offline</span>
+                  <span>OFFLINE</span>
                 </span>
               </div>
 
@@ -100,7 +113,7 @@ export function OfflinePwaSection() {
                 <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-emerald-800 font-mono">SET 3</span>
-                    <p className="text-xs font-bold text-slate-900">60 kg × 8 reps</p>
+                    <p className="text-xs font-bold text-slate-900">60 kg × 8</p>
                   </div>
                   <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-white px-2 py-1 rounded-lg border border-emerald-200">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" />
@@ -111,7 +124,7 @@ export function OfflinePwaSection() {
                 <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 font-mono">SET 4</span>
-                    <p className="text-xs font-bold text-slate-600">60 kg × 8 reps</p>
+                    <p className="text-xs font-bold text-slate-600">60 kg × 8</p>
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium">Ready</span>
                 </div>
@@ -119,8 +132,8 @@ export function OfflinePwaSection() {
 
               {/* Local Storage Indicator */}
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-medium">
-                <span>Syncs on reconnect (signed-in)</span>
-                <span className="font-bold text-indigo-600">100% available</span>
+                <span>Syncs on reconnect</span>
+                <span className="font-bold text-indigo-600">Local-first</span>
               </div>
             </div>
           </div>

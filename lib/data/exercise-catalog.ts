@@ -11,6 +11,12 @@
  */
 
 import { CANONICAL_EXERCISES } from './canonical-exercises';
+import { DATASET_EXERCISES } from './dataset-exercises';
+import {
+  CORE_CANONICAL_TO_DATASET_ID,
+  isSafetySignatureViolated,
+} from './exercise-dataset-mapping';
+import { hasApprovedMedia } from '@/lib/exercises/media-resolver';
 import {
   Exercise,
   FitnessGoal,
@@ -48,9 +54,101 @@ function normalizeString(val: string): string {
   return val.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+function initializeCatalog(): Exercise[] {
+  const combined: Exercise[] = [...CANONICAL_EXERCISES];
+  const canonicalIds = new Set(CANONICAL_EXERCISES.map((c) => c.id));
+  const canonicalNames = new Set(CANONICAL_EXERCISES.map((c) => normalizeString(c.name)));
+
+  const datasetById = new Map<string, Exercise>();
+  const datasetByName = new Map<string, Exercise>();
+  for (const dex of DATASET_EXERCISES) {
+    datasetById.set(dex.id, dex);
+    datasetByName.set(normalizeString(dex.name), dex);
+  }
+
+  const claimedDatasetIds = new Set<string>();
+  const claimedDatasetNames = new Set<string>();
+
+  // Enrich canonical exercises with dataset media where matched and not already present
+  for (let i = 0; i < combined.length; i++) {
+    const c = combined[i];
+    let match: Exercise | undefined;
+
+    // 1. Resolve through mapping's verified target ID with safety checks
+    const targetId = CORE_CANONICAL_TO_DATASET_ID[c.id];
+    if (targetId) {
+      const candidate = datasetById.get(targetId);
+      if (
+        candidate &&
+        !isSafetySignatureViolated(
+          c.name,
+          c.equipment || [],
+          candidate.name,
+          (candidate.equipment && candidate.equipment[0]) || ''
+        )
+      ) {
+        match = candidate;
+      }
+    }
+
+    // 2. Fall back to normalized name equality if safety check passes
+    if (!match) {
+      const candidate = datasetByName.get(normalizeString(c.name));
+      if (
+        candidate &&
+        !isSafetySignatureViolated(
+          c.name,
+          c.equipment || [],
+          candidate.name,
+          (candidate.equipment && candidate.equipment[0]) || ''
+        )
+      ) {
+        match = candidate;
+      }
+    }
+
+    if (match) {
+      claimedDatasetIds.add(match.id);
+      claimedDatasetNames.add(normalizeString(match.name));
+
+      if (match.media && match.media.length > 0) {
+        const existingUrls = new Set((c.media || []).map((m) => m.url));
+        const mergedMedia = [...(c.media || [])];
+        for (const m of match.media) {
+          if (!existingUrls.has(m.url)) {
+            mergedMedia.push(m);
+            existingUrls.add(m.url);
+          }
+        }
+        combined[i] = {
+          ...c,
+          media: mergedMedia,
+          thumbnailUrl: c.thumbnailUrl || match.thumbnailUrl,
+          mediaUrl: c.mediaUrl || match.mediaUrl,
+        };
+      }
+    }
+  }
+
+  // Add non-conflicting dataset exercises without appending duplicate dataset exercises
+  for (const dex of DATASET_EXERCISES) {
+    const dexNorm = normalizeString(dex.name);
+    if (
+      !canonicalIds.has(dex.id) &&
+      !claimedDatasetIds.has(dex.id) &&
+      !canonicalNames.has(dexNorm) &&
+      !claimedDatasetNames.has(dexNorm)
+    ) {
+      combined.push(dex);
+    }
+  }
+
+  return combined;
+}
+
 export class ExerciseCatalog {
   private static version = '1.0.0';
-  private static exercises: Exercise[] = CANONICAL_EXERCISES;
+  private static exercises: Exercise[] = initializeCatalog();
 
   public static getCatalogVersion(): string {
     return this.version;
@@ -84,8 +182,7 @@ export class ExerciseCatalog {
     if (!muscle) return [];
     const m = normalizeString(muscle);
     return this.exercises.filter((ex) =>
-      ex.primaryMuscles.some((pm) => normalizeString(pm).includes(m) || m.includes(normalizeString(pm))) ||
-      ex.secondaryMuscles?.some((sm) => normalizeString(sm).includes(m) || m.includes(normalizeString(sm)))
+      ex.primaryMuscles.some((pm) => normalizeString(pm).includes(m) || m.includes(normalizeString(pm)))
     );
   }
 
@@ -129,7 +226,8 @@ export class ExerciseCatalog {
 
   /**
    * Deterministic replacement candidates (Alternatives)
-   * Prioritizes curated relationships, followed by same movement pattern + primary muscle
+   * Prioritizes curated relationships, followed by same movement pattern + primary muscle,
+   * with preference for exercises having working media demonstrations.
    */
   public static findAlternatives(exerciseId: string): Exercise[] {
     const exercise = this.getExerciseById(exerciseId);
@@ -148,12 +246,37 @@ export class ExerciseCatalog {
     }
 
     // Deterministic fallback: match by primary muscle & movement pattern
+    const candidates = this.exercises.filter(
+      (ex) =>
+        ex.id !== exercise.id &&
+        ex.movementPattern === exercise.movementPattern &&
+        ex.primaryMuscles.some((m) => exercise.primaryMuscles.includes(m))
+    );
+
+    // Prioritize candidates with available demonstrations
+    return candidates
+      .sort((a, b) => {
+        const aHasMedia = hasApprovedMedia(a) ? 1 : 0;
+        const bHasMedia = hasApprovedMedia(b) ? 1 : 0;
+        return bHasMedia - aHasMedia;
+      })
+      .slice(0, 4);
+  }
+
+  /**
+   * Specifically finds alternative exercises that have verified media demonstrations available in folders.
+   */
+  public static findAlternativesWithMedia(exerciseId: string): Exercise[] {
+    const exercise = this.getExerciseById(exerciseId);
+    if (!exercise) return [];
+
     return this.exercises
       .filter(
         (ex) =>
           ex.id !== exercise.id &&
-          ex.movementPattern === exercise.movementPattern &&
-          ex.primaryMuscles.some((m) => exercise.primaryMuscles.includes(m))
+          hasApprovedMedia(ex) &&
+          (ex.movementPattern === exercise.movementPattern ||
+            ex.primaryMuscles.some((m) => exercise.primaryMuscles.includes(m)))
       )
       .slice(0, 4);
   }

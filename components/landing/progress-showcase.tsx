@@ -1,5 +1,5 @@
 /**
- * Progress Showcase Section (Part 17 & 25)
+ * Progress Showcase Section (Progress Reinforcement)
  *
  * Demonstrates how Replyf transforms raw set logs into actionable analytics:
  * - Heading: "Your training history becomes useful."
@@ -7,13 +7,15 @@
  * - Persuasive metrics labeled as "Example training snapshot"
  */
 
+'use client';
+
 import React from 'react';
-import { TrendingUp, Award, Calendar, BarChart2, Flame } from 'lucide-react';
+import { TrendingUp, Award, Calendar, BarChart2, Flame, ChevronDown } from 'lucide-react';
 
 const SNAPSHOT_METRICS = [
-  { label: 'Workouts Completed', value: '12', subtext: 'Consistent 3x/wk frequency', icon: Calendar },
+  { label: 'Workouts Completed', value: '12', subtext: 'Consistent 4x/wk frequency', icon: Calendar },
   { label: 'Volume Progression', value: '+18%', subtext: 'Progressive overload on track', icon: TrendingUp },
-  { label: 'Personal Records', value: '4 PRs', subtext: 'Squat, Bench, Row, Deadlift', icon: Award },
+  { label: 'Personal Records', value: '4 PRs', subtext: 'Bench, Squat, Row, Press', icon: Award },
   { label: 'Consistency Score', value: '86%', subtext: 'Above target adherence', icon: Flame },
 ];
 
@@ -21,22 +23,22 @@ export function ProgressShowcase() {
   return (
     <section
       id="progress"
-      className="relative w-full px-4 sm:px-6 py-16 md:py-24 scroll-mt-24 bg-gradient-to-b from-white via-indigo-50/20 to-white"
+      className="relative w-full px-4 sm:px-6 py-16 md:py-24 scroll-mt-24 bg-gradient-to-b from-white via-indigo-50/20 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border-b border-slate-200/60 dark:border-slate-800"
       aria-label="Progress Analytics"
     >
       <div className="mx-auto max-w-[1320px]">
         {/* Section Header */}
         <div className="text-center max-w-[680px] mx-auto mb-12 sm:mb-16">
-          <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 block">
-            Progress Analytics
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2 block">
+            PROGRESS ANALYTICS
           </span>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
             Your training history becomes useful.
           </h2>
-          <p className="text-base text-slate-600 mt-3 leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-3 leading-relaxed">
             See the work you&apos;ve done, the progress you&apos;ve made, and where your next improvement can come from.
           </p>
-          <div className="mt-3 inline-block px-3 py-1 rounded-full bg-slate-100 text-[11px] font-semibold text-slate-500">
+          <div className="mt-4 inline-block px-3.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700">
             Example training snapshot
           </div>
         </div>
@@ -48,32 +50,34 @@ export function ProgressShowcase() {
             return (
               <div
                 key={m.label}
-                className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md transition-shadow"
+                className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{m.label}</span>
-                  <div className="h-8 w-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                     <Icon className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{m.value}</p>
-                <p className="text-xs text-slate-500 mt-1 font-medium">{m.subtext}</p>
+                <p className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">{m.value}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">{m.subtext}</p>
               </div>
             );
           })}
         </div>
 
         {/* High-Fidelity Dashboard Graphic Frame */}
-        <div className="rounded-3xl bg-white border border-slate-200/90 p-6 sm:p-8 shadow-xl max-w-[1080px] mx-auto overflow-hidden">
-          <div className="flex items-center justify-between pb-6 border-b border-slate-100 flex-wrap gap-4">
+        <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xl max-w-[1080px] mx-auto overflow-hidden">
+          <div className="flex items-center justify-between pb-6 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-4">
             <div>
-              <h3 className="text-lg font-black text-slate-900">Training Volume Over Time</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Calculated set load across completed mesocycles</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Training Volume Over Time</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Calculated set load across completed mesocycles</p>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700">
+                <span>Last 6 weeks</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </div>
               <span className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white shadow-xs">Total Volume</span>
-              <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Intensity</span>
-              <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Est. 1RM</span>
             </div>
           </div>
 
@@ -86,10 +90,10 @@ export function ProgressShowcase() {
                 { week: 'W3', vol: 62, label: '12,500 kg' },
                 { week: 'W4', vol: 50, label: '10,900 kg (Deload)' },
                 { week: 'W5', vol: 72, label: '13,400 kg' },
-                { week: 'W6', vol: 85, label: '14,250 kg' },
+                { week: 'W6', vol: 88, label: '14,250 kg' },
               ].map((bar) => (
                 <div key={bar.week} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <span className="text-[10px] font-bold text-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                     {bar.label}
                   </span>
                   <div
@@ -103,22 +107,22 @@ export function ProgressShowcase() {
           </div>
 
           {/* Muscle Focus Breakdown */}
-          <div className="pt-6 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
             <div>
-              <span className="text-slate-500 font-semibold block">Chest / Push</span>
-              <span className="font-bold text-slate-900 text-sm">34% of volume</span>
+              <span className="text-slate-500 dark:text-slate-400 font-semibold block">Chest / Push</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">34% of volume</span>
             </div>
             <div>
-              <span className="text-slate-500 font-semibold block">Back / Pull</span>
-              <span className="font-bold text-slate-900 text-sm">28% of volume</span>
+              <span className="text-slate-500 dark:text-slate-400 font-semibold block">Back / Pull</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">28% of volume</span>
             </div>
             <div>
-              <span className="text-slate-500 font-semibold block">Legs / Posterior</span>
-              <span className="font-bold text-slate-900 text-sm">26% of volume</span>
+              <span className="text-slate-500 dark:text-slate-400 font-semibold block">Legs / Posterior</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">26% of volume</span>
             </div>
             <div>
-              <span className="text-slate-500 font-semibold block">Arms & Core</span>
-              <span className="font-bold text-slate-900 text-sm">12% of volume</span>
+              <span className="text-slate-500 dark:text-slate-400 font-semibold block">Arms & Core</span>
+              <span className="font-bold text-slate-900 dark:text-white text-sm">12% of volume</span>
             </div>
           </div>
         </div>

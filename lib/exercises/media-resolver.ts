@@ -21,6 +21,7 @@ export interface ResolvedCandidate {
   type: 'animation' | 'video' | 'svg' | 'image';
   posterUrl?: string;
   license?: string;
+  isApproved?: boolean;
 }
 
 export const VALID_MEDIA_TYPES = new Set(['image', 'video', 'gif', 'svg', 'animation']);
@@ -49,6 +50,27 @@ export function isValidUrl(url: unknown): url is string {
  * 5. thumbnailUrl
  * 6. mediaUrl
  */
+export function isLocalUrl(url: string): boolean {
+  return !url.startsWith('http://') && !url.startsWith('https://');
+}
+
+/**
+ * Extracts and sorts valid media candidates in priority order according to Section 20:
+ * 1. approved local animated media
+ * 2. approved local video
+ * 3. approved local SVG
+ * 4. approved local static image
+ * 5. approved permitted remote media
+ * 6. thumbnail
+ * 7. mediaUrl
+ * 8. fallback
+ *
+ * Automatically excludes:
+ * - referenceOnly = true
+ * - identity = unverified
+ * - rights = unverified or restricted
+ * - asset = broken
+ */
 export function resolveMediaCandidates(
   exercise: Exercise,
   context: ExerciseMediaContext = 'card'
@@ -56,100 +78,109 @@ export function resolveMediaCandidates(
   const candidates: ResolvedCandidate[] = [];
   const rawList: DomainExerciseMedia[] = Array.isArray(exercise.media) ? exercise.media : [];
 
-  // Categorized buckets
-  const animations: ResolvedCandidate[] = [];
-  const videos: ResolvedCandidate[] = [];
-  const svgs: ResolvedCandidate[] = [];
-  const images: ResolvedCandidate[] = [];
+  // Categorized buckets for approved media
+  const localAnimations: ResolvedCandidate[] = [];
+  const localVideos: ResolvedCandidate[] = [];
+  const localSvgs: ResolvedCandidate[] = [];
+  const localImages: ResolvedCandidate[] = [];
+  const remoteApproved: ResolvedCandidate[] = [];
 
   for (const item of rawList) {
     if (!item || !isValidUrl(item.url)) continue;
     if (!item.type || !VALID_MEDIA_TYPES.has(item.type)) continue;
 
+    // Filter out unapproved or reference-only media per Section 20
+    if (item.provenance) {
+      if (item.provenance.referenceOnly) continue;
+      if (item.provenance.verification) {
+        if (item.provenance.verification.identity === 'unverified') continue;
+        if (
+          item.provenance.verification.rights === 'unverified' ||
+          item.provenance.verification.rights === 'restricted'
+        ) {
+          continue;
+        }
+        if (item.provenance.verification.asset === 'broken') continue;
+      }
+    }
+
     const license = item.provenance?.license || exercise.provenance?.license;
     const isSvg = item.type === 'svg' || item.url.toLowerCase().endsWith('.svg');
+    const isLocal = item.isLocal ?? isLocalUrl(item.url);
 
-    if (item.type === 'gif' || item.type === 'animation') {
-      animations.push({
-        id: item.id || `anim-${item.url}`,
-        url: item.url,
-        type: 'animation',
-        posterUrl: item.posterUrl,
-        license,
-      });
-    } else if (item.type === 'video') {
-      videos.push({
-        id: item.id || `video-${item.url}`,
-        url: item.url,
-        type: 'video',
-        posterUrl: item.posterUrl,
-        license,
-      });
-    } else if (isSvg) {
-      svgs.push({
-        id: item.id || `svg-${item.url}`,
-        url: item.url,
-        type: 'svg',
-        posterUrl: item.posterUrl,
-        license,
-      });
+    const candidate: ResolvedCandidate = {
+      id: item.id || `m-${item.url}`,
+      url: item.url,
+      type: (item.type === 'gif' || item.type === 'animation')
+        ? 'animation'
+        : item.type === 'video'
+        ? 'video'
+        : isSvg
+        ? 'svg'
+        : 'image',
+      posterUrl: item.posterUrl,
+      license,
+      isApproved: true,
+    };
+
+    if (!isLocal) {
+      remoteApproved.push(candidate);
+    } else if (candidate.type === 'animation') {
+      localAnimations.push(candidate);
+    } else if (candidate.type === 'video') {
+      localVideos.push(candidate);
+    } else if (candidate.type === 'svg') {
+      localSvgs.push(candidate);
     } else {
-      images.push({
-        id: item.id || `img-${item.url}`,
-        url: item.url,
-        type: 'image',
-        posterUrl: item.posterUrl,
-        license,
-      });
+      localImages.push(candidate);
     }
   }
 
   // Hierarchy prioritization
-  // For cards: lightweight SVG/static/poster first to avoid eager downloading of hundreds of animations,
-  // then animations if no static media is present.
-  // For detail & session: full animation demonstration first.
+  // For cards & pickers: lightweight local SVG/static image first to prevent 24 cards from downloading heavy GIFs (Section 17 & 21)
+  // For detail & session: full demonstration (animated/video) first
   if (context === 'card' || context === 'picker') {
-    if (svgs.length > 0) {
-      candidates.push(...svgs);
-      candidates.push(...images);
-      candidates.push(...animations);
-      candidates.push(...videos);
-    } else if (images.length > 0) {
-      candidates.push(...images);
-      candidates.push(...svgs);
-      candidates.push(...animations);
-      candidates.push(...videos);
+    if (localSvgs.length > 0 || localImages.length > 0) {
+      candidates.push(...localSvgs);
+      candidates.push(...localImages);
+      candidates.push(...localAnimations);
+      candidates.push(...localVideos);
     } else {
-      candidates.push(...animations);
-      candidates.push(...videos);
-      candidates.push(...svgs);
-      candidates.push(...images);
+      candidates.push(...localAnimations);
+      candidates.push(...localVideos);
+      candidates.push(...localSvgs);
+      candidates.push(...localImages);
     }
   } else {
     // Detail / Session context: full demonstration priority
-    candidates.push(...animations);
-    candidates.push(...videos);
-    candidates.push(...svgs);
-    candidates.push(...images);
+    candidates.push(...localAnimations);
+    candidates.push(...localVideos);
+    candidates.push(...localSvgs);
+    candidates.push(...localImages);
   }
 
-  // Fallback 5: thumbnailUrl
+  // Remote approved media after local approved media
+  candidates.push(...remoteApproved);
+
+  // Fallback 6: thumbnailUrl
   if (isValidUrl(exercise.thumbnailUrl)) {
     candidates.push({
       id: `thumb-${exercise.id}`,
       url: exercise.thumbnailUrl,
       type: exercise.thumbnailUrl.toLowerCase().endsWith('.svg') ? 'svg' : 'image',
       license: exercise.provenance?.license,
+      isApproved: false,
     });
   }
 
-  // Fallback 6: mediaUrl
+  // Fallback 7: mediaUrl
   if (isValidUrl(exercise.mediaUrl)) {
     candidates.push({
       id: `mediaurl-${exercise.id}`,
       url: exercise.mediaUrl,
       type: exercise.mediaUrl.toLowerCase().endsWith('.svg') ? 'svg' : 'image',
       license: exercise.provenance?.license,
+      isApproved: false,
     });
   }
 
@@ -164,6 +195,23 @@ export function resolveMediaCandidates(
   }
 
   return uniqueCandidates;
+}
+
+/**
+ * Resolves only approved media candidates (excluding loose thumbnailUrl/mediaUrl fallbacks)
+ */
+export function resolveApprovedMediaCandidates(
+  exercise: Exercise,
+  context: ExerciseMediaContext = 'card'
+): ResolvedCandidate[] {
+  return resolveMediaCandidates(exercise, context).filter((c) => c.isApproved === true);
+}
+
+/**
+ * Shared approved-media predicate checking if an exercise possesses at least one qualified approved asset
+ */
+export function hasApprovedMedia(exercise: Exercise): boolean {
+  return resolveApprovedMediaCandidates(exercise).length > 0;
 }
 
 /**

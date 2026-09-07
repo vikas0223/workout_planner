@@ -18,19 +18,42 @@ import { Exercise } from '@/types/domain';
 import { CANONICAL_EXERCISES } from './canonical-exercises';
 import { getExerciseMapping } from './exercise-dataset-mapping';
 
-export type MediaCoverageStatus = 'READY' | 'STATIC' | 'ANIMATED' | 'UNAVAILABLE' | 'FALLBACK';
+export type MediaCoverageStatus = 'ANIMATED' | 'STATIC' | 'FALLBACK' | 'REFERENCE_ONLY' | 'READY' | 'UNAVAILABLE' | 'UNVERIFIED';
 
 export interface ExerciseMediaAuditRecord {
-  exerciseId: string;
+  // Section 35 fields
+  replyfExerciseId: string;
+  exerciseId: string; // Backward compatibility alias
   exerciseName: string;
-  matchedExternalId: string | null;
+  freeExerciseDbMatch: string | null;
+  azilRababeMatch: string | null;
+  exerciseDbMatch: string | null;
+  matchedExternalId: string | null; // Backward compatibility alias
+
+  approvedAnimatedMedia: string | null;
+  approvedVideo: string | null;
+  approvedSvg: string | null;
+  approvedStaticImage: string | null;
+
+  source: string;
+  sourceExerciseId: string | null;
+  sourceCommit: string | null;
+  sourcePath: string | null;
+  assetHash: string | null;
+
+  license: string;
+  commercialUseAllowed: boolean;
+  redistributionAllowed: boolean;
+  localBundleAllowed: boolean;
+
+  identityVerification: 'verified' | 'unverified';
+  rightsVerification: 'verified' | 'unverified' | 'restricted';
+  assetVerification: 'verified' | 'broken';
+
   status: MediaCoverageStatus;
   mediaType: 'animation' | 'video' | 'svg' | 'image' | 'none';
   mediaPath: string | null;
-  source: string;
-  license: string;
   attribution: string;
-  commercialUseAllowed: boolean;
   fallbackRequired: boolean;
   fallbackAllowed: boolean;
 }
@@ -39,7 +62,7 @@ export interface MediaAuditSummary {
   totalExercises: number;
   exercisesWithMedia: number;
   exercisesWithFallbackAllowed: number;
-  statusBreakdown: Record<MediaCoverageStatus, number>;
+  statusBreakdown: Record<string, number>;
   mediaTypeBreakdown: Record<string, number>;
   verifiedCoreExercises: {
     name: string;
@@ -50,18 +73,20 @@ export interface MediaAuditSummary {
 }
 
 /**
- * 16 High-Priority exercises specified in Section W
+ * 18 High-Priority exercises specified in Section 36
  */
 export const HIGH_PRIORITY_EXERCISES = [
   'Abductor Machine',
   'Adductor Machine',
   'Ankle Rotations',
+  'Assault Bike',
+  'Band Pull-Aparts',
+  'Barbell Rows',
   'Barbell Back Squat',
-  'Barbell Bench Press',
+  'Bench Press',
   'Deadlift',
-  'Pull-Up',
+  'Pull-Ups',
   'Overhead Press',
-  'Barbell Row',
   'Dips',
   'Lunges',
   'Push-Ups',
@@ -88,18 +113,61 @@ function fileExistsInPublic(urlPath: string): boolean {
 }
 
 /**
- * Derives comprehensive audit records across canonical exercises
+ * Derives comprehensive audit records across canonical exercises according to Section 35
  */
 export function auditExerciseMediaCoverage(exercises: Exercise[] = CANONICAL_EXERCISES): ExerciseMediaAuditRecord[] {
   return exercises.map((ex) => {
-    const primaryMedia = ex.media && ex.media.length > 0 ? ex.media[0] : null;
+    const mapping = getExerciseMapping(ex.id);
+    const mediaList = Array.isArray(ex.media) ? ex.media : [];
+
+    let approvedAnimatedMedia: string | null = null;
+    let approvedVideo: string | null = null;
+    let approvedSvg: string | null = null;
+    let approvedStaticImage: string | null = null;
+
     let mediaType: 'animation' | 'video' | 'svg' | 'image' | 'none' = 'none';
     let mediaPath: string | null = null;
+
     let source = ex.provenance?.source || 'in_house';
+    let sourceExerciseId: string | null = ex.provenance?.sourceExerciseId || null;
+    let sourceCommit: string | null = ex.provenance?.sourceCommit || null;
+    let sourcePath: string | null = ex.provenance?.sourcePath || null;
+    let assetHash: string | null = ex.provenance?.assetHash || null;
     let license = ex.provenance?.license || 'CC-BY-4.0';
     let attribution = ex.provenance?.attribution || 'Workout Planner Platform';
     let commercialUseAllowed = ex.provenance?.commercialUseAllowed ?? true;
+    let redistributionAllowed = ex.provenance?.redistributionAllowed ?? true;
+    let localBundleAllowed = ex.provenance?.localBundleAllowed ?? true;
 
+    let identityVerification: 'verified' | 'unverified' = 'unverified';
+    let rightsVerification: 'verified' | 'unverified' | 'restricted' = 'unverified';
+    let assetVerification: 'verified' | 'broken' = 'broken';
+
+    // Inspect attached media items
+    for (const m of mediaList) {
+      if (!m || !m.url) continue;
+      const isPhys = fileExistsInPublic(m.url);
+      const isRefOnly = m.provenance?.referenceOnly ?? false;
+      const idVer = m.provenance?.verification?.identity ?? 'verified';
+      const rVer = m.provenance?.verification?.rights ?? 'verified';
+      const declaredAsset = m.provenance?.verification?.asset;
+      const aVer = declaredAsset === 'broken' ? 'broken' : (isPhys ? (declaredAsset ?? 'verified') : 'broken');
+
+      if (!isRefOnly && idVer === 'verified' && rVer === 'verified' && aVer === 'verified') {
+        if (m.type === 'animation' || m.type === 'gif') {
+          approvedAnimatedMedia = m.url;
+        } else if (m.type === 'video') {
+          approvedVideo = m.url;
+        } else if (m.type === 'svg' || m.url.endsWith('.svg')) {
+          approvedSvg = m.url;
+        } else if (m.type === 'image') {
+          approvedStaticImage = m.url;
+        }
+      }
+    }
+
+    // Determine primary presentation
+    const primaryMedia = mediaList.length > 0 ? mediaList[0] : null;
     if (primaryMedia) {
       mediaPath = primaryMedia.url;
       if (primaryMedia.type === 'animation' || primaryMedia.type === 'gif') {
@@ -114,18 +182,37 @@ export function auditExerciseMediaCoverage(exercises: Exercise[] = CANONICAL_EXE
 
       if (primaryMedia.provenance) {
         source = primaryMedia.provenance.source ?? source;
+        sourceExerciseId = primaryMedia.provenance.sourceExerciseId ?? sourceExerciseId;
+        sourceCommit = primaryMedia.provenance.sourceCommit ?? sourceCommit;
+        sourcePath = primaryMedia.provenance.sourcePath ?? sourcePath;
+        assetHash = primaryMedia.provenance.assetHash ?? assetHash;
         license = primaryMedia.provenance.license ?? license;
         attribution = primaryMedia.provenance.attribution || attribution;
-        commercialUseAllowed = typeof primaryMedia.provenance.commercialUseAllowed === 'boolean'
-          ? primaryMedia.provenance.commercialUseAllowed
-          : commercialUseAllowed;
+        commercialUseAllowed = primaryMedia.provenance.commercialUseAllowed ?? commercialUseAllowed;
+        redistributionAllowed = primaryMedia.provenance.redistributionAllowed ?? redistributionAllowed;
+        localBundleAllowed = primaryMedia.provenance.localBundleAllowed ?? localBundleAllowed;
+
+        if (primaryMedia.provenance.verification) {
+          identityVerification = primaryMedia.provenance.verification.identity;
+          rightsVerification = primaryMedia.provenance.verification.rights;
+          const declaredPrimaryAsset = primaryMedia.provenance.verification.asset;
+          assetVerification = declaredPrimaryAsset === 'broken' ? 'broken' : (fileExistsInPublic(primaryMedia.url) ? (declaredPrimaryAsset ?? 'verified') : 'broken');
+        }
       }
     } else if (ex.thumbnailUrl || ex.mediaUrl) {
       mediaPath = ex.thumbnailUrl || ex.mediaUrl || null;
       mediaType = mediaPath?.endsWith('.svg') ? 'svg' : 'image';
+      if (mediaPath && fileExistsInPublic(mediaPath)) {
+        assetVerification = 'verified';
+        identityVerification = 'verified';
+        rightsVerification = 'verified';
+      }
     }
 
-    const mapping = getExerciseMapping(ex.id);
+    // External matches
+    const freeExerciseDbMatch = mapping?.externalSource === 'free-exercise-db' ? mapping.externalSourceId : null;
+    const azilRababeMatch = mapping?.externalSource === 'azilRababe' ? mapping.externalSourceId : null;
+    const exerciseDbMatch = mapping?.externalSource === 'ExerciseDB' ? mapping.externalSourceId : null;
     const matchedExternalId = mapping ? mapping.externalSourceId : null;
 
     // Check physical presence or reachability
@@ -134,18 +221,28 @@ export function auditExerciseMediaCoverage(exercises: Exercise[] = CANONICAL_EXE
     let status: MediaCoverageStatus = 'FALLBACK';
     let fallbackRequired = true;
 
-    if (isPhysicalAsset) {
-      fallbackRequired = false;
-      if (mediaType === 'animation' || mediaType === 'video') {
-        status = 'ANIMATED';
-      } else if (mediaType === 'svg' || mediaType === 'image') {
-        status = 'STATIC';
+    const hasApprovedRightsAndIdentity =
+      identityVerification === 'verified' &&
+      rightsVerification === 'verified' &&
+      assetVerification === 'verified';
+
+    if (primaryMedia?.provenance?.referenceOnly) {
+      status = 'REFERENCE_ONLY';
+      fallbackRequired = true;
+    } else if (isPhysicalAsset) {
+      if (hasApprovedRightsAndIdentity) {
+        fallbackRequired = false;
+        if (mediaType === 'animation' || mediaType === 'video') {
+          status = 'ANIMATED';
+        } else {
+          status = 'STATIC';
+        }
       } else {
-        status = 'READY';
+        status = 'UNVERIFIED';
+        fallbackRequired = true;
       }
     } else if (mediaPath) {
-      // Declared media reference without local file -> fallback required
-      status = 'UNAVAILABLE';
+      status = 'FALLBACK';
       fallbackRequired = true;
     } else {
       status = 'FALLBACK';
@@ -153,18 +250,40 @@ export function auditExerciseMediaCoverage(exercises: Exercise[] = CANONICAL_EXE
     }
 
     return {
+      replyfExerciseId: ex.id,
       exerciseId: ex.id,
       exerciseName: ex.name,
+      freeExerciseDbMatch,
+      azilRababeMatch,
+      exerciseDbMatch,
       matchedExternalId,
+
+      approvedAnimatedMedia,
+      approvedVideo,
+      approvedSvg,
+      approvedStaticImage,
+
+      source,
+      sourceExerciseId,
+      sourceCommit,
+      sourcePath,
+      assetHash,
+
+      license,
+      commercialUseAllowed,
+      redistributionAllowed,
+      localBundleAllowed,
+
+      identityVerification,
+      rightsVerification,
+      assetVerification,
+
       status,
       mediaType,
       mediaPath,
-      source,
-      license,
       attribution,
-      commercialUseAllowed,
       fallbackRequired,
-      fallbackAllowed: true, // Offline/graceful fallback is always guaranteed
+      fallbackAllowed: true,
     };
   });
 }
@@ -182,12 +301,14 @@ export function getMediaAuditSummary(exercises: Exercise[] = CANONICAL_EXERCISES
     none: 0,
   };
 
-  const statusBreakdown: Record<MediaCoverageStatus, number> = {
-    READY: 0,
+  const statusBreakdown: Record<string, number> = {
     STATIC: 0,
     ANIMATED: 0,
-    UNAVAILABLE: 0,
     FALLBACK: 0,
+    REFERENCE_ONLY: 0,
+    READY: 0,
+    UNAVAILABLE: 0,
+    UNVERIFIED: 0,
   };
 
   for (const record of audit) {
@@ -201,13 +322,15 @@ export function getMediaAuditSummary(exercises: Exercise[] = CANONICAL_EXERCISES
       const normName = rec.exerciseName.toLowerCase().replace(/[-_\s]/g, '');
       if (normName === normalizedReq) return true;
       if (normalizedReq === 'barbellbacksquat' && (normName === 'barbellsquat' || normName === 'backsquat')) return true;
-      if (normalizedReq === 'barbellbenchpress' && normName === 'benchpress') return true;
-      if (normalizedReq === 'pullup' && (normName === 'pullups' || normName === 'pullup')) return true;
-      if ((normalizedReq === 'pushups' || normalizedReq === 'pushup') && (normName === 'pushupvariations' || normName === 'pushups' || normName === 'pushup')) return true;
-      if (normalizedReq === 'barbellrow' && (normName === 'barbellrows' || normName === 'barbellrow')) return true;
+      if (normalizedReq === 'benchpress' && (normName === 'benchpress' || normName === 'barbellbenchpress')) return true;
+      if (normalizedReq === 'pullups' && (normName === 'pullups' || normName === 'pullup')) return true;
+      if (normalizedReq === 'pushups' && (normName === 'pushupvariations' || normName === 'pushups' || normName === 'pushup')) return true;
+      if (normalizedReq === 'barbellrows' && (normName === 'barbellrows' || normName === 'barbellrow')) return true;
       if (normalizedReq === 'dumbbellpress' && (normName.includes('dumbbellpress') && !normName.includes('band'))) return true;
       if (normalizedReq === 'bicepscurl' && (normName === 'bicepcurls' || normName === 'bicepcurl')) return true;
       if (normalizedReq === 'tricepsextension' && (normName === 'tricepextensions' || normName === 'tricepextension')) return true;
+      if (normalizedReq === 'bandpullaparts' && (normName.includes('bandpullapart') || normName.includes('resistancebandpullapart'))) return true;
+      if (normalizedReq === 'assaultbike' && normName.includes('assaultbike')) return true;
       return false;
     });
 
