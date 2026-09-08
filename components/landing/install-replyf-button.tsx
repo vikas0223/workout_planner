@@ -1,13 +1,18 @@
 /**
  * Install Replyf Button Component
  * 
- * Reusable CTA trigger for PWA installation that integrates with
- * the client-side install prompt hook and fallback guidance modal.
+ * Centralized CTA trigger for PWA installation across all Replyf entrypoints
+ * (Floating Navbar, Mobile Drawer, Hero Section, Offline Section, and Final CTA).
+ * 
+ * Behavior:
+ * 1. If already installed: disables or hides CTA, preventing redundant prompts.
+ * 2. If native prompt is available: directly invokes native browser prompt.
+ * 3. If native prompt is unavailable: opens platform-specific fallback guidance modal.
  */
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Download, Smartphone } from 'lucide-react';
 import { useInstallPrompt } from '@/lib/landing/install-prompt';
 import { InstallReplyfModal } from './install-replyf-modal';
@@ -18,6 +23,7 @@ export interface InstallReplyfButtonProps {
   size?: 'sm' | 'md' | 'lg';
   showIcon?: boolean;
   label?: string;
+  hideWhenInstalled?: boolean;
 }
 
 export function InstallReplyfButton({
@@ -26,9 +32,14 @@ export function InstallReplyfButton({
   size = 'md',
   showIcon = true,
   label = 'Install Replyf',
+  hideWhenInstalled = false,
 }: InstallReplyfButtonProps) {
-  const { isInstalled, platform, showGuidanceModal, setShowGuidanceModal, triggerInstall } =
-    useInstallPrompt();
+  const { isInstalled, platform, triggerInstall } = useInstallPrompt();
+  const [modalOpen, setModalOpen] = useState(false);
+
+  if (hideWhenInstalled && isInstalled) {
+    return null;
+  }
 
   const variantStyles = {
     primary:
@@ -47,28 +58,37 @@ export function InstallReplyfButton({
     lg: 'min-h-[48px] px-6 py-3 text-base font-bold rounded-2xl',
   };
 
+  const handleClick = async () => {
+    if (isInstalled) return;
+    const outcome = await triggerInstall();
+    if (outcome === 'manual_needed') {
+      setModalOpen(true);
+    }
+  };
+
   return (
     <>
       <button
         type="button"
-        onClick={triggerInstall}
+        onClick={handleClick}
         disabled={isInstalled}
-        className={`inline-flex items-center justify-center gap-2 border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
-        aria-label={isInstalled ? 'Replyf Installed on this device' : label}
+        className={`inline-flex items-center justify-center gap-2 border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-60 disabled:cursor-default disabled:active:scale-100 ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        aria-label={isInstalled ? 'Replyf is installed on this device' : label}
+        title={isInstalled ? 'Replyf is already installed' : label}
       >
         {showIcon && (
           isInstalled ? (
-            <Smartphone className="w-4 h-4 text-emerald-600 shrink-0" />
+            <Smartphone className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
           ) : (
-            <Download className="w-4 h-4 shrink-0" />
+            <Download className="w-4 h-4 shrink-0" aria-hidden="true" />
           )
         )}
         <span>{isInstalled ? 'Installed' : label}</span>
       </button>
 
       <InstallReplyfModal
-        open={showGuidanceModal}
-        onOpenChange={setShowGuidanceModal}
+        open={modalOpen && !isInstalled}
+        onOpenChange={setModalOpen}
         platform={platform}
       />
     </>

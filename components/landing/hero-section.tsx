@@ -173,7 +173,7 @@ export function HeroSection() {
             <div
               className="relative w-[290px] sm:w-[330px] rounded-[48px] bg-slate-950 p-3 sm:p-3.5 border-[5px] border-slate-900 shadow-[0_30px_70px_-15px_rgba(30,27,75,0.22),0_15px_35px_-10px_rgba(15,23,42,0.18)] ring-1 ring-slate-800/80 transition-transform duration-300"
               style={{
-                transform: 'translate(14px, 0px) rotate(-5deg)',
+                transform: 'translate(14px, 0px) rotate(4deg)',
                 transformOrigin: '50% 50%',
               }}
             >

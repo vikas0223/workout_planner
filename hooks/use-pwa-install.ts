@@ -3,7 +3,7 @@
  * 
  * Captures the beforeinstallprompt event and provides:
  * - Install prompt state management
- * - Deferred prompt triggering
+ * - Deferred prompt triggering with single-use guarantee
  * - Platform-specific fallback instructions
  * - Standalone mode detection
  * 
@@ -51,6 +51,21 @@ export function usePwaInstall(): PwaInstallResult {
       return;
     }
 
+    // Listen for display-mode changes
+    try {
+      const mediaQuery = window.matchMedia('(display-mode: standalone)');
+      const handleMediaChange = (e: MediaQueryListEvent) => {
+        if (e.matches) {
+          setIsStandalone(true);
+          setState('installed');
+          deferredPromptRef.current = null;
+        }
+      };
+      mediaQuery.addEventListener?.('change', handleMediaChange);
+    } catch {
+      // Ignore environments without matchMedia addEventListener
+    }
+
     // Capture beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -78,18 +93,24 @@ export function usePwaInstall(): PwaInstallResult {
     const prompt = deferredPromptRef.current;
     if (!prompt) return;
 
+    // Immediately clear prompt reference to guarantee single consumption
+    deferredPromptRef.current = null;
     setState('prompting');
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
 
-    if (outcome === 'accepted') {
-      setState('installed');
-      deferredPromptRef.current = null;
-      await recordInstalled();
-    } else {
-      setState('dismissed');
-      deferredPromptRef.current = null;
-      await recordInstallDismissed();
+    try {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+
+      if (outcome === 'accepted') {
+        setState('installed');
+        await recordInstalled();
+      } else {
+        setState('dismissed');
+        await recordInstallDismissed();
+      }
+    } catch (err) {
+      console.warn('Native install prompt encountered an error:', err);
+      setState('not_available');
     }
   }, []);
 
@@ -122,21 +143,16 @@ function getPlatformInstructions(state: InstallState): string | null {
   const ua = navigator.userAgent.toLowerCase();
 
   if (/iphone|ipad|ipod/.test(ua) && /safari/.test(ua)) {
-    return 'Tap the Share button, then "Add to Home Screen"';
+    return 'Tap Share, then "Add to Home Screen", then "Add"';
   }
 
-  if (/firefox/.test(ua)) {
-    return 'Tap the menu (⋮), then "Install" or "Add to Home Screen"';
+  if (/android/.test(ua)) {
+    return 'Open your browser menu (⋮) and tap "Install app" or "Add to Home screen"';
   }
 
-  if (/samsung/.test(ua)) {
-    return 'Tap the menu, then "Add page to" → "Home screen"';
+  if (/chrome|chromium|edg/.test(ua) && !/mobile/.test(ua)) {
+    return 'Look for the install icon in your browser\'s address bar or menu';
   }
 
-  // For browsers that don't support beforeinstallprompt, provide generic advice
-  if (state === 'not_available' && !/chrome/.test(ua)) {
-    return 'Use your browser menu to add this app to your home screen';
-  }
-
-  return null;
+  return 'Replyf can still be used directly in your browser with full offline support';
 }
