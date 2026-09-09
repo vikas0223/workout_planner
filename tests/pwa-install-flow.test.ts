@@ -30,6 +30,7 @@ import {
   _setDeferredPromptForTesting,
   _setIsInstalledForTesting,
   _setPlatformForTesting,
+  _getInstallStateSnapshotForTesting,
   BeforeInstallPromptEvent,
 } from '@/lib/landing/install-prompt';
 
@@ -149,9 +150,9 @@ describe('PWA Platform-Aware Installation Flow', () => {
     );
     expect(modalFile).toContain("activePlatform === 'ios'");
     expect(modalFile).toContain('iPhone & iPad (Safari)');
-    expect(modalFile).toContain('Share');
+    expect(modalFile).toContain("in Safari&apos;s bottom toolbar");
     expect(modalFile).toContain('Add to Home Screen');
-    expect(modalFile).toContain('Add');
+    expect(modalFile).toContain('in the top-right corner');
   });
 
   // ─── Requirement 9: Android fallback shows Android-specific instructions ─────
@@ -316,9 +317,24 @@ describe('PWA Platform-Aware Installation Flow', () => {
       _setDeferredPromptForTesting(null);
     });
 
-    it('Scenario C: User accepts prompt -> appinstalled marks installed=true', () => {
+    it('Scenario C: User accepts prompt -> appinstalled marks installed=true and capability=installed', () => {
+      const mockEvent: BeforeInstallPromptEvent = {
+        prompt: vi.fn().mockResolvedValue(undefined),
+        userChoice: Promise.resolve({ outcome: 'accepted', platform: 'web' }),
+        preventDefault: vi.fn(),
+      } as any;
+
+      _setDeferredPromptForTesting(mockEvent);
+      expect(_getInstallStateSnapshotForTesting().capability).toBe('native-installable');
+
+      // Simulate prompt acceptance and appinstalled transition
       _setIsInstalledForTesting(true);
       _setDeferredPromptForTesting(null);
+
+      const state = _getInstallStateSnapshotForTesting();
+      expect(state.isInstalled).toBe(true);
+      expect(state.capability).toBe('installed');
+      expect(state.deferredPrompt).toBeNull();
     });
 
     it('Scenario D: iOS Safari fallback detects iOS and isolates 3-step instructions', () => {

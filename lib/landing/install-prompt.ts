@@ -240,3 +240,15 @@ export function _setIsInstalledForTesting(installed: boolean) {
 export function _setPlatformForTesting(platform: PlatformType) {
   updateStore({ platform });
 }
+
+export function _getInstallStateSnapshotForTesting() {
+  const capability: InstallCapability = storeState.isInstalled
+    ? 'installed'
+    : storeState.deferredPrompt !== null
+    ? 'native-installable'
+    : 'instructional-fallback';
+  return {
+    ...storeState,
+    capability,
+  };
+}

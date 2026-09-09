@@ -228,8 +228,9 @@ export function InstallReplyfModal({ open, onOpenChange, platform }: InstallRepl
           <div className="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs">
             <button
               type="button"
+              aria-pressed={activePlatform === 'ios'}
               onClick={() => setSelectedPlatform('ios')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 min-h-[44px] flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all ${
                 activePlatform === 'ios'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
@@ -239,8 +240,9 @@ export function InstallReplyfModal({ open, onOpenChange, platform }: InstallRepl
             </button>
             <button
               type="button"
+              aria-pressed={activePlatform === 'android'}
               onClick={() => setSelectedPlatform('android')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 min-h-[44px] flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all ${
                 activePlatform === 'android'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
@@ -250,8 +252,9 @@ export function InstallReplyfModal({ open, onOpenChange, platform }: InstallRepl
             </button>
             <button
               type="button"
+              aria-pressed={activePlatform === 'desktop-chrome'}
               onClick={() => setSelectedPlatform('desktop-chrome')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 min-h-[44px] flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all ${
                 activePlatform === 'desktop-chrome'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'
@@ -261,8 +264,9 @@ export function InstallReplyfModal({ open, onOpenChange, platform }: InstallRepl
             </button>
             <button
               type="button"
+              aria-pressed={activePlatform === 'other'}
               onClick={() => setSelectedPlatform('other')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 min-h-[44px] flex items-center justify-center px-2.5 rounded-lg text-xs font-semibold transition-all ${
                 activePlatform === 'other'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-500 hover:text-slate-800'

@@ -52,9 +52,12 @@ export function usePwaInstall(): PwaInstallResult {
     }
 
     // Listen for display-mode changes
+    let mediaQuery: MediaQueryList | null = null;
+    let handleMediaChange: ((e: MediaQueryListEvent) => void) | null = null;
+
     try {
-      const mediaQuery = window.matchMedia('(display-mode: standalone)');
-      const handleMediaChange = (e: MediaQueryListEvent) => {
+      mediaQuery = window.matchMedia('(display-mode: standalone)');
+      handleMediaChange = (e: MediaQueryListEvent) => {
         if (e.matches) {
           setIsStandalone(true);
           setState('installed');
@@ -86,6 +89,9 @@ export function usePwaInstall(): PwaInstallResult {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      if (mediaQuery && handleMediaChange) {
+        mediaQuery.removeEventListener?.('change', handleMediaChange);
+      }
     };
   }, []);
 
