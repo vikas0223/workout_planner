@@ -180,13 +180,13 @@ export function ProgramBuilder() {
           <Link
             href="/programs"
             aria-label="Back to Programs"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Program Builder</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Program Builder</h1>
+            <p className="text-xs text-slate-500">
               Design a custom multi-week training cycle with progressive scheduling.
             </p>
           </div>
@@ -196,7 +196,7 @@ export function ProgramBuilder() {
           onClick={handleSaveProgram}
           disabled={saving || !name.trim()}
           id="btn-save-custom-program"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
         >
           <Save className="h-4 w-4" />
           {saving ? 'Saving...' : 'Save & Publish Program'}
@@ -205,11 +205,13 @@ export function ProgramBuilder() {
 
       <form onSubmit={handleSaveProgram} className="space-y-8">
         {/* General Program Info */}
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4">
-          <h2 className="text-base font-bold text-foreground">Program Details</h2>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs space-y-4">
+          <h2 className="text-base font-bold text-slate-900">Program Details</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
-              <label htmlFor="input-prog-name" className="text-xs font-medium text-foreground">Program Name *</label>
+              <label htmlFor="input-prog-name" className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                Program Name *
+              </label>
               <input
                 id="input-prog-name"
                 type="text"
@@ -217,29 +219,33 @@ export function ProgramBuilder() {
                 placeholder="e.g. 8-Week Hypertrophy & Power"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <label htmlFor="input-prog-desc" className="text-xs font-medium text-foreground">Description / Focus</label>
+              <label htmlFor="input-prog-desc" className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                Description / Focus
+              </label>
               <textarea
                 id="input-prog-desc"
                 rows={2}
                 placeholder="Outline the training philosophy, volume progression, and target outcomes..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="select-prog-goal" className="text-xs font-medium text-foreground">Primary Goal</label>
+              <label htmlFor="select-prog-goal" className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                Primary Goal
+              </label>
               <select
                 id="select-prog-goal"
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               >
                 <option value="strength">Strength</option>
                 <option value="hypertrophy">Hypertrophy (Muscle Gain)</option>
@@ -250,12 +256,14 @@ export function ProgramBuilder() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="select-prog-diff" className="text-xs font-medium text-foreground">Difficulty Level</label>
+              <label htmlFor="select-prog-diff" className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                Difficulty Level
+              </label>
               <select
                 id="select-prog-diff"
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as ExperienceLevel)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
               >
                 <option value="beginner">Beginner</option>
                 <option value="intermediate">Intermediate</option>
@@ -269,9 +277,9 @@ export function ProgramBuilder() {
                 id="chk-make-active"
                 checked={makeActive}
                 onChange={(e) => setMakeActive(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <label htmlFor="chk-make-active" className="text-xs font-medium text-foreground">
+              <label htmlFor="chk-make-active" className="text-xs font-medium text-slate-700">
                 Set as my active training program immediately upon saving
               </label>
             </div>
@@ -281,11 +289,11 @@ export function ProgramBuilder() {
         {/* Multi-Week Day Configurator */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-foreground">Training Weeks Schedule ({weeks.length} Weeks)</h2>
+            <h2 className="text-base font-bold text-slate-900">Training Weeks Schedule ({weeks.length} Weeks)</h2>
             <button
               type="button"
               onClick={handleAddWeek}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200/80 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Another Week
@@ -293,7 +301,7 @@ export function ProgramBuilder() {
           </div>
 
           {weeks.map((week, wIdx) => (
-            <div key={week.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+            <div key={week.id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <input
                   type="text"
@@ -304,14 +312,14 @@ export function ProgramBuilder() {
                     copy[wIdx].label = e.target.value;
                     setWeeks(copy);
                   }}
-                  className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-bold text-foreground hover:border-border focus:border-primary focus:outline-none"
+                  className="rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-bold text-slate-900 hover:border-slate-200 focus:border-indigo-600 focus:outline-none"
                 />
 
                 {weeks.length > 1 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveWeek(week.weekNumber)}
-                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition"
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
                     title="Delete Week"
                     aria-label={`Delete Week ${week.weekNumber}`}
                   >
@@ -323,14 +331,14 @@ export function ProgramBuilder() {
               {/* 7 Days Grid */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {week.days.map((day, dIdx) => (
-                  <div key={day.id} className="rounded-xl border border-border/80 bg-background p-3 space-y-2.5">
+                  <div key={day.id} className="rounded-xl border border-slate-200/70 bg-slate-50/60 p-3 space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-foreground">Day {day.dayNumber}</span>
+                      <span className="font-bold text-slate-900">Day {day.dayNumber}</span>
                       <select
                         aria-label={`Week ${week.weekNumber} Day ${day.dayNumber} Type`}
                         value={day.type}
                         onChange={(e) => handleUpdateDay(wIdx, dIdx, 'type', e.target.value as ProgramDayType)}
-                        className="rounded-lg border border-border bg-card px-2 py-0.5 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-900 font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       >
                         <option value="workout">Workout</option>
                         <option value="rest">Rest</option>
@@ -345,12 +353,12 @@ export function ProgramBuilder() {
                       placeholder="Day label (e.g. Upper Power)"
                       value={day.label || ''}
                       onChange={(e) => handleUpdateDay(wIdx, dIdx, 'label', e.target.value)}
-                      className="w-full rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
 
                     {day.type === 'workout' && (
                       <div className="space-y-1">
-                        <label htmlFor={`select-tpl-${week.id}-${day.id}`} className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        <label htmlFor={`select-tpl-${week.id}-${day.id}`} className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
                           Linked Template
                         </label>
                         <select
@@ -358,7 +366,7 @@ export function ProgramBuilder() {
                           aria-label={`Week ${week.weekNumber} Day ${day.dayNumber} Linked Template`}
                           value={day.workoutTemplateId || ''}
                           onChange={(e) => handleUpdateDay(wIdx, dIdx, 'workoutTemplateId', e.target.value)}
-                          className="w-full rounded-lg border border-border bg-card px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         >
                           <option value="">-- Choose Template --</option>
                           {templates.map((tpl) => (

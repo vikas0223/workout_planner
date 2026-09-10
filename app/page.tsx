@@ -18,13 +18,25 @@ import Image from 'next/image';
 import { LayoutGrid, BarChart2, User, LogOut, Loader2, Menu } from 'lucide-react';
 import { useAuthGuard } from '@/contexts/auth-guard-context';
 import { AuthGuestScreen } from '@/components/auth/auth-guest-screen';
+import { WelcomeScreen } from '@/components/auth/welcome-screen';
 import { WorkoutWizard } from '@/components/workout/workout-wizard';
 import { WorkoutHub } from '@/components/workout/workout-hub';
 import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer';
 import { GeneratedWorkout } from '@/types/domain';
 
 export default function Home() {
-  const { accessMode, onboardingState, status, isInitializing, userEmail, signOut, switchAccess, resetFlow } = useAuthGuard();
+  const {
+    accessMode,
+    onboardingState,
+    status,
+    isInitializing,
+    userEmail,
+    authTransition,
+    completeAuthTransition,
+    signOut,
+    switchAccess,
+    resetFlow,
+  } = useAuthGuard();
   const [stagedPlan, setStagedPlan] = useState<GeneratedWorkout | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -52,6 +64,17 @@ export default function Home() {
     );
   }
 
+  // Transient in-memory authentication welcome screen (user-controlled with Continue button)
+  if (authTransition) {
+    return (
+      <WelcomeScreen
+        kind={authTransition.kind}
+        displayName={authTransition.displayName}
+        onContinue={completeAuthTransition}
+      />
+    );
+  }
+
   // Guard Branch 1: Access not selected -> Fresh user must see Auth / Guest screen
   if (accessMode === 'unselected') {
     return (
@@ -68,7 +91,18 @@ export default function Home() {
     setStagedPlan(plan);
   };
 
-  // Guard Branch 2 & 3: User/Guest with Incomplete Onboarding OR Completed Onboarding
+  // Guard Branch 2: Authenticated / Guest with Incomplete Onboarding -> Dedicated Header-Free Onboarding Shell
+  if (onboardingState === 'incomplete') {
+    return (
+      <main className="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center py-6 sm:py-10 px-4 sm:px-6">
+        <div className="w-full max-w-[860px] mx-auto flex flex-col items-center">
+          <WorkoutWizard onWorkoutGenerated={handleOnboardingWorkoutGenerated} />
+        </div>
+      </main>
+    );
+  }
+
+  // Guard Branch 3: Authenticated / Guest with Completed Onboarding -> Standard Application Shell
   return (
     <main className="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 text-slate-800 min-h-screen">
       <div className="w-full max-w-[1320px] mx-auto px-4 sm:px-6 py-4 md:py-6 lg:py-10 space-y-5 md:space-y-6">
@@ -189,15 +223,9 @@ export default function Home() {
         />
 
         {/* ======================================================
-            CONTENT — Onboarding Wizard or Workout Hub
+            CONTENT — Workout Hub (Onboarding complete)
             ====================================================== */}
-        {onboardingState === 'incomplete' ? (
-          <div className="w-full flex flex-col items-center">
-            <WorkoutWizard onWorkoutGenerated={handleOnboardingWorkoutGenerated} />
-          </div>
-        ) : (
-          <WorkoutHub initialWorkout={stagedPlan} />
-        )}
+        <WorkoutHub initialWorkout={stagedPlan} />
       </div>
     </main>
   );

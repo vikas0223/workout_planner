@@ -12,3 +12,4 @@ export * from './sync-pull';
 export * from './sync-recovery';
 export * from './sync-events';
 export * from './sync-coordinator';
+export * from './guest-migration';

@@ -3,6 +3,7 @@ import './globals.css'
 import { PersistenceProvider } from '@/components/providers/persistence-provider'
 import { PWAProvider } from '@/components/providers/pwa-provider'
 import { AuthGuardProvider } from '@/contexts/auth-guard-context'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'replyf',
@@ -70,7 +71,10 @@ export default function RootLayout({
       <body>
         <PersistenceProvider>
           <PWAProvider>
-            <AuthGuardProvider>{children}</AuthGuardProvider>
+            <AuthGuardProvider>
+              {children}
+              <Toaster />
+            </AuthGuardProvider>
           </PWAProvider>
         </PersistenceProvider>
       </body>

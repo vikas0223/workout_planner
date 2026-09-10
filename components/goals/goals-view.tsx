@@ -18,8 +18,8 @@ export function GoalsView() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-xs text-muted-foreground">Evaluating fitness goals...</span>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <span className="text-xs text-slate-500 font-medium">Evaluating fitness goals...</span>
         </div>
       </div>
     );
@@ -32,14 +32,15 @@ export function GoalsView() {
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             title="Back to Home / Dashboard"
+            aria-label="Back to Home / Dashboard"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Fitness Goals</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Fitness Goals</h1>
+            <p className="text-xs text-slate-500">
               Set quantifiable milestones for volume, frequency, strength, and session completion.
             </p>
           </div>
@@ -48,7 +49,7 @@ export function GoalsView() {
         <button
           onClick={() => setIsModalOpen(true)}
           id="btn-create-goal"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 active:scale-95"
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 active:bg-indigo-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
         >
           <Plus className="h-4 w-4" />
           Set New Goal
@@ -59,8 +60,8 @@ export function GoalsView() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-primary" />
-            <h2 className="text-base font-bold text-foreground">Active Targets ({activeGoals.length})</h2>
+            <Target className="h-4 w-4 text-indigo-600" />
+            <h2 className="text-base font-bold text-slate-900">Active Targets ({activeGoals.length})</h2>
           </div>
         </div>
 
@@ -71,17 +72,17 @@ export function GoalsView() {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white/70 p-8 text-center shadow-xs">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100">
               <Target className="h-6 w-6" />
             </div>
-            <h3 className="mt-3 text-base font-bold text-foreground">No Active Goals Set</h3>
-            <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
+            <h3 className="mt-3 text-base font-bold text-slate-900">No Active Goals Set</h3>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
               Define a weekly frequency target, total volume goal, or strength benchmark to track your ongoing progress.
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 active:bg-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
             >
               <Plus className="h-3.5 w-3.5" />
               Create First Goal
@@ -95,7 +96,7 @@ export function GoalsView() {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-emerald-500" />
-            <h2 className="text-base font-bold text-foreground">
+            <h2 className="text-base font-bold text-slate-900">
               Achieved Milestones ({completedGoals.length})
             </h2>
           </div>

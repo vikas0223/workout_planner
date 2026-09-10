@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 export default function GoalsPage() {
   return (
-    <div className="py-8 min-h-screen">
+    <main className="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 text-slate-800 min-h-screen py-6 sm:py-10">
       <RouteGuardShell>
         <GoalsView />
       </RouteGuardShell>
-    </div>
+    </main>
   );
 }

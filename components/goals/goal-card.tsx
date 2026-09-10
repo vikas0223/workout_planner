@@ -30,16 +30,16 @@ export function GoalCard({ evaluatedGoal, onDelete }: GoalCardProps) {
       case 'maintain':
         return <Minus className="h-3.5 w-3.5 text-sky-500" />;
       default:
-        return <TrendingUp className="h-3.5 w-3.5 text-primary" />;
+        return <TrendingUp className="h-3.5 w-3.5 text-indigo-600" />;
     }
   };
 
   return (
     <div
-      className={`flex flex-col justify-between rounded-2xl border p-5 shadow-sm transition hover:shadow-md ${
+      className={`flex flex-col justify-between rounded-2xl border p-5 shadow-xs transition-all hover:shadow-md ${
         isAchieved
-          ? 'border-emerald-500/40 bg-gradient-to-br from-card via-card to-emerald-500/5'
-          : 'border-border bg-card'
+          ? 'border-emerald-200/80 bg-gradient-to-br from-white via-white to-emerald-50/30'
+          : 'border-slate-200/80 bg-white hover:border-slate-300'
       }`}
     >
       <div>
@@ -47,27 +47,28 @@ export function GoalCard({ evaluatedGoal, onDelete }: GoalCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             {getDirectionIcon()}
-            <span className="capitalize text-muted-foreground">
+            <span className="capitalize text-slate-500">
               {goal.direction} {goal.type.replace('_', ' ')}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
             {isAchieved ? (
-              <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100/80">
                 <CheckCircle2 className="h-3 w-3" />
                 Achieved
               </span>
             ) : (
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700 border border-indigo-100/80">
                 {percentComplete}%
               </span>
             )}
 
             <button
               onClick={() => onDelete(goal.id)}
-              className="rounded-lg p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
               title="Delete Goal"
+              aria-label={`Delete ${goal.label || 'goal'}`}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -75,23 +76,23 @@ export function GoalCard({ evaluatedGoal, onDelete }: GoalCardProps) {
         </div>
 
         {/* Goal Title / Label */}
-        <h3 className="mt-3 text-base font-bold tracking-tight text-foreground">
+        <h3 className="mt-3 text-base font-bold tracking-tight text-slate-900">
           {goal.label || `${goal.targetValue} ${goal.unit} Target`}
         </h3>
 
         {/* Progress Value Comparison */}
         <div className="mt-2 flex items-baseline justify-between text-xs">
-          <span className="text-muted-foreground">Current:</span>
-          <span className="font-bold text-foreground">
-            {currentValue} <span className="font-normal text-muted-foreground">/ {goal.targetValue} {goal.unit}</span>
+          <span className="text-slate-500">Current:</span>
+          <span className="font-bold text-slate-800">
+            {currentValue} <span className="font-normal text-slate-400">/ {goal.targetValue} {goal.unit}</span>
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              isAchieved ? 'bg-emerald-500' : 'bg-primary'
+              isAchieved ? 'bg-emerald-500' : 'bg-indigo-600'
             }`}
             style={{ width: `${Math.min(100, percentComplete)}%` }}
           />
@@ -99,7 +100,7 @@ export function GoalCard({ evaluatedGoal, onDelete }: GoalCardProps) {
       </div>
 
       {/* Footer Details */}
-      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
         <span>{trendText}</span>
         {goal.targetDate && (
           <div className="flex items-center gap-1">

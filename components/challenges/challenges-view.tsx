@@ -17,8 +17,8 @@ export function ChallengesView() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span className="text-xs text-muted-foreground">Evaluating community challenges...</span>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <span className="text-xs text-slate-500 font-medium">Evaluating community challenges...</span>
         </div>
       </div>
     );
@@ -30,14 +30,15 @@ export function ChallengesView() {
       <div className="flex items-center gap-3">
         <Link
           href="/"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition hover:bg-accent hover:text-foreground"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-xs transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
           title="Back to Home / Dashboard"
+          aria-label="Back to Home / Dashboard"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Community & Fitness Challenges</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">Community & Fitness Challenges</h1>
+          <p className="text-xs text-slate-500">
             Join targeted training milestones to test your consistency, set volume, and workout streaks.
           </p>
         </div>
@@ -47,8 +48,8 @@ export function ChallengesView() {
       {joinedChallenges.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-primary" />
-            <h2 className="text-base font-bold text-foreground">
+            <Flame className="h-4 w-4 text-indigo-600" />
+            <h2 className="text-base font-bold text-slate-900">
               My Active Challenges ({joinedChallenges.length})
             </h2>
           </div>
@@ -71,7 +72,7 @@ export function ChallengesView() {
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-emerald-500" />
-            <h2 className="text-base font-bold text-foreground">
+            <h2 className="text-base font-bold text-slate-900">
               Completed Challenges ({completedChallenges.length})
             </h2>
           </div>
@@ -92,8 +93,8 @@ export function ChallengesView() {
       {/* Available Platform Challenges */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-primary" />
-          <h2 className="text-base font-bold text-foreground">
+          <Layers className="h-4 w-4 text-indigo-600" />
+          <h2 className="text-base font-bold text-slate-900">
             Available Challenges ({availableChallenges.length})
           </h2>
         </div>

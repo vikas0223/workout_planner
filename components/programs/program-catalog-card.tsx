@@ -36,69 +36,69 @@ export function ProgramCatalogCard({
   };
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+    <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-indigo-300 hover:shadow-md">
       <div>
         {/* Header Tags */}
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
-          <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">
+          <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-indigo-700 border border-indigo-100/80 font-bold">
             {program.weeksCount} Weeks
           </span>
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-foreground/80 dark:text-foreground/90 font-medium">
+          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700 font-semibold">
             {program.daysPerWeek} Days/Wk
           </span>
-          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-secondary-foreground capitalize">
+          <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-purple-700 border border-purple-100/80 capitalize font-semibold">
             {program.difficulty}
           </span>
         </div>
 
         {/* Title & Description */}
-        <h3 className="mt-3 text-lg font-bold tracking-tight text-foreground">{program.name}</h3>
-        <p className="mt-1 text-xs text-muted-foreground line-clamp-3">
+        <h3 className="mt-3 text-lg font-bold tracking-tight text-slate-900">{program.name}</h3>
+        <p className="mt-1 text-xs text-slate-500 line-clamp-3">
           {program.description}
         </p>
 
         {/* Highlights */}
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border/60 pt-3 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Target className="h-3.5 w-3.5 text-primary" />
+        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <Target className="h-3.5 w-3.5 text-indigo-600" />
             <span className="capitalize">{program.goal || 'General Fitness'}</span>
           </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Dumbbell className="h-3.5 w-3.5 text-primary" />
+          <div className="flex items-center gap-1.5 text-slate-600 font-medium">
+            <Dumbbell className="h-3.5 w-3.5 text-indigo-600" />
             <span>Compound Focus</span>
           </div>
         </div>
       </div>
 
       {/* Footer / Adoption Action */}
-      <div className="mt-5 border-t border-border/60 pt-4">
+      <div className="mt-5 border-t border-slate-100 pt-4">
         {isCurrentActive ? (
-          <div className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/10 py-2.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            <Check className="h-4 w-4" />
+          <div className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-100 py-2.5 text-xs font-bold text-emerald-700">
+            <Check className="h-4 w-4 text-emerald-600" />
             Currently Active
           </div>
         ) : showDatePicker ? (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-medium text-foreground">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
               <span>Choose Start Date:</span>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleAdopt}
                 disabled={adopting}
-                className="flex-1 rounded-xl bg-primary py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-50"
+                className="flex-1 rounded-xl bg-indigo-600 py-2 text-xs font-bold text-white shadow-md shadow-indigo-200 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 transition-all"
               >
                 {adopting ? 'Adopting...' : 'Confirm & Start'}
               </button>
               <button
                 onClick={() => setShowDatePicker(false)}
-                className="rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-accent"
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
               >
                 Cancel
               </button>
@@ -108,7 +108,7 @@ export function ProgramCatalogCard({
           <button
             onClick={() => setShowDatePicker(true)}
             id={`btn-adopt-${program.id}`}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground active:scale-95"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 py-2.5 text-xs font-bold transition shadow-xs hover:shadow-sm active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600"
           >
             <Sparkles className="h-3.5 w-3.5" />
             Adopt Program

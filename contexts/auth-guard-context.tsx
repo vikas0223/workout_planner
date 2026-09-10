@@ -22,10 +22,17 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { getBrowserSupabaseClient } from '@/lib/supabase/browser-client';
 import { IndexedDBEngine } from '@/lib/storage/indexeddb-engine';
 import { STORES, MetaRecord } from '@/lib/storage/indexeddb-schema';
+import { associateGuestDataWithUser } from '@/lib/sync/guest-migration';
 
 export type AccessMode = 'unselected' | 'guest' | 'authenticated';
 export type OnboardingState = 'incomplete' | 'complete';
 export type AuthGuardStatus = 'initializing' | 'ready';
+export type AuthTransitionKind = 'signup' | 'signin';
+
+export interface AuthTransitionState {
+  kind: AuthTransitionKind;
+  displayName: string | null;
+}
 
 export const ACCESS_MODE_KEY = 'replyf_access_mode';
 export const ONBOARDING_STATE_KEY = 'replyf_onboarding_state';
@@ -131,8 +138,16 @@ export interface AuthGuardContextType {
   isInitializing: boolean;
   isLoading: boolean; // backward-compatibility alias for isInitializing
   userEmail: string | null;
+  displayName: string | null;
+  authTransition: AuthTransitionState | null;
   selectGuestMode: () => Promise<void>;
-  authenticateUser: (email: string) => Promise<void>;
+  authenticateUser: (
+    email: string,
+    displayName?: string,
+    kind?: AuthTransitionKind,
+    authUserId?: string
+  ) => Promise<void>;
+  completeAuthTransition: () => void;
   signOut: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
   switchAccess: () => Promise<void>;
@@ -146,6 +161,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const [onboardingState, setOnboardingStateState] = useState<OnboardingState>('incomplete');
   const [status, setStatus] = useState<AuthGuardStatus>('initializing');
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [authTransition, setAuthTransition] = useState<AuthTransitionState | null>(null);
 
   // Initialize state following strict Part A & Part C authority rules
   useEffect(() => {
@@ -179,6 +196,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         // Step 3: Restore/check Supabase authentication session (auth authority)
         let hasSupabaseSession = false;
         let email: string | null = null;
+        let initialName: string | null = null;
 
         try {
           const supabase = getBrowserSupabaseClient();
@@ -186,6 +204,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
           if (sessionData?.session?.user) {
             hasSupabaseSession = true;
             email = sessionData.session.user.email || null;
+            const meta = sessionData.session.user.user_metadata;
+            initialName = meta?.display_name || meta?.full_name || meta?.name || null;
           }
         } catch (supabaseErr) {
           console.debug('[AuthGuard] Supabase session check skipped/failed:', supabaseErr);
@@ -224,7 +244,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
           setAccessModeState(resolvedAccess);
           setOnboardingStateState(resolvedOnboarding);
           setUserEmail(email);
-          // Step 5: Set status to ready
+          setDisplayName(initialName);
+          // Step 5: Set status to ready (authTransition remains null on startup/refresh)
           setStatus('ready');
         }
       } catch (err) {
@@ -257,25 +278,70 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const authenticateUser = useCallback(async (email: string) => {
-    setAccessModeState('authenticated');
-    setUserEmail(email);
-    try {
-      localStorage.setItem(ACCESS_MODE_KEY, 'authenticated');
-      const engine = IndexedDBEngine.getInstance();
-      await engine.put(STORES.META, {
-        key: ACCESS_MODE_KEY,
-        value: 'authenticated',
-        updatedAt: new Date().toISOString(),
+  const authenticateUser = useCallback(
+    async (
+      email: string,
+      providedName?: string,
+      kind: AuthTransitionKind = 'signin',
+      authUserId?: string
+    ) => {
+      setAccessModeState('authenticated');
+      setUserEmail(email);
+
+      // Resolve display name: provided name -> auth metadata -> local profile -> null
+      let resolvedName = (providedName && providedName.trim()) || null;
+      if (!resolvedName) {
+        try {
+          const supabase = getBrowserSupabaseClient();
+          const { data } = await supabase.auth.getUser();
+          const meta = data?.user?.user_metadata;
+          resolvedName = meta?.display_name || meta?.full_name || meta?.name || null;
+        } catch {
+          // Safe fallback
+        }
+      }
+
+      setDisplayName(resolvedName);
+
+      // Controlled guest migration if authUserId provided
+      if (authUserId) {
+        try {
+          await associateGuestDataWithUser(authUserId);
+        } catch (migErr) {
+          console.warn('[AuthGuard] Guest migration non-blocking warning:', migErr);
+        }
+      }
+
+      // Set transient in-memory transition (never persisted to storage)
+      setAuthTransition({
+        kind,
+        displayName: resolvedName,
       });
-    } catch (e) {
-      console.warn('[AuthGuard] Failed to persist authenticated mode:', e);
-    }
+
+      try {
+        localStorage.setItem(ACCESS_MODE_KEY, 'authenticated');
+        const engine = IndexedDBEngine.getInstance();
+        await engine.put(STORES.META, {
+          key: ACCESS_MODE_KEY,
+          value: 'authenticated',
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.warn('[AuthGuard] Failed to persist authenticated mode:', e);
+      }
+    },
+    []
+  );
+
+  const completeAuthTransition = useCallback(() => {
+    setAuthTransition(null);
   }, []);
 
   const signOut = useCallback(async () => {
     setAccessModeState('unselected');
     setUserEmail(null);
+    setDisplayName(null);
+    setAuthTransition(null);
     try {
       localStorage.removeItem(ACCESS_MODE_KEY);
       const engine = IndexedDBEngine.getInstance();
@@ -316,6 +382,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const switchAccess = useCallback(async () => {
     setAccessModeState('unselected');
     setUserEmail(null);
+    setDisplayName(null);
+    setAuthTransition(null);
     try {
       localStorage.removeItem(ACCESS_MODE_KEY);
       const engine = IndexedDBEngine.getInstance();
@@ -329,6 +397,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     setAccessModeState('unselected');
     setOnboardingStateState('incomplete');
     setUserEmail(null);
+    setDisplayName(null);
+    setAuthTransition(null);
     try {
       localStorage.removeItem(ACCESS_MODE_KEY);
       localStorage.removeItem(ONBOARDING_STATE_KEY);
@@ -354,8 +424,11 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         isInitializing,
         isLoading: isInitializing,
         userEmail,
+        displayName,
+        authTransition,
         selectGuestMode,
         authenticateUser,
+        completeAuthTransition,
         signOut,
         completeOnboarding,
         switchAccess,

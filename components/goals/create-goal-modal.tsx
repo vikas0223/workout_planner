@@ -237,7 +237,7 @@ export function CreateGoalModal({ isOpen, onClose, onSave }: CreateGoalModalProp
             <button
               type="submit"
               disabled={saving}
-              className="min-h-[44px] px-6 rounded-xl bg-slate-900 hover:bg-black active:bg-slate-950 text-white text-sm font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+              className="min-h-[44px] px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold shadow-md shadow-indigo-200 hover:shadow-lg transition-all disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2"
             >
               {saving ? 'Saving...' : 'Create Goal'}
             </button>

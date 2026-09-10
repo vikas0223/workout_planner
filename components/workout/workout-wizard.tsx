@@ -116,8 +116,20 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
   useEffect(() => {
     isMountedRef.current = true;
+    if (typeof window !== 'undefined') {
+      (window as any).__setPlannerStateForTesting = (
+        state: PlannerState,
+        msg?: PlannerErrorMessage
+      ) => {
+        setPlannerState(state);
+        if (msg) setErrorMessage(msg);
+      };
+    }
     return () => {
       isMountedRef.current = false;
+      if (typeof window !== 'undefined') {
+        delete (window as any).__setPlannerStateForTesting;
+      }
     };
   }, []);
 
@@ -185,6 +197,22 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
     setErrorMessage(null);
 
     try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const simDelay =
+          (window as any).__REPLYF_SIMULATE_DELAY ||
+          (urlParams.get('simDelay') ? Number(urlParams.get('simDelay')) : 0);
+        if (simDelay > 0) {
+          await new Promise((resolve) => setTimeout(resolve, simDelay));
+        }
+        const simError =
+          (window as any).__REPLYF_SIMULATE_ERROR ||
+          urlParams.get('simError') === '1';
+        if (simError) {
+          throw new Error('Simulated engine failure for verification');
+        }
+      }
+
       const input: WorkoutEngineInput = {
         name: `${CANONICAL_GOALS.find((g) => g.value === goal)?.label.split(' ')[0] || 'Custom'} ${selectedMuscles[0]} Routine`,
         fitnessLevel: experience,
