@@ -86,6 +86,16 @@ export function WorkoutHub({ initialView, initialWorkout = null }: WorkoutHubPro
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  // Synchronize generated workout and switch to review view immediately when initialWorkout arrives
+  useEffect(() => {
+    if (initialWorkout) {
+      setGeneratedWorkout(initialWorkout);
+      setActiveView('review');
+    } else if (initialView) {
+      setActiveView(initialView);
+    }
+  }, [initialWorkout, initialView]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);

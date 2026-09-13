@@ -68,7 +68,9 @@ describe('Replyf Workout Planner — Loading & Error State Matrix', () => {
       expect(wizardFileContent).toContain('aria-live="polite"');
       expect(wizardFileContent).toContain('aria-busy={isLoading}');
       expect(wizardFileContent).toContain('Building your workout…');
-      expect(wizardFileContent).toContain('Matching your goal, experience, schedule, and equipment.');
+      // Dynamic rotating messages instead of static text
+      expect(wizardFileContent).toContain('LOADING_MESSAGES');
+      expect(wizardFileContent).toContain('loadingMsgIndex');
     });
 
     it('7. successful generation calls completeOnboarding and onWorkoutGenerated', () => {

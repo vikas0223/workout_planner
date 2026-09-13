@@ -25,7 +25,7 @@
 
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FitnessGoal, ExperienceLevel, GeneratedWorkout } from '@/types/domain';
 import { WorkoutEngine, WorkoutEngineInput } from '@/features/workout-engine';
 import { CANONICAL_GOALS, EXPERIENCE_LEVELS } from '@/lib/domain/workout-draft';
@@ -86,24 +86,36 @@ const MUSCLE_FOCUS_OPTIONS = [
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90];
 
+/** Contextual loading messages rotated during workout generation */
+const LOADING_MESSAGES = [
+  'Understanding your training goals…',
+  'Matching your experience level…',
+  'Working with your available equipment…',
+  'Balancing your training volume…',
+  'Selecting exercises for your plan…',
+  'Finalizing your workout…',
+];
+
 export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardProps) {
   const { completeOnboarding } = useAuthGuard();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const totalSteps = 6;
 
-  // Form State with canonical defaults (preserved across retries and edits)
-  const [goal, setGoal] = useState<FitnessGoal>('hypertrophy');
-  const [experience, setExperience] = useState<ExperienceLevel>('intermediate');
-  const [location, setLocation] = useState<'gym' | 'home'>('gym');
-  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([
-    'Dumbbells',
-    'Barbell',
-    'Bodyweight',
-    'Bench',
-  ]);
-  const [daysPerWeek, setDaysPerWeek] = useState<number>(3);
-  const [duration, setDuration] = useState<number>(45);
-  const [selectedMuscles, setSelectedMuscles] = useState<string[]>(['Full Body']);
+  // Form State — undefined/null = no selection yet (first-time user sees nothing pre-selected)
+  const [goal, setGoal] = useState<FitnessGoal | undefined>(undefined);
+  const [experience, setExperience] = useState<ExperienceLevel | undefined>(undefined);
+  const [location, setLocation] = useState<'gym' | 'home' | undefined>(undefined);
+  const [selectedEquipment, setSelectedEquipment] = useState<string[]>([]);
+  const [daysPerWeek, setDaysPerWeek] = useState<number | undefined>(undefined);
+  const [duration, setDuration] = useState<number | undefined>(undefined);
+  const [selectedMuscles, setSelectedMuscles] = useState<string[]>([]);
+
+  // Validation: tracks whether user attempted to proceed without selecting
+  const [showValidation, setShowValidation] = useState<boolean>(false);
+
+  // Loading message rotation state
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState<number>(0);
+  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Explicit Planner Lifecycle State: 'idle' | 'loading' | 'error'
   const [plannerState, setPlannerState] = useState<PlannerState>('idle');
@@ -133,6 +145,53 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
     };
   }, []);
 
+  // Rotate loading messages at ~1s interval; clean up on success/error/unmount
+  useEffect(() => {
+    if (plannerState === 'loading') {
+      setLoadingMsgIndex(0);
+      loadingIntervalRef.current = setInterval(() => {
+        setLoadingMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      }, 1000);
+    } else {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    }
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
+  }, [plannerState]);
+
+  /** Returns whether the current step has a valid user selection */
+  const isCurrentStepValid = useCallback((): boolean => {
+    switch (currentStep) {
+      case 1: return goal !== undefined;
+      case 2: return experience !== undefined;
+      case 3: return location !== undefined || selectedEquipment.length > 0;
+      case 4: return daysPerWeek !== undefined;
+      case 5: return duration !== undefined;
+      case 6: return selectedMuscles.length > 0;
+      default: return true;
+    }
+  }, [currentStep, goal, experience, location, selectedEquipment, daysPerWeek, duration, selectedMuscles]);
+
+  /** Human-readable validation message per step */
+  const getValidationMessage = (): string => {
+    switch (currentStep) {
+      case 1: return 'Choose a goal to continue.';
+      case 2: return 'Choose your experience level to continue.';
+      case 3: return 'Choose your training location or equipment to continue.';
+      case 4: return 'Choose how many days you want to train.';
+      case 5: return 'Choose a workout duration.';
+      case 6: return 'Choose at least one muscle focus.';
+      default: return 'Please make a selection to continue.';
+    }
+  };
+
   // Keyboard accessibility: route focus to error alert container when error occurs
   useEffect(() => {
     if (plannerState === 'error' && errorContainerRef.current) {
@@ -156,7 +215,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
     const filtered = selectedMuscles.filter((m) => m !== 'Full Body');
     if (filtered.includes(muscle)) {
       const remaining = filtered.filter((m) => m !== muscle);
-      setSelectedMuscles(remaining.length > 0 ? remaining : ['Full Body']);
+      setSelectedMuscles(remaining);
     } else {
       setSelectedMuscles([...filtered, muscle]);
     }
@@ -164,6 +223,12 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
   const handleNext = () => {
     if (plannerState === 'loading') return;
+    // Validate current step before proceeding
+    if (!isCurrentStepValid()) {
+      setShowValidation(true);
+      return;
+    }
+    setShowValidation(false);
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -173,6 +238,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
   const handleBack = () => {
     if (plannerState === 'loading') return;
+    setShowValidation(false);
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     } else if (onCancel) {
@@ -214,13 +280,13 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
       }
 
       const input: WorkoutEngineInput = {
-        name: `${CANONICAL_GOALS.find((g) => g.value === goal)?.label.split(' ')[0] || 'Custom'} ${selectedMuscles[0]} Routine`,
-        fitnessLevel: experience,
-        primaryGoal: goal,
-        targetMuscles: selectedMuscles,
+        name: `${CANONICAL_GOALS.find((g) => g.value === goal)?.label.split(' ')[0] || 'Custom'} ${selectedMuscles[0] || 'Full Body'} Routine`,
+        fitnessLevel: experience ?? 'intermediate',
+        primaryGoal: goal ?? 'hypertrophy',
+        targetMuscles: selectedMuscles.length > 0 ? selectedMuscles : ['Full Body'],
         equipment: selectedEquipment.length > 0 ? selectedEquipment : ['bodyweight'],
-        durationMinutes: duration,
-        daysPerWeek: daysPerWeek,
+        durationMinutes: duration ?? 45,
+        daysPerWeek: daysPerWeek ?? 3,
         seed: Date.now(),
       };
 
@@ -237,17 +303,13 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         return;
       }
 
+      // Provide generated plan to parent before completing onboarding so stagedPlan is ready
+      onWorkoutGenerated(plan);
+
       // Complete onboarding safely without treating metadata write errors as plan generation failures
       await completeOnboarding().catch((onboardingErr) => {
         console.error('Failed to update onboarding metadata:', onboardingErr);
       });
-
-      // Stale check again after asynchronous completeOnboarding
-      if (currentAttempt !== generationIdRef.current || !isMountedRef.current) {
-        return;
-      }
-
-      onWorkoutGenerated(plan);
     } catch (err: unknown) {
       // Ignore stale errors
       if (currentAttempt !== generationIdRef.current || !isMountedRef.current) {
@@ -267,6 +329,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
   const progressPercentage = (currentStep / totalSteps) * 100;
   const isLoading = plannerState === 'loading';
   const isError = plannerState === 'error';
+  const stepValid = isCurrentStepValid();
 
   return (
     <div
@@ -309,7 +372,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
               <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {CANONICAL_GOALS.map((g) => {
-                  const isSelected = goal === g.value;
+                  const isSelected = goal !== undefined && goal === g.value;
                   return (
                     <button
                       key={g.value}
@@ -359,7 +422,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
               <div className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {EXPERIENCE_LEVELS.map((lvl) => {
-                  const isSelected = experience === lvl.value;
+                  const isSelected = experience !== undefined && experience === lvl.value;
                   const desc =
                     lvl.value === 'beginner'
                       ? 'Fundamental movement patterns, motor learning, and foundation building.'
@@ -606,7 +669,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
               </div>
 
               <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl text-center text-xs text-slate-600 mt-5">
-                Estimated structure: <strong className="text-slate-900 font-bold">{Math.round(duration / 9)} compound/isolation exercises</strong> with warm-up and cool-down intervals.
+                Estimated structure: <strong className="text-slate-900 font-bold">{Math.round((duration ?? 45) / 9)} compound/isolation exercises</strong> with warm-up and cool-down intervals.
               </div>
             </div>
           )}
@@ -678,8 +741,8 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
               <h3 className="text-xs sm:text-sm font-bold text-slate-900">
                 Building your workout…
               </h3>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed">
-                Matching your goal, experience, schedule, and equipment.
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed transition-opacity duration-300">
+                {LOADING_MESSAGES[loadingMsgIndex]}
               </p>
             </div>
           </div>
@@ -730,6 +793,13 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
               </Button>
             </div>
           </div>
+        )}
+
+        {/* Validation Feedback — shown only after user clicks Continue without selecting */}
+        {showValidation && !stepValid && (
+          <p className="mt-4 text-xs sm:text-sm text-rose-600 font-medium animate-in fade-in duration-200" role="alert">
+            {getValidationMessage()}
+          </p>
         )}
 
         {/* Options -> Divider (28px: mt-7) -> Divider -> Footer buttons (24px: pt-6) */}

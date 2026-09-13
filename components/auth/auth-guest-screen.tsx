@@ -140,6 +140,10 @@ export function AuthGuestScreen() {
 
     setLoading(true);
 
+    let authSuccessData: { user: any; session: any } | null = null;
+    const authKind: 'signup' | 'signin' = authMode === 'signup' ? 'signup' : 'signin';
+    let resolvedUserName: string | null = null;
+
     try {
       const supabase = getBrowserSupabaseClient();
 
@@ -166,12 +170,8 @@ export function AuthGuestScreen() {
           return;
         }
 
-        // Account authenticated immediately
-        if (data.user) {
-          const resolvedName = cleanName || data.user.user_metadata?.display_name || null;
-          await authenticateUser(cleanEmail, resolvedName || undefined, 'signup', data.user.id);
-          setShowAuthModal(false);
-        }
+        authSuccessData = data;
+        resolvedUserName = cleanName || data.user?.user_metadata?.display_name || null;
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
@@ -182,12 +182,9 @@ export function AuthGuestScreen() {
           throw error;
         }
 
-        if (data.user) {
-          const meta = data.user.user_metadata;
-          const resolvedName = meta?.display_name || meta?.full_name || meta?.name || null;
-          await authenticateUser(cleanEmail, resolvedName || undefined, 'signin', data.user.id);
-          setShowAuthModal(false);
-        }
+        authSuccessData = data;
+        const meta = data.user?.user_metadata;
+        resolvedUserName = meta?.display_name || meta?.full_name || meta?.name || null;
       }
     } catch (err: any) {
       // Friendly, non-technical error handling: never leak raw Supabase, FetchError, or stack traces
@@ -205,8 +202,26 @@ export function AuthGuestScreen() {
       } else {
         setErrorMsg('Unable to sign in. Check your email and password and try again.');
       }
+      return;
     } finally {
       setLoading(false);
+    }
+
+    // AUTH SUCCESS BOUNDARY:
+    // Once Supabase authentication succeeds, close the modal immediately and activate Welcome.
+    // Secondary post-auth operations must NEVER prevent the Welcome screen or trigger auth errors.
+    if (authSuccessData?.user) {
+      setShowAuthModal(false);
+      try {
+        await authenticateUser(
+          cleanEmail,
+          resolvedUserName || undefined,
+          authKind,
+          authSuccessData.user.id
+        );
+      } catch (postAuthErr) {
+        console.warn('[AuthGuestScreen] Non-blocking post-auth warning:', postAuthErr);
+      }
     }
   };
 

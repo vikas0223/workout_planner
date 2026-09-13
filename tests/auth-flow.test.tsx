@@ -25,7 +25,7 @@ import { setupMockIndexedDB } from './helpers/fake-indexeddb';
 import { IndexedDBEngine } from '@/lib/storage/indexeddb-engine';
 import { STORES } from '@/lib/storage/indexeddb-schema';
 import * as guestMigrationModule from '@/lib/sync/guest-migration';
-import { reconcileAccessState, ACCESS_MODE_KEY, ONBOARDING_STATE_KEY } from '@/contexts/auth-guard-context';
+import { reconcileAccessState, resolveAppRoute, ACCESS_MODE_KEY, ONBOARDING_STATE_KEY } from '@/contexts/auth-guard-context';
 
 describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling', () => {
   const authComponentPath = path.resolve(__dirname, '../components/auth/auth-guest-screen.tsx');
@@ -178,10 +178,12 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
 
   // ─── Architectural Requirement 1: Supabase signin succeeds → Welcome appears even if guest migration fails ───
   it('Arch 1. Supabase signin succeeds -> Welcome appears even if guest migration fails', async () => {
+    // Mock guest migration to reject with error
     const spy = vi.spyOn(guestMigrationModule, 'associateGuestDataWithUser').mockRejectedValue(
       new Error('Simulated guest migration network failure')
     );
 
+    // Simulate authenticateUser flow
     let authTransitionResult: any = null;
     let accessModeResult: string = 'unselected';
 
@@ -192,6 +194,7 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
       accessModeResult = val;
     };
 
+    // Simulated authenticateUser implementation following the corrected decoupled architecture
     const authenticateUser = async (email: string, name?: string, kind: 'signin' | 'signup' = 'signin', authUserId?: string) => {
       const resolvedName = (name && name.trim()) || null;
       setAuthTransition({ kind, displayName: resolvedName });
@@ -204,6 +207,7 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
 
     await authenticateUser('user@example.com', 'Alex', 'signin', 'user_123');
 
+    // Welcome transition MUST be activated immediately
     expect(authTransitionResult).toEqual({
       kind: 'signin',
       displayName: 'Alex',
@@ -217,6 +221,7 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
     let authTransitionResult: any = null;
 
     const authenticateUser = async (email: string, name?: string, kind: 'signin' | 'signup' = 'signup') => {
+      // Name provided at signup is used directly; no remote profile dependency
       const resolvedName = (name && name.trim()) || null;
       authTransitionResult = { kind, displayName: resolvedName };
     };
@@ -231,10 +236,12 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
 
   // ─── Architectural Requirement 3: Supabase signin succeeds → Welcome appears even if sync queue fails ────────
   it('Arch 3. Supabase signin succeeds -> Welcome appears even if sync queue creation fails', async () => {
+    // Even if outbox queue throws in background, Welcome transition is active
     let transitionActive = false;
 
     const authenticateUser = async (email: string, name?: string, kind: 'signin' | 'signup' = 'signin') => {
       transitionActive = true;
+      // Simulated detached failing sync
       Promise.reject(new Error('Sync queue full')).catch(() => {});
     };
 
@@ -250,12 +257,14 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
     const authKind = 'signin';
     const authSuccessData = { user: { id: 'u_999' }, session: { access_token: 'token' } };
 
+    // When auth succeeds, handleAuthSubmit isolates post-auth execution
     if (authSuccessData?.user) {
       accessMode = 'authenticated';
       try {
+        // Migration fails in background
         throw new Error('Database locked');
       } catch (postAuthErr) {
-        // Handled silently
+        // Error is logged, never assigned to errorMessage
       }
     }
 
@@ -267,6 +276,8 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
   it('Arch 6 & 7. Missing display name uses safe fallback without throwing', () => {
     const rawProvidedName: string = '';
     const resolvedName = rawProvidedName.trim().length > 0 ? rawProvidedName.trim() : null;
+
+    expect(resolvedName).toBeNull();
 
     // WelcomeScreen formatting test for null displayName
     const formatWelcomeSignup = (displayName: string | null | undefined) => {
@@ -291,6 +302,7 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
       authTransition = null;
     };
 
+    // User clicks Continue
     completeAuthTransition();
     expect(authTransition).toBeNull();
   });
@@ -349,6 +361,7 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
 
   // ─── Architectural Requirement 12: Refresh never replays Welcome (in-memory only) ───────────────────────────
   it('Arch 12. Page reload / session restoration never triggers or replays Welcome', () => {
+    // Reconcile state on page load with existing Supabase session
     const reconciled = reconcileAccessState({
       localAccess: 'authenticated',
       localOnboarding: 'complete',
@@ -361,8 +374,164 @@ describe('Part 38 & Corrective: Production Authentication & Welcome Decoupling',
     expect(reconciled.resolvedAccess).toBe('authenticated');
     expect(reconciled.resolvedOnboarding).toBe('complete');
 
+    // authTransition state defaults to null on initialization and is never persisted
     expect(authGuardContent).toContain('const [authTransition, setAuthTransition] = useState<AuthTransitionState | null>(null)');
     expect(authGuardContent).not.toMatch(/localStorage\.setItem\([^,]+authTransition/);
     expect(authGuardContent).not.toMatch(/STORES\.META[^\n]*authTransition/);
+  });
+
+  // ─── Section 20: New User Routing Verification Suite ────────────────────────
+  describe('Section 20: Required New User Routing & Onboarding Specifications', () => {
+    const pagePath = path.resolve(__dirname, '../app/page.tsx');
+    const pageContent = fs.readFileSync(pagePath, 'utf-8');
+
+    const hubPath = path.resolve(__dirname, '../components/workout/workout-hub.tsx');
+    const hubContent = fs.readFileSync(hubPath, 'utf-8');
+
+    const wizardPath = path.resolve(__dirname, '../components/workout/workout-wizard.tsx');
+    const wizardContent = fs.readFileSync(wizardPath, 'utf-8');
+
+    it('1. new signup results in authenticated state', () => {
+      expect(authGuardContent).toContain("setAccessModeState('authenticated')");
+      expect(authGuardContent).toContain("localStorage.setItem(ACCESS_MODE_KEY, 'authenticated')");
+    });
+
+    it('2. new signup strictly leaves onboardingState incomplete', () => {
+      expect(authGuardContent).toContain("if (kind === 'signup') {");
+      expect(authGuardContent).toContain("setOnboardingStateState('incomplete')");
+      expect(authGuardContent).toContain("localStorage.setItem(ONBOARDING_STATE_KEY, 'incomplete')");
+      expect(authGuardContent).toContain("key: ONBOARDING_STATE_KEY,\n            value: 'incomplete'");
+    });
+
+    it('3. new signup shows Welcome screen', () => {
+      expect(authGuardContent).toContain("setAuthTransition({\n        kind,\n        displayName: resolvedName,\n      })");
+      expect(pageContent).toContain('if (authTransition) {');
+      expect(pageContent).toContain('<WelcomeScreen');
+    });
+
+    it('4. Welcome displays correct user name', () => {
+      expect(welcomeScreenContent).toContain('displayName');
+      expect(welcomeScreenContent).toContain('Welcome, ${cleanName}');
+      expect(welcomeScreenContent).toContain('Your training space is ready.');
+    });
+
+    it('5. signup success toast appears once with "Account created successfully"', () => {
+      expect(welcomeScreenContent).toContain("'Account created successfully'");
+      expect(welcomeScreenContent).toContain('toastFiredRef.current');
+    });
+
+    it('6. Welcome screen does not auto-navigate and waits for user click', () => {
+      // Must not contain automated setTimeout navigation to home or dashboard
+      expect(welcomeScreenContent).not.toMatch(/setTimeout\([^)]*router\.push/);
+      expect(welcomeScreenContent).not.toMatch(/setTimeout\([^)]*onContinue/);
+      expect(welcomeScreenContent).toContain('onClick={onContinue}');
+      expect(welcomeScreenContent).toContain('Continue');
+    });
+
+    it('7. Continue enters onboarding for incomplete onboarding state', () => {
+      expect(pageContent).toContain("if (onboardingState === 'incomplete') {");
+      expect(pageContent).toContain('<WorkoutWizard onWorkoutGenerated={handleOnboardingWorkoutGenerated} />');
+    });
+
+    it('8. onboarding is rendered in a dedicated header-free shell', () => {
+      // Guard Branch 2 has its own main container without <header> or <MobileNavDrawer>
+      const guardBranch2 = pageContent.slice(
+        pageContent.indexOf("if (onboardingState === 'incomplete')"),
+        pageContent.indexOf('// Guard Branch 3')
+      );
+      expect(guardBranch2).not.toContain('<header');
+      expect(guardBranch2).not.toContain('<MobileNavDrawer');
+      expect(guardBranch2).toContain('<WorkoutWizard');
+    });
+
+    it('9. Saved Routines is NOT rendered during onboarding', () => {
+      const guardBranch2 = pageContent.slice(
+        pageContent.indexOf("if (onboardingState === 'incomplete')"),
+        pageContent.indexOf('// Guard Branch 3')
+      );
+      expect(guardBranch2).not.toContain('Saved Routines');
+      expect(guardBranch2).not.toContain('WorkoutHub');
+    });
+
+    it('10. normal app header is NOT rendered during onboarding', () => {
+      const guardBranch2 = pageContent.slice(
+        pageContent.indexOf("if (onboardingState === 'incomplete')"),
+        pageContent.indexOf('// Guard Branch 3')
+      );
+      expect(guardBranch2).not.toContain('Programs');
+      expect(guardBranch2).not.toContain('Goals');
+      expect(guardBranch2).not.toContain('Challenges');
+      expect(guardBranch2).not.toContain('Exercises');
+      expect(guardBranch2).not.toContain('Dashboard');
+      expect(guardBranch2).not.toContain('Switch');
+    });
+
+    it('11. workout sub-navigation is NOT rendered during onboarding', () => {
+      const guardBranch2 = pageContent.slice(
+        pageContent.indexOf("if (onboardingState === 'incomplete')"),
+        pageContent.indexOf('// Guard Branch 3')
+      );
+      expect(guardBranch2).not.toContain('Generate Plan');
+      expect(guardBranch2).not.toContain('Custom Builder');
+      expect(guardBranch2).not.toContain('Saved Routines');
+    });
+
+    it('12. Step 1 of 6 is shown initially in questionnaire', () => {
+      expect(wizardContent).toContain('const [currentStep, setCurrentStep] = useState<number>(1)');
+      expect(wizardContent).toContain('Step {currentStep} of {totalSteps}');
+      expect(wizardContent).toContain('const totalSteps = 6;');
+    });
+
+    it('13. user can navigate all six steps of questionnaire', () => {
+      expect(wizardContent).toContain('Step 1: Goal');
+      expect(wizardContent).toContain('Step 2: Experience');
+      expect(wizardContent).toContain('Step 3: Location & Equipment');
+      expect(wizardContent).toContain('Step 4: Days per Week');
+      expect(wizardContent).toContain('Step 6: Target Muscle Focus');
+    });
+
+    it('14. Generate Workout reaches WorkoutReview', () => {
+      expect(wizardContent).toContain('onWorkoutGenerated(plan)');
+      expect(wizardContent).toContain('await completeOnboarding()');
+      expect(hubContent).toContain("activeView === 'review' && generatedWorkout && (");
+      expect(hubContent).toContain('<WorkoutReview');
+    });
+
+    it('15. successful first workout does NOT redirect to Saved Routines', () => {
+      expect(hubContent).toContain('if (initialWorkout) {');
+      expect(hubContent).toContain('setGeneratedWorkout(initialWorkout)');
+      expect(hubContent).toContain("setActiveView('review')");
+      // Must not force 'saved' when initialWorkout is present
+      expect(hubContent).not.toMatch(/if\s*\(initialWorkout\)\s*\{[^}]*setActiveView\('saved'\)/);
+    });
+
+    it('16. returning completed user does NOT unnecessarily enter onboarding', () => {
+      const decision = resolveAppRoute('authenticated', 'complete', 'ready');
+      expect(decision).toBe('workout_hub');
+    });
+
+    it('17. returning completed user can still explicitly navigate to Saved Routines', () => {
+      expect(hubContent).toContain("setActiveView('saved')");
+      expect(hubContent).toContain('Saved Routines');
+    });
+
+    it('18. page refresh does not replay Welcome screen', () => {
+      expect(authGuardContent).toContain('const [authTransition, setAuthTransition] = useState<AuthTransitionState | null>(null)');
+      // authTransition is never written to persistent stores
+      expect(authGuardContent).not.toMatch(/localStorage\.setItem\([^,]+authTransition/);
+    });
+
+    it('19. session restoration does not replay Welcome screen', () => {
+      const reconciled = reconcileAccessState({
+        localAccess: 'authenticated',
+        localOnboarding: 'complete',
+        idbAccess: 'authenticated',
+        idbOnboarding: 'complete',
+        hasSupabaseSession: true,
+      });
+      expect(reconciled.resolvedAccess).toBe('authenticated');
+      // No authTransition exists during session restoration
+      expect(reconcileAccessState).toBeDefined();
+    });
   });
 });

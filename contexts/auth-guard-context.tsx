@@ -285,49 +285,58 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       kind: AuthTransitionKind = 'signin',
       authUserId?: string
     ) => {
-      setAccessModeState('authenticated');
-      setUserEmail(email);
+      // 1. Resolve safe display name synchronously without blocking on network/profile lookups
+      const resolvedName = (providedName && providedName.trim()) || null;
 
-      // Resolve display name: provided name -> auth metadata -> local profile -> null
-      let resolvedName = (providedName && providedName.trim()) || null;
-      if (!resolvedName) {
-        try {
-          const supabase = getBrowserSupabaseClient();
-          const { data } = await supabase.auth.getUser();
-          const meta = data?.user?.user_metadata;
-          resolvedName = meta?.display_name || meta?.full_name || meta?.name || null;
-        } catch {
-          // Safe fallback
-        }
-      }
-
-      setDisplayName(resolvedName);
-
-      // Controlled guest migration if authUserId provided
-      if (authUserId) {
-        try {
-          await associateGuestDataWithUser(authUserId);
-        } catch (migErr) {
-          console.warn('[AuthGuard] Guest migration non-blocking warning:', migErr);
-        }
-      }
-
-      // Set transient in-memory transition (never persisted to storage)
+      // 2. Set transient in-memory Welcome transition and authenticated state immediately
       setAuthTransition({
         kind,
         displayName: resolvedName,
       });
+      setAccessModeState('authenticated');
+      setUserEmail(email);
+      setDisplayName(resolvedName);
 
+      // 3. For new account signups, strictly enforce onboardingState = 'incomplete'
+      if (kind === 'signup') {
+        setOnboardingStateState('incomplete');
+      }
+
+      // 4. Persist local authenticated mode and onboarding state in non-blocking try/catch
       try {
-        localStorage.setItem(ACCESS_MODE_KEY, 'authenticated');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(ACCESS_MODE_KEY, 'authenticated');
+          if (kind === 'signup') {
+            localStorage.setItem(ONBOARDING_STATE_KEY, 'incomplete');
+            localStorage.removeItem(ONBOARDING_COMPLETED_AT_KEY);
+            localStorage.removeItem(ONBOARDING_VERSION_KEY);
+          }
+        }
         const engine = IndexedDBEngine.getInstance();
         await engine.put(STORES.META, {
           key: ACCESS_MODE_KEY,
           value: 'authenticated',
           updatedAt: new Date().toISOString(),
         });
+        if (kind === 'signup') {
+          await engine.put(STORES.META, {
+            key: ONBOARDING_STATE_KEY,
+            value: 'incomplete',
+            updatedAt: new Date().toISOString(),
+          });
+          await engine.delete(STORES.META, ONBOARDING_COMPLETED_AT_KEY);
+          await engine.delete(STORES.META, ONBOARDING_VERSION_KEY);
+        }
       } catch (e) {
-        console.warn('[AuthGuard] Failed to persist authenticated mode:', e);
+        console.warn('[AuthGuard] Non-blocking mode persistence warning:', e);
+      }
+
+      // 4. Controlled guest data migration in detached background async boundary
+      // CRITICAL: Guest migration failure must NEVER block Welcome screen, reset auth, or throw to UI!
+      if (authUserId) {
+        associateGuestDataWithUser(authUserId).catch((migErr) => {
+          console.warn('[AuthGuard] Non-blocking guest migration warning:', migErr);
+        });
       }
     },
     []

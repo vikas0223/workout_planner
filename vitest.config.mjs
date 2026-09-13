@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     testTimeout: 15000,
-    include: ['tests/**/*.test.ts', 'tests/**/*.spec.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'tests/**/*.spec.ts'],
   },
   resolve: {
     alias: {
