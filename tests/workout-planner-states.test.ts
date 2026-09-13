@@ -353,4 +353,54 @@ describe('Replyf Workout Planner — Loading & Error State Matrix', () => {
       expect(plan.goal).toBe('strength');
     });
   });
+
+  describe('Section 21: Post-Step-6 1.2-Second Synchronized Loading Animation Contract', () => {
+    it('1. defines all 6 canonical loading stages in exact order', () => {
+      expect(wizardFileContent).toContain('Understanding your training goals');
+      expect(wizardFileContent).toContain('Matching your experience level');
+      expect(wizardFileContent).toContain('Considering your available equipment');
+      expect(wizardFileContent).toContain('Balancing your training volume');
+      expect(wizardFileContent).toContain('Selecting the right exercises');
+      expect(wizardFileContent).toContain('Finalizing your workout plan');
+    });
+
+    it('2. enforces exact 1.2-second (1200ms) stage progression interval', () => {
+      expect(wizardFileContent).toContain('1200');
+      expect(wizardFileContent).toContain('currentGenerationStage');
+    });
+
+    it('3. checklist uses currentGenerationStage state while ring is decoupled from percentage', () => {
+      expect(wizardFileContent).toContain('const [currentGenerationStage, setCurrentGenerationStage] = useState<number>(0)');
+      // Checklist active and completed states derived from currentGenerationStage
+      expect(wizardFileContent).toContain('currentGenerationStage > idx');
+      expect(wizardFileContent).toContain('currentGenerationStage === idx');
+      // Ring is continuous loading animation and does NOT use stage-dependent strokeDashoffset or percentage calculation
+      expect(wizardFileContent).not.toContain('strokeDashoffset={301.59');
+      expect(wizardFileContent).not.toContain('currentGenerationStage / 6');
+    });
+
+    it('4. renders continuous dual-arc loading animation with centered dumbbell', () => {
+      expect(wizardFileContent).toContain('loading-dual-arc-container');
+      expect(wizardFileContent).toContain('loading-arc-a');
+      expect(wizardFileContent).toContain('loading-arc-b');
+      expect(wizardFileContent).toContain('animate-[spin_2s_linear_infinite]');
+      expect(wizardFileContent).toContain('animate-[spin_2.8s_linear_infinite_reverse]');
+      expect(wizardFileContent).toContain('Dumbbell');
+    });
+
+    it('5. contains GENERATE PLAN badge and "Building your workout plan…" heading', () => {
+      expect(wizardFileContent).toContain('GENERATE PLAN');
+      expect(wizardFileContent).toContain('Building your workout plan…');
+      expect(wizardFileContent).toContain('creating a personalized plan based on your answers');
+    });
+
+    it('6. resets currentGenerationStage to 0 on retry and edit plan', () => {
+      expect(wizardFileContent).toContain('setCurrentGenerationStage(0)');
+    });
+
+    it('7. respects prefers-reduced-motion across rotating and pulsing indicators', () => {
+      expect(wizardFileContent).toContain('motion-reduce:animate-none');
+    });
+  });
 });
+

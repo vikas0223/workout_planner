@@ -1,3 +1,19 @@
+import crypto from 'node:crypto';
+
+// Polyfill Node 25 Webpack crypto hash edge-case where undefined is passed to hash.update()
+const origCreateHash = crypto.createHash;
+crypto.createHash = function (algorithm, options) {
+  const hash = origCreateHash.call(crypto, algorithm === 'xxhash64' ? 'sha256' : algorithm, options);
+  const origUpdate = hash.update;
+  hash.update = function (data, encoding) {
+    if (data === undefined) {
+      return this;
+    }
+    return origUpdate.call(this, data, encoding);
+  };
+  return hash;
+};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async headers() {
@@ -51,8 +67,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  env: {
+    NEXT_PUBLIC_ENABLE_TEST_HELPERS:
+      process.env.NEXT_PUBLIC_ENABLE_TEST_HELPERS ||
+      (process.env.npm_lifecycle_event === 'dev:test' ? 'true' : 'false'),
+  },
   webpack: (config) => {
-    config.output.hashFunction = 'xxhash64';
+    config.output.hashFunction = 'sha256';
     return config;
   },
 };

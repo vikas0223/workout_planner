@@ -217,7 +217,8 @@ export function AuthGuestScreen() {
           cleanEmail,
           resolvedUserName || undefined,
           authKind,
-          authSuccessData.user.id
+          authSuccessData.user.id,
+          authSuccessData.user.user_metadata
         );
       } catch (postAuthErr) {
         console.warn('[AuthGuestScreen] Non-blocking post-auth warning:', postAuthErr);
@@ -259,16 +260,20 @@ export function AuthGuestScreen() {
 
     setLoading(true);
     setResendStatus(null);
+    setErrorMsg(null);
 
     try {
       const supabase = getBrowserSupabaseClient();
-      await supabase.auth.resend({
+      const { error } = await supabase.auth.resend({
         type: 'signup',
         email: cleanEmail,
       });
+      if (error) {
+        throw error;
+      }
       setResendStatus('Verification email resent. Please check your inbox.');
     } catch {
-      setResendStatus('Verification email resent. Please check your inbox.');
+      setErrorMsg('Failed to resend verification email. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

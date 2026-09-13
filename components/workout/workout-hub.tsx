@@ -44,6 +44,9 @@ import {
   Bookmark,
   Flame,
   Check,
+  Target,
+  ArrowRight,
+  X,
 } from 'lucide-react';
 import { generateId } from '@/lib/utils/id';
 import { useRecommendations } from '@/hooks/use-recommendations';
@@ -85,6 +88,7 @@ export function WorkoutHub({ initialView, initialWorkout = null }: WorkoutHubPro
   const [completedSession, setCompletedSession] = useState<WorkoutSession | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [showWeeklyBanner, setShowWeeklyBanner] = useState<boolean>(true);
 
   // Synchronize generated workout and switch to review view immediately when initialWorkout arrives
   useEffect(() => {
@@ -306,6 +310,46 @@ export function WorkoutHub({ initialView, initialWorkout = null }: WorkoutHubPro
           onDismiss={dismissRecommendation}
           compact
         />
+      )}
+
+      {/* Weekly Goal Progress Banner */}
+      {!primaryRecommendation && showWeeklyBanner && activeView !== 'session' && activeView !== 'completed' && (
+        <div className="flex items-center justify-between p-3 sm:p-4 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/80 shadow-xs flex-wrap sm:flex-nowrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center shrink-0 text-indigo-600">
+              <Target className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-slate-900">Weekly Goal: 3 Sessions to Go</span>
+                <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  High Confidence
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                You&apos;ve completed 0 of 3 workouts this week. Let&apos;s build a plan that keeps you on track.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <Button
+              size="sm"
+              onClick={() => setActiveView('wizard')}
+              className="h-8 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs flex items-center gap-1"
+            >
+              <span>Take Action</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+            <button
+              type="button"
+              onClick={() => setShowWeeklyBanner(false)}
+              className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label="Dismiss banner"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Top Hub Navigation Bar */}

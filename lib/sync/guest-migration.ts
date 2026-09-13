@@ -93,8 +93,19 @@ export async function associateGuestDataWithUser(
 
   try {
     lockAcquired = await lock.acquire(15000);
+    if (!lockAcquired) {
+      throw new Error('Exclusive migration lock could not be acquired');
+    }
   } catch (err: any) {
-    console.warn('[GuestMigration] Could not acquire exclusive lock, proceeding with caution:', err);
+    const errorMsg = `Lock acquisition error: ${err?.message || String(err)}`;
+    console.warn('[GuestMigration]', errorMsg);
+    return {
+      success: false,
+      migratedCount: 0,
+      queuedCount: 0,
+      migratedStores,
+      errors: [errorMsg],
+    };
   }
 
   const now = new Date().toISOString();
@@ -130,6 +141,23 @@ export async function associateGuestDataWithUser(
           },
         };
         await engine.put(STORES.LOCAL_PROFILES, newAuthProfile);
+        totalMigrated++;
+        migratedStores['profiles'] = (migratedStores['profiles'] || 0) + 1;
+
+        // Explicitly create outbox sync operation for cloned authenticated profile first
+        const queued = await outbox.enqueue({
+          ownerKind: 'user',
+          ownerId: authUserId,
+          entityType: 'profiles',
+          entityId: authUserId,
+          operation: 'upsert',
+          version: newAuthProfile.version,
+          payload: newAuthProfile as unknown as Record<string, unknown>,
+          baseUpdatedAt: newAuthProfile.updatedAt,
+        });
+        if (queued) {
+          totalQueued++;
+        }
       }
     } catch (profErr: any) {
       errors.push(`Profile linking error: ${profErr?.message || String(profErr)}`);
@@ -137,6 +165,10 @@ export async function associateGuestDataWithUser(
 
     // 2. Iterate through all domain stores in explicit dependency order
     for (const { storeName, entityType } of GUEST_MIGRATION_STORES) {
+      // STORES.LOCAL_PROFILES is handled exclusively by the dedicated profile-cloning step above
+      if (storeName === STORES.LOCAL_PROFILES) {
+        continue;
+      }
       try {
         const records = await engine.getAll<LocalRecordMeta & Record<string, any>>(storeName);
         let storeMigrated = 0;

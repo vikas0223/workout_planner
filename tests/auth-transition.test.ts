@@ -118,20 +118,16 @@ describe('Part 40 & 41: Welcome Transition & Header-Free Onboarding Guard', () =
 
   // ─── Requirement 13 & 14: Header-Free Onboarding Shell ────────────────────────
   it('13 & 14. renders dedicated header-free shell for incomplete onboarding without header or sub-tabs', () => {
-    // Branch 2 early return in page.tsx
-    const onboardingBlockPattern = /if\s*\(\s*onboardingState\s*===\s*['"]incomplete['"]\s*\)\s*\{[\s\S]*?<WorkoutWizard[\s\S]*?return/;
     expect(pageContent).toContain("if (onboardingState === 'incomplete')");
     expect(pageContent).toContain('<WorkoutWizard onWorkoutGenerated={handleOnboardingWorkoutGenerated} />');
 
     // Make sure the header element is not in the incomplete branch
     const incompleteBranchMatch = pageContent.match(/if\s*\(onboardingState === 'incomplete'\)\s*\{([\s\S]*?)\n\s*\}/);
-    expect(incompleteBranchMatch).toBeDefined();
-    if (incompleteBranchMatch) {
-      expect(incompleteBranchMatch[1]).not.toContain('<header');
-      expect(incompleteBranchMatch[1]).not.toContain('Programs');
-      expect(incompleteBranchMatch[1]).not.toContain('Goals');
-      expect(incompleteBranchMatch[1]).not.toContain('WorkoutHub');
-    }
+    expect(incompleteBranchMatch).toBeTruthy();
+    expect(incompleteBranchMatch![1]).not.toContain('<header');
+    expect(incompleteBranchMatch![1]).not.toContain('Programs');
+    expect(incompleteBranchMatch![1]).not.toContain('Goals');
+    expect(incompleteBranchMatch![1]).not.toContain('WorkoutHub');
   });
 
   // ─── Requirement 15: Standard Application Shell when onboarding complete ──────

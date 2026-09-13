@@ -21,7 +21,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getBrowserSupabaseClient } from '@/lib/supabase/browser-client';
 import { IndexedDBEngine } from '@/lib/storage/indexeddb-engine';
-import { STORES, MetaRecord } from '@/lib/storage/indexeddb-schema';
+import { STORES, MetaRecord, LocalProfileRecord } from '@/lib/storage/indexeddb-schema';
 import { associateGuestDataWithUser } from '@/lib/sync/guest-migration';
 
 export type AccessMode = 'unselected' | 'guest' | 'authenticated';
@@ -38,6 +38,7 @@ export const ACCESS_MODE_KEY = 'replyf_access_mode';
 export const ONBOARDING_STATE_KEY = 'replyf_onboarding_state';
 export const ONBOARDING_COMPLETED_AT_KEY = 'replyf_onboarding_completed_at';
 export const ONBOARDING_VERSION_KEY = 'replyf_onboarding_version';
+export const ONBOARDING_DRAFT_KEY = 'replyf_onboarding_draft';
 export const CURRENT_ONBOARDING_VERSION = '1.0';
 
 export type AppRouteDecision = 'initializing' | 'auth_guest_screen' | 'onboarding' | 'workout_hub';
@@ -145,7 +146,8 @@ export interface AuthGuardContextType {
     email: string,
     displayName?: string,
     kind?: AuthTransitionKind,
-    authUserId?: string
+    authUserId?: string,
+    userMetadata?: Record<string, unknown>
   ) => Promise<void>;
   completeAuthTransition: () => void;
   signOut: () => Promise<void>;
@@ -206,6 +208,9 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
             email = sessionData.session.user.email || null;
             const meta = sessionData.session.user.user_metadata;
             initialName = meta?.display_name || meta?.full_name || meta?.name || null;
+            if (meta?.onboarding_completed === true) {
+              idbOnboarding = 'complete';
+            }
           }
         } catch (supabaseErr) {
           console.debug('[AuthGuard] Supabase session check skipped/failed:', supabaseErr);
@@ -283,7 +288,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       email: string,
       providedName?: string,
       kind: AuthTransitionKind = 'signin',
-      authUserId?: string
+      authUserId?: string,
+      userMetadata?: Record<string, unknown>
     ) => {
       // 1. Resolve safe display name synchronously without blocking on network/profile lookups
       const resolvedName = (providedName && providedName.trim()) || null;
@@ -297,8 +303,45 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       setUserEmail(email);
       setDisplayName(resolvedName);
 
-      // 3. For new account signups, strictly enforce onboardingState = 'incomplete'
-      if (kind === 'signup') {
+      // Check whether onboarding has already been completed in any entry mode
+      let isAlreadyCompleted = onboardingState === 'complete';
+      if (!isAlreadyCompleted && typeof window !== 'undefined') {
+        try {
+          isAlreadyCompleted = localStorage.getItem(ONBOARDING_STATE_KEY) === 'complete';
+        } catch {}
+      }
+      if (!isAlreadyCompleted && userMetadata?.onboarding_completed === true) {
+        isAlreadyCompleted = true;
+      }
+
+      const engine = IndexedDBEngine.getInstance();
+      if (!isAlreadyCompleted) {
+        try {
+          const metaOnboarding = await engine.get<MetaRecord>(STORES.META, ONBOARDING_STATE_KEY);
+          if (metaOnboarding?.value === 'complete') {
+            isAlreadyCompleted = true;
+          }
+          if (!isAlreadyCompleted && authUserId) {
+            const allProfiles = await engine.getAll<LocalProfileRecord>(STORES.LOCAL_PROFILES);
+            const userProf = allProfiles.find(
+              (p) => p.id === authUserId || p.ownerId === authUserId
+            );
+            if (userProf?.profile?.fitnessLevel || userProf?.profile?.primaryGoal) {
+              isAlreadyCompleted = true;
+            }
+          }
+        } catch (dbErr) {
+          console.debug('[AuthGuard] Onboarding IDB check:', dbErr);
+        }
+      }
+
+      // 3. Resolve authoritative onboarding completion state.
+      // NEVER overwrite completed onboarding with incomplete (e.g. guest who completed onboarding then signs up/in).
+      if (isAlreadyCompleted) {
+        setOnboardingStateState('complete');
+      } else if (kind === 'signup') {
+        setOnboardingStateState('incomplete');
+      } else {
         setOnboardingStateState('incomplete');
       }
 
@@ -306,19 +349,28 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       try {
         if (typeof window !== 'undefined') {
           localStorage.setItem(ACCESS_MODE_KEY, 'authenticated');
-          if (kind === 'signup') {
+          if (isAlreadyCompleted) {
+            localStorage.setItem(ONBOARDING_STATE_KEY, 'complete');
+          } else if (kind === 'signup') {
             localStorage.setItem(ONBOARDING_STATE_KEY, 'incomplete');
             localStorage.removeItem(ONBOARDING_COMPLETED_AT_KEY);
             localStorage.removeItem(ONBOARDING_VERSION_KEY);
+          } else {
+            localStorage.setItem(ONBOARDING_STATE_KEY, 'incomplete');
           }
         }
-        const engine = IndexedDBEngine.getInstance();
         await engine.put(STORES.META, {
           key: ACCESS_MODE_KEY,
           value: 'authenticated',
           updatedAt: new Date().toISOString(),
         });
-        if (kind === 'signup') {
+        if (isAlreadyCompleted) {
+          await engine.put(STORES.META, {
+            key: ONBOARDING_STATE_KEY,
+            value: 'complete',
+            updatedAt: new Date().toISOString(),
+          });
+        } else if (kind === 'signup') {
           await engine.put(STORES.META, {
             key: ONBOARDING_STATE_KEY,
             value: 'incomplete',
@@ -326,20 +378,25 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
           });
           await engine.delete(STORES.META, ONBOARDING_COMPLETED_AT_KEY);
           await engine.delete(STORES.META, ONBOARDING_VERSION_KEY);
+        } else {
+          await engine.put(STORES.META, {
+            key: ONBOARDING_STATE_KEY,
+            value: 'incomplete',
+            updatedAt: new Date().toISOString(),
+          });
         }
       } catch (e) {
         console.warn('[AuthGuard] Non-blocking mode persistence warning:', e);
       }
 
-      // 4. Controlled guest data migration in detached background async boundary
-      // CRITICAL: Guest migration failure must NEVER block Welcome screen, reset auth, or throw to UI!
+      // 5. Controlled guest data migration in detached background async boundary
       if (authUserId) {
         associateGuestDataWithUser(authUserId).catch((migErr) => {
           console.warn('[AuthGuard] Non-blocking guest migration warning:', migErr);
         });
       }
     },
-    []
+    [onboardingState]
   );
 
   const completeAuthTransition = useCallback(() => {
@@ -367,6 +424,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     const now = new Date().toISOString();
     try {
       localStorage.setItem(ONBOARDING_STATE_KEY, 'complete');
+      localStorage.removeItem(ONBOARDING_DRAFT_KEY);
       const engine = IndexedDBEngine.getInstance();
       await engine.put(STORES.META, {
         key: ONBOARDING_STATE_KEY,
@@ -383,6 +441,15 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         value: CURRENT_ONBOARDING_VERSION,
         updatedAt: now,
       });
+      await engine.delete(STORES.META, ONBOARDING_DRAFT_KEY);
+
+      // Best-effort background sync of completion flag to Supabase user metadata
+      try {
+        const supabase = getBrowserSupabaseClient();
+        supabase.auth.updateUser({
+          data: { onboarding_completed: true },
+        }).catch(() => {});
+      } catch {}
     } catch (e) {
       console.warn('[AuthGuard] Failed to persist onboarding completion metadata:', e);
     }
@@ -411,11 +478,15 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.removeItem(ACCESS_MODE_KEY);
       localStorage.removeItem(ONBOARDING_STATE_KEY);
+      localStorage.removeItem(ONBOARDING_COMPLETED_AT_KEY);
+      localStorage.removeItem(ONBOARDING_VERSION_KEY);
+      localStorage.removeItem(ONBOARDING_DRAFT_KEY);
       const engine = IndexedDBEngine.getInstance();
       await engine.delete(STORES.META, ACCESS_MODE_KEY);
       await engine.delete(STORES.META, ONBOARDING_STATE_KEY);
       await engine.delete(STORES.META, ONBOARDING_COMPLETED_AT_KEY);
       await engine.delete(STORES.META, ONBOARDING_VERSION_KEY);
+      await engine.delete(STORES.META, ONBOARDING_DRAFT_KEY);
     } catch (e) {
       console.warn('[AuthGuard] Failed to reset flow:', e);
     }

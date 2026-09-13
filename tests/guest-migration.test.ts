@@ -28,6 +28,7 @@ import {
   associateGuestDataWithUser,
   GUEST_MIGRATION_STORES,
 } from '@/lib/sync/guest-migration';
+import { SyncLock } from '@/lib/sync/sync-lock';
 
 describe('Part 39: Controlled Guest Data Association & Sync Migration', () => {
   beforeEach(() => {
@@ -264,5 +265,31 @@ describe('Part 39: Controlled Guest Data Association & Sync Migration', () => {
     expect(newAuthProfile.ownerId).toBe(authUserId);
     expect(newAuthProfile.profile.displayName).toBe('Guest Alex');
     expect(newAuthProfile.profile.fitnessLevel).toBe('intermediate');
+
+    // Guest profile must NOT be rewritten or enqueued with guest profile ID
+    const originalGuestProfile = await engine.get<any>(STORES.LOCAL_PROFILES, guestProfileId);
+    expect(originalGuestProfile).toBeDefined();
+    expect(originalGuestProfile.ownerKind).toBe('guest');
+
+    // Cloned authenticated profile must be enqueued first in outbox
+    const outboxOps = await engine.getAll<any>(STORES.SYNC_QUEUE);
+    const profileOp = outboxOps.find((op) => op.entityType === 'profiles');
+    expect(profileOp).toBeDefined();
+    expect(profileOp.entityId).toBe(authUserId);
+    expect(profileOp.operation).toBe('upsert');
+  });
+
+  it('16. stops migration and reports error if exclusive lock cannot be acquired', async () => {
+    const engine = IndexedDBEngine.getInstance();
+    const authUserId = 'user_lock_fail_test';
+
+    // Mock lock.acquire to return false
+    vi.spyOn(SyncLock.prototype, 'acquire').mockResolvedValue(false);
+
+    const result = await associateGuestDataWithUser(authUserId, engine);
+    expect(result.success).toBe(false);
+    expect(result.migratedCount).toBe(0);
+    expect(result.errors).toBeDefined();
+    expect(result.errors![0]).toContain('Lock acquisition error');
   });
 });

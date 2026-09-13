@@ -95,7 +95,7 @@ export default function Home() {
   if (onboardingState === 'incomplete') {
     return (
       <main className="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-slate-100 text-slate-800 min-h-screen flex flex-col items-center justify-center py-6 sm:py-10 px-4 sm:px-6">
-        <div className="w-full max-w-[860px] mx-auto flex flex-col items-center">
+        <div className="w-full max-w-[1320px] mx-auto flex flex-col items-center">
           <WorkoutWizard onWorkoutGenerated={handleOnboardingWorkoutGenerated} />
         </div>
       </main>
