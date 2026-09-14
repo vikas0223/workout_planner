@@ -126,42 +126,42 @@ export function HeroSection() {
           </p>
         </div>
 
-        {/* RIGHT COLUMN: Realistic Phone Product Visual with Organic Blob (col 7-12) */}
+        {/* RIGHT COLUMN: Realistic Phone Product Visual with Modern Fluid Blob (col 7-12) */}
         <div className="lg:col-span-6 w-full relative flex items-center justify-center pt-8 lg:pt-0">
-          {/* Organic Background Blob */}
+          {/* Modern Fluid Organic Background Blob */}
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[480px] lg:w-[540px] h-[400px] sm:h-[480px] lg:h-[540px] bg-[#edf2fe]/80 dark:bg-indigo-950/30 rounded-[48%_52%_62%_38%/42%_58%_42%_58%] -z-10 pointer-events-none transition-all"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] sm:w-[500px] lg:w-[540px] h-[440px] sm:h-[500px] lg:h-[540px] bg-gradient-to-tr from-[#dce5fe]/85 via-[#eef2fe]/95 to-[#ede9fe]/80 dark:from-indigo-950/40 dark:via-purple-950/25 dark:to-slate-900/40 rounded-[44%_56%_66%_34%/38%_44%_56%_62%] blur-[0.5px] drop-shadow-[0_20px_45px_rgba(99,102,241,0.09)] -z-10 pointer-events-none transition-all"
             aria-hidden="true"
           />
 
           <div
             ref={visualRef}
-            className="hero-anim-item relative mx-auto flex flex-col items-center"
+            className="hero-anim-item relative mx-auto flex flex-col items-center select-none"
           >
-            {/* Playful Handwritten Annotation (Left of Phone) */}
+            {/* Playful Handwritten Annotation (Left of Phone over Blob, cleared from phone bezel) */}
             <div
-              className="absolute -left-16 sm:-left-24 top-6 sm:top-10 z-20 flex flex-col items-center pointer-events-none select-none"
+              className="absolute -left-28 sm:-left-36 lg:-left-40 top-3 sm:top-6 z-20 flex flex-col items-center pointer-events-none select-none"
               aria-hidden="true"
             >
-              <span className="font-serif italic font-bold text-indigo-600 dark:text-indigo-400 text-base sm:text-xl tracking-tight -rotate-12 leading-tight drop-shadow-xs text-center">
+              <span className="font-serif italic font-bold text-indigo-600 dark:text-indigo-400 text-base sm:text-xl tracking-tight -rotate-12 leading-tight drop-shadow-xs text-center whitespace-nowrap">
                 A plan<br />built for you
               </span>
               {/* Hand-drawn curving arrow pointing down-right toward phone */}
               <svg
-                width="48"
-                height="42"
-                viewBox="0 0 48 42"
+                width="54"
+                height="44"
+                viewBox="0 0 54 44"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-indigo-600 dark:text-indigo-400 stroke-current -rotate-6 translate-x-3 mt-1"
+                className="text-indigo-600 dark:text-indigo-400 stroke-current -rotate-6 translate-x-5 mt-1"
               >
                 <path
-                  d="M8 6C16 16 26 26 38 28"
+                  d="M6 6C16 16 30 26 44 28"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                 />
                 <path
-                  d="M28 30L38 28L32 18"
+                  d="M34 31L44 28L38 18"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -169,19 +169,19 @@ export function HeroSection() {
               </svg>
             </div>
 
-            {/* Standalone Realistic iPhone Mockup with subtle physical lean */}
+            {/* Standalone Realistic iPhone Mockup on the right side */}
             <div
               className="relative w-[290px] sm:w-[330px] rounded-[48px] bg-slate-950 p-3 sm:p-3.5 border-[5px] border-slate-900 shadow-[0_30px_70px_-15px_rgba(30,27,75,0.22),0_15px_35px_-10px_rgba(15,23,42,0.18)] ring-1 ring-slate-800/80 transition-transform duration-300"
               style={{
-                transform: 'translate(14px, 0px) rotate(4deg)',
+                transform: 'translate(10px, 0px) rotate(4deg)',
                 transformOrigin: '50% 50%',
               }}
             >
-              {/* Subtle Physical Side Buttons (Volume / Power) matching physical device photo */}
-              <div className="absolute -left-[7px] top-[110px] w-[3px] h-8 bg-slate-800 rounded-l-xs" />
-              <div className="absolute -left-[7px] top-[155px] w-[3px] h-11 bg-slate-800 rounded-l-xs" />
-              <div className="absolute -left-[7px] top-[215px] w-[3px] h-11 bg-slate-800 rounded-l-xs" />
-              <div className="absolute -right-[7px] top-[140px] w-[3px] h-14 bg-slate-800 rounded-r-xs" />
+              {/* Subtle Physical Side Buttons (Volume / Power) */}
+              <div className="absolute -left-[7px] top-[105px] w-[3px] h-8 bg-slate-800 rounded-l-xs" />
+              <div className="absolute -left-[7px] top-[150px] w-[3px] h-11 bg-slate-800 rounded-l-xs" />
+              <div className="absolute -left-[7px] top-[210px] w-[3px] h-11 bg-slate-800 rounded-l-xs" />
+              <div className="absolute -right-[7px] top-[135px] w-[3px] h-14 bg-slate-800 rounded-r-xs" />
 
               {/* Phone Top Speaker / Camera Notch */}
               <div className="w-20 h-4 bg-slate-900 rounded-full mx-auto mb-2 flex items-center justify-center">
@@ -189,7 +189,7 @@ export function HeroSection() {
               </div>
 
               {/* Phone Screen Container */}
-              <div className="rounded-[38px] bg-white dark:bg-slate-900 p-4 sm:p-5 text-left border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-inner min-h-[490px] sm:min-h-[530px]">
+              <div className="rounded-[38px] bg-white dark:bg-slate-900 p-4 sm:p-5 text-left border border-slate-100 dark:border-slate-800 flex flex-col justify-between shadow-inner min-h-[485px] sm:min-h-[525px]">
                 <div>
                   {/* Status Bar */}
                   <div className="flex items-center justify-between pb-3 text-slate-900 dark:text-slate-100">

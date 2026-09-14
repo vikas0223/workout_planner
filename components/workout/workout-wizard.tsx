@@ -463,7 +463,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
   const remainingSteps = totalSteps - currentStep;
   const progressPercentage = (currentStep / totalSteps) * 100;
-  const isLoading = plannerState === 'loading';
+  const isLoading = (plannerState as string) === 'loading';
   const isError = plannerState === 'error';
   const stepValid = isCurrentStepValid();
 
@@ -503,13 +503,175 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
 
   return (
     <div className="w-full md:max-w-[860px] lg:max-w-[1320px] mx-auto">
-      {/* =========================================================================
-          DESKTOP 3-COLUMN / MOBILE-STACKED LAYOUT
-          Left (~22%): Step Navigation & Guidance
-          Center (~50%): Main Question Card
-          Right (~28%): Selections Summary & What's Next
-         ========================================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      {isLoading ? (
+        /* Dedicated Full-Page Centered Generation Loading Screen (matches reference mockup) */
+        <div
+          role="status"
+          aria-live="polite"
+          aria-busy={isLoading}
+          className="fixed inset-0 z-50 bg-[#f6f8fc] flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-300"
+        >
+          <div className="w-full max-w-[560px] bg-white rounded-[28px] sm:rounded-[32px] border border-slate-100 shadow-[0_20px_60px_-15px_rgba(79,70,229,0.08)] p-6 sm:p-10 md:p-12 flex flex-col items-center text-center space-y-6 my-auto">
+            {/* GENERATE PLAN Eyebrow Badge */}
+            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-[#eef2ff] border border-indigo-100/80 text-[#4f46e5] text-[11px] font-bold tracking-widest uppercase shadow-2xs">
+              <span>GENERATE PLAN</span>
+            </div>
+
+            {/* Heading & Subtitle */}
+            <div className="space-y-2">
+              <h2 className="text-2xl sm:text-[28px] font-extrabold text-slate-900 tracking-tight">
+                Building your workout plan…
+              </h2>
+              <span className="sr-only">Building your workout… Building Workout…</span>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                We&apos;re creating a personalized plan based on your answers.
+                <span className="block mt-0.5 text-slate-400">This only takes a few seconds.</span>
+              </p>
+            </div>
+
+            {/* Dumbbell Icon with Dual-Arc Continuous Loading Animation */}
+            <div
+              className="relative my-2 sm:my-4 flex items-center justify-center"
+              data-testid="loading-dual-arc-container"
+            >
+              {/* Outer soft ambient glow ring */}
+              <div
+                className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full bg-gradient-to-b from-indigo-50/50 to-purple-50/20 border border-indigo-100/40 shadow-[0_0_40px_rgba(99,102,241,0.12)] pointer-events-none"
+                aria-hidden="true"
+              />
+
+              {/* Dual-Arc SVG Animation */}
+              <svg
+                className="w-36 h-36 sm:w-40 sm:h-40"
+                viewBox="0 0 140 140"
+                aria-hidden="true"
+              >
+                {/* Stationary guide track */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  fill="none"
+                  stroke="currentColor"
+                  className="text-indigo-50/80"
+                  strokeWidth="4"
+                />
+
+                {/* Arc A: Clockwise continuous rotation (~2s, longer arc) */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  fill="none"
+                  stroke="currentColor"
+                  className="text-indigo-600 animate-[spin_2s_linear_infinite] motion-reduce:animate-none origin-center"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeDasharray="145 207"
+                  data-testid="loading-arc-a"
+                />
+
+                {/* Arc B: Counter-clockwise continuous rotation (~2.8s, slightly shorter arc) */}
+                <circle
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  fill="none"
+                  stroke="currentColor"
+                  className="text-indigo-400 animate-[spin_2.8s_linear_infinite_reverse] motion-reduce:animate-none origin-center"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray="85 267"
+                  data-testid="loading-arc-b"
+                />
+              </svg>
+
+              {/* Centered Dumbbell Icon */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-22 h-22 sm:w-24 sm:h-24 rounded-full bg-white border border-indigo-50 flex items-center justify-center shadow-xs">
+                  <Dumbbell
+                    className="w-9 h-9 sm:w-10 sm:h-10 text-indigo-600"
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Integrated Six-row Generation Checklist Card */}
+            <div
+              className="w-full max-w-md bg-white rounded-2xl border border-slate-100 p-2 sm:p-2.5 shadow-xs space-y-0.5 text-left divide-y divide-slate-50"
+              aria-label="Generation checklist"
+            >
+              {LOADING_STAGES.map((stageText, idx) => {
+                const isCompleted = currentGenerationStage > idx;
+                const isActive = currentGenerationStage === idx;
+
+                return (
+                  <div
+                    key={stageText}
+                    className={`min-h-[46px] px-3.5 py-2.5 rounded-xl border flex items-center gap-3 transition-all duration-300 ${
+                      isActive
+                        ? 'bg-[#f0f3ff] border-indigo-100/90 shadow-2xs'
+                        : 'border-transparent'
+                    }`}
+                  >
+                    {/* Status Indicator */}
+                    <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                      {isCompleted ? (
+                        <div className="w-5 h-5 rounded-full bg-[#4f46e5] text-white flex items-center justify-center transition-all duration-200 scale-100 shadow-2xs animate-in zoom-in-75 fade-in motion-reduce:animate-none">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" aria-hidden="true" />
+                        </div>
+                      ) : isActive ? (
+                        <div className="w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin motion-reduce:animate-none flex items-center justify-center transition-all duration-200" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white transition-all duration-200" />
+                      )}
+                    </div>
+
+                    {/* Dynamic Text with smooth fade & stable row height */}
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className={`text-xs sm:text-sm block transition-all duration-250 ${
+                          isActive
+                            ? 'text-indigo-950 font-bold tracking-tight translate-y-0 opacity-100'
+                            : isCompleted
+                            ? 'text-slate-800 font-medium'
+                            : 'text-slate-400 font-normal'
+                        }`}
+                      >
+                        {stageText}{isActive ? '…' : ''}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Card Footer Microcopy */}
+            <div className="pt-2 text-center text-xs text-slate-500 space-y-1">
+              <p className="flex items-center justify-center gap-1.5 font-medium text-slate-600">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" aria-hidden="true" />
+                <span>Good things take a moment</span>
+              </p>
+              <p className="text-[11px] text-slate-400">
+                Your personalized plan is on the way.
+              </p>
+            </div>
+
+            {/* Screen-reader live announcement of stage changes */}
+            <p className="sr-only">
+              Stage {loadingMsgIndex + 1} of 6: {LOADING_MESSAGES[loadingMsgIndex]}
+            </p>
+          </div>
+        </div>
+      ) : (
+        /* =========================================================================
+            DESKTOP 3-COLUMN / MOBILE-STACKED LAYOUT
+            Left (~22%): Step Navigation & Guidance
+            Center (~50%): Main Question Card
+            Right (~28%): Selections Summary & What's Next
+           ========================================================================= */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
         {/* ───────────────────────────────────────────────────────────────────────
             LEFT COLUMN (lg:col-span-3, ~22%): Step Navigation Panel
@@ -636,160 +798,12 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
             </div>
 
             {/* Fieldset disables all wizard inputs during loading while preserving visibility */}
-            {isLoading ? (
-              /* Dedicated 1.2s Synchronized Loading Screen */
-              <div
-                role="status"
-                aria-live="polite"
-                aria-busy={isLoading}
-                className="py-4 px-2 sm:px-4 flex flex-col items-center text-center animate-in fade-in duration-300 w-full"
-              >
-                {/* GENERATE PLAN Eyebrow Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-100/90 text-indigo-600 text-[11px] font-extrabold tracking-wider uppercase mb-3 shadow-2xs">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" aria-hidden="true" />
-                  <span>GENERATE PLAN</span>
-                </div>
-
-                {/* Main Heading & Screen Reader Announcement */}
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Building your workout plan…
-                </h2>
-                <span className="sr-only">Building your workout… Building Workout…</span>
-                <p className="mt-1.5 text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                  We&apos;re creating a personalized plan based on your answers.
-                  <span className="block mt-0.5 text-slate-400">This only takes a few seconds.</span>
-                </p>
-
-                {/* Continuous Dual-Arc Dumbbell Loading Indicator */}
-                <div
-                  className="relative my-7 flex items-center justify-center"
-                  data-testid="loading-dual-arc-container"
-                >
-                  {/* Outer soft ambient glow ring */}
-                  <div
-                    className="absolute w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-indigo-50/40 border border-indigo-100/60 shadow-[0_0_35px_rgba(99,102,241,0.15)] pointer-events-none"
-                    aria-hidden="true"
-                  />
-
-                  {/* Dual-Arc SVG Animation */}
-                  <svg
-                    className="w-32 h-32 sm:w-36 sm:h-36"
-                    viewBox="0 0 140 140"
-                    aria-hidden="true"
-                  >
-                    {/* Background stationary guide track */}
-                    <circle
-                      cx="70"
-                      cy="70"
-                      r="56"
-                      fill="none"
-                      stroke="currentColor"
-                      className="text-indigo-100/70"
-                      strokeWidth="4"
-                    />
-
-                    {/* Arc A: Clockwise continuous rotation (~2s, longer arc) */}
-                    <circle
-                      cx="70"
-                      cy="70"
-                      r="56"
-                      fill="none"
-                      stroke="currentColor"
-                      className="text-indigo-600 animate-[spin_2s_linear_infinite] motion-reduce:animate-none origin-center"
-                      strokeWidth="4.5"
-                      strokeLinecap="round"
-                      strokeDasharray="145 207"
-                      data-testid="loading-arc-a"
-                    />
-
-                    {/* Arc B: Counter-clockwise continuous rotation (~2.8s, slightly shorter arc) */}
-                    <circle
-                      cx="70"
-                      cy="70"
-                      r="56"
-                      fill="none"
-                      stroke="currentColor"
-                      className="text-indigo-400 animate-[spin_2.8s_linear_infinite_reverse] motion-reduce:animate-none origin-center"
-                      strokeWidth="3.5"
-                      strokeLinecap="round"
-                      strokeDasharray="85 267"
-                      data-testid="loading-arc-b"
-                    />
-                  </svg>
-
-                  {/* Centered Dumbbell Icon */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-indigo-50/80 border border-indigo-100 flex items-center justify-center shadow-inner">
-                      <Dumbbell
-                        className="w-9 h-9 sm:w-10 sm:h-10 text-indigo-600"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Six-item Generation Checklist Card */}
-                <div
-                  className="w-full max-w-md bg-white rounded-2xl border border-slate-200/90 p-2 sm:p-2.5 shadow-xs space-y-1 text-left"
-                  aria-label="Generation checklist"
-                >
-                  {LOADING_STAGES.map((stageText, idx) => {
-                    const isCompleted = currentGenerationStage > idx;
-                    const isActive = currentGenerationStage === idx;
-
-                    return (
-                      <div
-                        key={stageText}
-                        className={`min-h-[46px] px-3.5 py-2.5 rounded-xl border flex items-center gap-3 transition-all duration-300 ${
-                          isActive
-                            ? 'bg-indigo-50/90 border-indigo-200/90 shadow-2xs'
-                            : 'border-transparent'
-                        }`}
-                      >
-                        {/* Status Indicator */}
-                        <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                          {isCompleted ? (
-                            <div className="w-5 h-5 rounded-full bg-[#4f46e5] text-white flex items-center justify-center transition-all duration-200 scale-100 shadow-2xs animate-in zoom-in-75 fade-in motion-reduce:animate-none">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" aria-hidden="true" />
-                            </div>
-                          ) : isActive ? (
-                            <div className="w-5 h-5 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin motion-reduce:animate-none flex items-center justify-center transition-all duration-200" />
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-slate-200 bg-white transition-all duration-200" />
-                          )}
-                        </div>
-
-                        {/* Dynamic Text with smooth fade & stable row height */}
-                        <div className="flex-1 min-w-0">
-                          <span
-                            className={`text-xs sm:text-sm block transition-all duration-250 ${
-                              isActive
-                                ? 'text-indigo-950 font-bold tracking-tight translate-y-0 opacity-100'
-                                : isCompleted
-                                ? 'text-slate-800 font-medium'
-                                : 'text-slate-400 font-normal'
-                            }`}
-                          >
-                            {stageText}{isActive ? '…' : ''}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Screen-reader live announcement of stage changes */}
-                <p className="sr-only">
-                  Stage {loadingMsgIndex + 1} of 6: {LOADING_MESSAGES[loadingMsgIndex]}
-                </p>
-              </div>
-            ) : (
-              <fieldset
-                disabled={isLoading}
-                className="border-0 p-0 m-0 min-w-0"
-                aria-busy={isLoading}
-              >
-              {/* Step 1: Goal */}
+            <fieldset
+              disabled={isLoading}
+              className="border-0 p-0 m-0 min-w-0"
+              aria-busy={isLoading}
+            >
+            {/* Step 1: Goal */}
               {currentStep === 1 && (
                 <div>
                   <div className="mt-7">
@@ -1139,7 +1153,6 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
                 </div>
               )}
               </fieldset>
-            )}
 
             {/* Step-Specific "Why this matters" Guidance Card */}
             {!isLoading && !isError && (
@@ -1446,6 +1459,7 @@ export function WorkoutWizard({ onWorkoutGenerated, onCancel }: WorkoutWizardPro
         </aside>
 
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 }

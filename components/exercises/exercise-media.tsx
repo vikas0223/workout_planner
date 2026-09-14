@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Exercise } from '@/types/domain';
 import { Dumbbell, ImageOff, ShieldCheck } from 'lucide-react';
 import {
@@ -31,6 +31,7 @@ export interface ExerciseMediaProps {
   className?: string;
   showProvenance?: boolean;
   priority?: boolean;
+  onMediaStatusChange?: (hasMedia: boolean) => void;
 }
 
 export function ExerciseMedia({
@@ -39,9 +40,16 @@ export function ExerciseMedia({
   className = '',
   showProvenance = false,
   priority = false,
+  onMediaStatusChange,
 }: ExerciseMediaProps) {
   const [failedUrls, setFailedUrls] = useState<Set<string>>(() => new Set());
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Reset failed URLs and loaded state when exercise changes
+  useEffect(() => {
+    setFailedUrls(new Set());
+    setIsLoaded(false);
+  }, [exercise.id]);
 
   const candidates = useMemo(() => {
     return resolveMediaCandidates(exercise, context);
@@ -51,6 +59,11 @@ export function ExerciseMedia({
   const activeCandidate = useMemo(() => {
     return resolveActiveCandidate(candidates, failedUrls);
   }, [candidates, failedUrls]);
+
+  // Notify parent of media availability changes
+  useEffect(() => {
+    onMediaStatusChange?.(Boolean(activeCandidate));
+  }, [activeCandidate, onMediaStatusChange]);
 
   const handleMediaError = useCallback((url: string) => {
     setFailedUrls((prev) => {

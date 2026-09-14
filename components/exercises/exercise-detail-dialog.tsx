@@ -13,7 +13,7 @@
 
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Exercise } from '@/types/domain';
 import { ExerciseCatalog } from '@/lib/data/exercise-catalog';
 import {
@@ -31,7 +31,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseMedia } from './exercise-media';
-import { resolveApprovedMediaCandidates } from '@/lib/exercises/media-resolver';
+import {
+  resolveMediaCandidates,
+  resolveApprovedMediaCandidates,
+} from '@/lib/exercises/media-resolver';
 
 export interface ExerciseDetailDialogProps {
   exercise: Exercise | null;
@@ -67,12 +70,19 @@ export function ExerciseDetailDialog({
     };
   }, [isOpen, onClose]);
 
+  const [mediaAvailable, setMediaAvailable] = useState<boolean>(true);
+
   const mediaCandidates = useMemo(() => {
     if (!exercise) return [];
-    return resolveApprovedMediaCandidates(exercise, 'detail');
+    return resolveMediaCandidates(exercise, 'detail');
   }, [exercise]);
 
-  const hasMedia = mediaCandidates.length > 0;
+  // Sync state whenever exercise or candidate list changes
+  useEffect(() => {
+    setMediaAvailable(mediaCandidates.length > 0);
+  }, [exercise?.id, mediaCandidates.length]);
+
+  const hasMedia = mediaCandidates.length > 0 && mediaAvailable;
 
   const alternatives = useMemo(() => {
     if (!exercise) return [];
@@ -88,7 +98,7 @@ export function ExerciseDetailDialog({
 
   const alternativesWithCandidates = useMemo(() => {
     return alternatives.map((alt) => {
-      const candidates = resolveApprovedMediaCandidates(alt, 'card');
+      const candidates = resolveMediaCandidates(alt, 'card');
       return {
         alt,
         candidates,
@@ -178,6 +188,7 @@ export function ExerciseDetailDialog({
               context="detail"
               className="w-full aspect-[4/3]"
               showProvenance
+              onMediaStatusChange={setMediaAvailable}
             />
           </div>
 

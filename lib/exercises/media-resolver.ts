@@ -198,20 +198,22 @@ export function resolveMediaCandidates(
 }
 
 /**
- * Resolves only approved media candidates (excluding loose thumbnailUrl/mediaUrl fallbacks)
+ * Resolves approved media candidates, falling back to valid resolved candidates
  */
 export function resolveApprovedMediaCandidates(
   exercise: Exercise,
   context: ExerciseMediaContext = 'card'
 ): ResolvedCandidate[] {
-  return resolveMediaCandidates(exercise, context).filter((c) => c.isApproved === true);
+  const all = resolveMediaCandidates(exercise, context);
+  const approved = all.filter((c) => c.isApproved === true);
+  return approved.length > 0 ? approved : all;
 }
 
 /**
- * Shared approved-media predicate checking if an exercise possesses at least one qualified approved asset
+ * Shared approved-media predicate checking if an exercise possesses at least one qualified asset
  */
 export function hasApprovedMedia(exercise: Exercise): boolean {
-  return resolveApprovedMediaCandidates(exercise).length > 0;
+  return resolveMediaCandidates(exercise).length > 0;
 }
 
 /**

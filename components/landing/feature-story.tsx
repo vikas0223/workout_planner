@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+import { CircularProcessLoop } from './circular-process-loop';
+
 gsap.registerPlugin(ScrollTrigger);
 
 export function FeatureStory() {
@@ -213,54 +215,8 @@ export function FeatureStory() {
             The work you complete today becomes context for what comes next.
           </p>
 
-          {/* Circular Cycle Diagram */}
-          <div className="relative my-10 py-6 max-w-[460px] mx-auto">
-            {/* Center Circle */}
-            <div className="relative mx-auto w-32 h-32 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border-2 border-dashed border-indigo-300 dark:border-indigo-700 flex flex-col items-center justify-center shadow-lg shadow-indigo-100 dark:shadow-none z-10">
-              <div className="relative h-8 w-8 rounded-xl overflow-hidden mb-1">
-                <Image
-                  src="/icons/replyf-logo-gradient.png"
-                  alt="Replyf"
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-cover dark:hidden"
-                />
-                <Image
-                  src="/icons/replyf-logo-dark.png"
-                  alt="Replyf dark"
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-cover hidden dark:block"
-                />
-              </div>
-              <span className="text-xs font-black text-slate-900 dark:text-white leading-tight">Next</span>
-              <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 leading-tight">Workout</span>
-            </div>
-
-            {/* Top: 01 Plan */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span className="h-2 w-2 rounded-full bg-indigo-600" />
-              <span>01 Plan (Create)</span>
-            </div>
-
-            {/* Right: 02 Train */}
-            <div className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-2 sm:translate-x-6 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span className="h-2 w-2 rounded-full bg-indigo-600" />
-              <span>02 Train (Log)</span>
-            </div>
-
-            {/* Bottom: 03 Track */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span className="h-2 w-2 rounded-full bg-indigo-600" />
-              <span>03 Track (Analyze)</span>
-            </div>
-
-            {/* Left: 04 Improve */}
-            <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-2 sm:-translate-x-6 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-200">
-              <span className="h-2 w-2 rounded-full bg-indigo-600" />
-              <span>04 Improve (Adapt)</span>
-            </div>
-          </div>
+          {/* Animated Circular Process Loop (01 Plan -> 02 Train -> 03 Track -> 04 Improve -> back to 01 Plan) */}
+          <CircularProcessLoop />
 
           {/* Slogan */}
           <p className="text-base sm:text-lg font-black text-indigo-600 dark:text-indigo-400 tracking-tight">
