@@ -105,6 +105,7 @@ export function CircularProcessLoop() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-sm shrink-0">
             <TrendingUp className="w-5 h-5 stroke-[2.2] text-white" />
           </div>
+        );
     }
   };
 
@@ -188,10 +189,10 @@ export function CircularProcessLoop() {
             className="text-indigo-200/90 dark:text-indigo-800/80"
           />
 
-          {/* ARC 1: 01 Plan → 02 Train (Clockwise Top-Right) */}
+          {/* ARC 1: 01 Plan → 02 Train (Emerges from Card 01 right, enters Card 02 top) */}
           <path
             id="arc-01-02"
-            d="M 459 149 A 225 225 0 0 1 557 281"
+            d="M 451 132 A 236 236 0 0 1 574 304"
             fill="none"
             stroke="currentColor"
             strokeWidth={hoveredStep === 'plan' || hoveredStep === 'train' ? '2.8' : '2.2'}
@@ -201,11 +202,10 @@ export function CircularProcessLoop() {
                 ? 'url(#clockwise-arrowhead-active)'
                 : 'url(#clockwise-arrowhead)'
             }
-            className={`transition-colors duration-200 ${
-              hoveredStep === 'plan' || hoveredStep === 'train'
-                ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
-                : 'text-indigo-400/90 dark:text-indigo-500/80'
-            }`}
+            className={`transition-colors duration-200 ${hoveredStep === 'plan' || hoveredStep === 'train'
+              ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+              : 'text-indigo-400/90 dark:text-indigo-500/80'
+              }`}
             style={{
               animation: 'flowClockwiseDash 1.2s linear infinite',
             }}
@@ -213,16 +213,16 @@ export function CircularProcessLoop() {
           {/* Arc 1 Moving Glow Dot */}
           <circle r="4.5" className="fill-indigo-600 dark:fill-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]">
             <animateMotion
-              path="M 459 149 A 225 225 0 0 1 557 281"
+              path="M 451 132 A 236 236 0 0 1 574 304"
               dur="1.6s"
               repeatCount="indefinite"
             />
           </circle>
 
-          {/* ARC 2: 02 Train → 03 Track (Clockwise Bottom-Right) */}
+          {/* ARC 2: 02 Train → 03 Track (Emerges from Card 02 bottom, enters Card 03 right) */}
           <path
             id="arc-02-03"
-            d="M 557 398 A 225 225 0 0 1 459 531"
+            d="M 574 376 A 236 236 0 0 1 451 548"
             fill="none"
             stroke="currentColor"
             strokeWidth={hoveredStep === 'train' || hoveredStep === 'track' ? '2.8' : '2.2'}
@@ -232,11 +232,10 @@ export function CircularProcessLoop() {
                 ? 'url(#clockwise-arrowhead-active)'
                 : 'url(#clockwise-arrowhead)'
             }
-            className={`transition-colors duration-200 ${
-              hoveredStep === 'train' || hoveredStep === 'track'
-                ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
-                : 'text-indigo-400/90 dark:text-indigo-500/80'
-            }`}
+            className={`transition-colors duration-200 ${hoveredStep === 'train' || hoveredStep === 'track'
+              ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+              : 'text-indigo-400/90 dark:text-indigo-500/80'
+              }`}
             style={{
               animation: 'flowClockwiseDash 1.2s linear infinite',
             }}
@@ -244,16 +243,16 @@ export function CircularProcessLoop() {
           {/* Arc 2 Moving Glow Dot */}
           <circle r="4.5" className="fill-indigo-600 dark:fill-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]">
             <animateMotion
-              path="M 557 398 A 225 225 0 0 1 459 531"
+              path="M 574 376 A 236 236 0 0 1 451 548"
               dur="1.6s"
               repeatCount="indefinite"
             />
           </circle>
 
-          {/* ARC 3: 03 Track → 04 Improve (Clockwise Bottom-Left) */}
+          {/* ARC 3: 03 Track → 04 Improve (Emerges from Card 03 left, enters Card 04 bottom) */}
           <path
             id="arc-03-04"
-            d="M 221 531 A 225 225 0 0 1 123 398"
+            d="M 229 548 A 236 236 0 0 1 106 376"
             fill="none"
             stroke="currentColor"
             strokeWidth={hoveredStep === 'track' || hoveredStep === 'improve' ? '2.8' : '2.2'}
@@ -263,11 +262,10 @@ export function CircularProcessLoop() {
                 ? 'url(#clockwise-arrowhead-active)'
                 : 'url(#clockwise-arrowhead)'
             }
-            className={`transition-colors duration-200 ${
-              hoveredStep === 'track' || hoveredStep === 'improve'
-                ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
-                : 'text-indigo-400/90 dark:text-indigo-500/80'
-            }`}
+            className={`transition-colors duration-200 ${hoveredStep === 'track' || hoveredStep === 'improve'
+              ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+              : 'text-indigo-400/90 dark:text-indigo-500/80'
+              }`}
             style={{
               animation: 'flowClockwiseDash 1.2s linear infinite',
             }}
@@ -275,16 +273,16 @@ export function CircularProcessLoop() {
           {/* Arc 3 Moving Glow Dot */}
           <circle r="4.5" className="fill-indigo-600 dark:fill-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]">
             <animateMotion
-              path="M 221 531 A 225 225 0 0 1 123 398"
+              path="M 229 548 A 236 236 0 0 1 106 376"
               dur="1.6s"
               repeatCount="indefinite"
             />
           </circle>
 
-          {/* ARC 4: 04 Improve → 01 Plan (Clockwise Top-Left, loops back) */}
+          {/* ARC 4: 04 Improve → 01 Plan (Emerges from Card 04 top, enters Card 01 left) */}
           <path
             id="arc-04-01"
-            d="M 123 281 A 225 225 0 0 1 221 149"
+            d="M 106 304 A 236 236 0 0 1 229 132"
             fill="none"
             stroke="currentColor"
             strokeWidth={hoveredStep === 'improve' || hoveredStep === 'plan' ? '2.8' : '2.2'}
@@ -294,11 +292,10 @@ export function CircularProcessLoop() {
                 ? 'url(#clockwise-arrowhead-active)'
                 : 'url(#clockwise-arrowhead)'
             }
-            className={`transition-colors duration-200 ${
-              hoveredStep === 'improve' || hoveredStep === 'plan'
-                ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
-                : 'text-indigo-400/90 dark:text-indigo-500/80'
-            }`}
+            className={`transition-colors duration-200 ${hoveredStep === 'improve' || hoveredStep === 'plan'
+              ? 'text-indigo-600 dark:text-indigo-300 drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]'
+              : 'text-indigo-400/90 dark:text-indigo-500/80'
+              }`}
             style={{
               animation: 'flowClockwiseDash 1.2s linear infinite',
             }}
@@ -306,7 +303,7 @@ export function CircularProcessLoop() {
           {/* Arc 4 Moving Glow Dot */}
           <circle r="4.5" className="fill-indigo-600 dark:fill-indigo-400 drop-shadow-[0_0_6px_rgba(99,102,241,0.8)]">
             <animateMotion
-              path="M 123 281 A 225 225 0 0 1 221 149"
+              path="M 106 304 A 236 236 0 0 1 229 132"
               dur="1.6s"
               repeatCount="indefinite"
             />
@@ -329,7 +326,7 @@ export function CircularProcessLoop() {
 
         {/* CARD 01: Plan (Create) — TOP */}
         <div
-          className="absolute top-[2%] left-1/2 -translate-x-1/2 z-20"
+          className="absolute top-[9%] left-1/2 -translate-x-1/2 z-20"
           onMouseEnter={() => setHoveredStep('plan')}
           onMouseLeave={() => setHoveredStep(null)}
         >
@@ -367,7 +364,7 @@ export function CircularProcessLoop() {
 
         {/* CARD 03: Track (Analyze) — BOTTOM */}
         <div
-          className="absolute bottom-[2%] left-1/2 -translate-x-1/2 z-20"
+          className="absolute bottom-[9%] left-1/2 -translate-x-1/2 z-20"
           onMouseEnter={() => setHoveredStep('track')}
           onMouseLeave={() => setHoveredStep(null)}
         >
